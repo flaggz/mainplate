@@ -159,4 +159,4 @@ mainplate/
 
 ## License
 
-MIT — do whatever you want with it.
+CC BY-NC-SA 4.0
