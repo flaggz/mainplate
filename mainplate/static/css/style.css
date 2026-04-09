@@ -1,0 +1,32 @@
+/* Custom CSS removed during migration to Tailwind/DaisyUI */
+
+th.sortable-th {
+    position: relative;
+    user-select: none;
+}
+
+th.sort-asc::after {
+    content: " \25B2";
+    font-size: 0.7em;
+    opacity: 0.6;
+    margin-left: 4px;
+}
+
+th.sort-desc::after {
+    content: " \25BC";
+    font-size: 0.7em;
+    opacity: 0.6;
+    margin-left: 4px;
+}
+
+.card-body.p-0 {
+    padding: 0 !important;
+}
+
+.card.bg-base-100 {
+    background-color: color-mix(in oklab, oklch(var(--b1) / 1) 50%, oklch(var(--b2) / 1) 50%) !important;
+}
+
+.widget.full-width {
+    grid-column: 1 / -1 !important;
+}

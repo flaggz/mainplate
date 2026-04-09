@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block breadcrumb %}<a href="{{ url_for('collection') }}" class="link">Collezione</a> <span
+    class="opacity-50 mx-2">/</span>{% endblock %}
+{% block page_title %}{% if watch %}{{ _('Edit') }} {% else %}{{ _('Add to Collection') }}{% endif %}{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="card bg-base-100 shadow-sm border border-base-200">
+        <div class="card-body">
+            <form method="post">
+                <div class="font-bold text-lg mb-4 border-b border-base-200 pb-2">{{ _('watch') }}</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Brand') }} *</span></label>
+                        <input type="text" name="brand" value="{{ watch.brand if watch else '' }}" required
+                            placeholder="es. Omega" class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Model') }} *</span></label>
+                        <input type="text" name="model" value="{{ watch.model if watch else '' }}" required
+                            placeholder="es. Seamaster" class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Reference') }}</span></label>
+                        <input type="text" name="reference" value="{{ watch.reference if watch else '' }}"
+                            placeholder="es. 2531.80" class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Year') }}</span></label>
+                        <input type="number" name="year" value="{{ watch.year if watch else '' }}"
+                            placeholder="es. 1998" min="1800" max="2099" class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Purchase Date') }}</span></label>
+                        <input type="date" name="acquired" value="{{ watch.acquired if watch else '' }}"
+                            class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Purchase Price') }}</span></label>
+                        <input type="number" step="0.01" name="purchase_price"
+                            value="{{ watch.purchase_price if watch else '0' }}" min="0"
+                            class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control md:col-span-2 pt-2 items-start" id="wishlist-container">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" name="is_wishlist" id="is_wishlist_check" value="1" class="hidden" {%
+                                if watch and watch.is_wishlist %}checked{% endif %}>
+                            <button type="button" id="wishlist_btn"
+                                class="btn transition-all duration-300 w-64 {% if watch and watch.is_wishlist %}btn-error{% else %}btn-success{% endif %} text-white">
+                                <span id="wishlist_text">
+                                    {% if watch and watch.is_wishlist %}
+                                    {{ _('Remove from Wishlist') }}
+                                    {% else %}
+                                    {{ _('Add to Wishlist') }}
+                                    {% endif %}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-control md:col-span-2">
+                        <label class="label"><span class="label-text">{{ _('Notes') }}</span></label>
+                        <textarea name="notes" rows="3" placeholder="Condizioni, storia, provenienza…"
+                            class="textarea textarea-bordered w-full">{{ watch.notes if watch else '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="font-bold text-lg mb-4 mt-8 border-b border-base-200 pb-2">{{ _('Sales (optional)') }}</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Sales Date') }}</span></label>
+                        <input type="date" name="sold_date" value="{{ watch.sold_date if watch else '' }}"
+                            class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Sales Price') }}</span></label>
+                        <input type="number" step="0.01" name="sold_price"
+                            value="{{ watch.sold_price if watch else '0' }}" min="0"
+                            class="input input-bordered w-full">
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end gap-2 border-t border-base-200 pt-4">
+                    <a href="{{ url_for('collection') }}" class="btn btn-ghost">{{ _('Cancel') }}</a>
+                    <button type="submit" class="btn btn-primary">{% if watch %}{{ _('Save') }}{% else %}{{ _('Add')
+                        }}{% endif
+                        %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const btn = document.getElementById('wishlist_btn');
+            const checkbox = document.getElementById('is_wishlist_check');
+            const textSpan = document.getElementById('wishlist_text');
+
+            const textAdd = "{{ _('Add to Wishlist') }}";
+            const textRemove = "{{ _('Remove from Wishlist') }}";
+
+            btn.addEventListener('click', () => {
+                checkbox.checked = !checkbox.checked;
+
+                if (checkbox.checked) {
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-error');
+                    textSpan.textContent = textRemove;
+                } else {
+                    btn.classList.remove('btn-error');
+                    btn.classList.add('btn-success');
+                    textSpan.textContent = textAdd;
+                }
+            });
+        });
+    </script>
+</div>
+{% endblock %}
+
+{% block page_actions %}
+{% endblock %}

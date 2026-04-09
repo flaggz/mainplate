@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+{% block page_title %}{{ _('COLLECTION') }}{% endblock %}
+{% block page_actions %}
+<button class="btn btn-primary btn-sm" onclick="toggleAddCollForm()">+ {{ _('Add Watch') }}</button>
+{% endblock %}
+{% block content %}
+
+<!-- Summary strip -->
+<div class="stats stats-vertical lg:stats-horizontal shadow bg-base-100 w-full mb-6">
+    <div class="stat">
+        <div class="stat-title uppercase">{{ _('TOTALS') }}</div>
+        <div class="stat-value">{{ watch_count }}</div>
+        <div class="stat-desc">{{ active_count }} in coll. · {{ sold_count_coll }} {{ _('sold') }}</div>
+    </div>
+    <div class="stat">
+        <div class="stat-title uppercase">{{ _('INVESTMENT') }}</div>
+        <div class="stat-value">€{{ '{:,.2f}'.format(total_purchase) }}</div>
+        <div class="stat-desc">{{ _('Purchase Price') }}</div>
+    </div>
+    <div class="stat">
+        <div class="stat-title uppercase">{{ _('services') }}</div>
+        <div class="stat-value">€{{ '{:,.2f}'.format(total_service) }}</div>
+        <div class="stat-desc">{{ _('Service and parts') }}</div>
+    </div>
+    <div class="stat">
+        <div class="stat-title uppercase">{{ _('total') }}</div>
+        <div class="stat-value">€{{ '{:,.2f}'.format(total_invested) }}</div>
+        <div class="stat-desc">{{ _('purchase') }} + {{ _('services') }}</div>
+    </div>
+</div>
+
+<!-- Inline add form -->
+<div id="add-coll-form-wrap" class="hidden mb-6">
+    <div class="card bg-base-100 shadow-md border border-base-200">
+        <div class="card-body p-6">
+            <div class="flex justify-between items-center mb-4">
+                <span class="font-bold text-lg">{{ _('NEW WATCH') }}</span>
+                <button class="btn btn-ghost btn-xs" onclick="toggleAddCollForm()">✕ {{ _('Cancel')}}</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="form-control">
+                    <label class="label"><span class="label-text">{{ _('Brand') }} *</span></label>
+                    <input type="text" id="nc-brand" placeholder="es. Omega" required
+                        class="input input-bordered w-full">
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">{{ _('Model') }} *</span></label>
+                    <input type="text" id="nc-model" placeholder="es. Seamaster" required
+                        class="input input-bordered w-full">
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">{{ _('Reference') }}</span></label>
+                    <input type="text" id="nc-ref" placeholder="es. 2531.80" class="input input-bordered w-full">
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">{{ _('Year') }}</span></label>
+                    <input type="number" id="nc-year" placeholder="es. 1998" min="1800" max="2099"
+                        class="input input-bordered w-full">
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">{{ _('Purchase Date') }}</span></label>
+                    <input type="date" id="nc-acquired" class="input input-bordered w-full">
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">{{ _('Purchase Price') }}</span></label>
+                    <input type="number" step="0.01" id="nc-price" value="0" min="0"
+                        class="input input-bordered w-full">
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">{{ _('Sale Date') }}</span></label>
+                    <input type="date" id="nc-sold-date" class="input input-bordered w-full">
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">{{ _('Sale Price') }}</span></label>
+                    <input type="number" step="0.01" id="nc-sold-price" value="0" min="0"
+                        class="input input-bordered w-full">
+                </div>
+                <div class="form-control mt-2" id="wishlist-container">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="nc-wishlist" value="1" class="hidden">
+                        <button type="button" id="wishlist_btn" onclick="toggleNcWishlist()"
+                            class="btn transition-all duration-300 w-64 btn-success text-white">
+                            <span id="wishlist_text">{{ _('Add to Wishlist') }}</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-control md:col-span-2 lg:col-span-4">
+                    <label class="label"><span class="label-text">{{ _('Notes') }}</span></label>
+                    <textarea id="nc-notes" rows="2" placeholder="{{ _('Conditions, history…') }}"
+                        class="textarea textarea-bordered w-full"></textarea>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-2">
+                <button class="btn btn-ghost" onclick="toggleAddCollForm()">{{ _('Cancel') }}</button>
+                <button class="btn btn-primary" onclick="ajaxAddCollection()">{{ _('Add') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active watches -->
+<div class="card bg-base-100 shadow-sm border border-base-200 mb-8">
+    <div class="card-body p-0">
+        <div class="font-bold p-4 border-b border-base-200 bg-base-200/50 rounded-box">{{ _('IN COLLECTION') }} ({{ active_count }})
+        </div>
+        <div class="overflow-x-auto">
+            <table class="table" id="coll-active-table">
+                <thead>
+                    <tr class="uppercase">
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('watch') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('Acquired') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="2">{{
+                            _('Purchase Price') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{
+                            _('services') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="4">{{
+                            _('total') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="5">{{ _('LAST LOG') }}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="coll-active-tbody">
+                    {% for w in active_watches %}
+                    <tr id="coll-row-{{ w.id }}"
+                        onclick="window.location='{{ url_for('collection_detail', wid=w.id) }}'"
+                        class="hover cursor-pointer">
+                        <td>
+                            <div class="font-semibold">{{ w.brand }} {{ w.model }}</div>
+                            <div class="text-xs opacity-70">{{ w.reference or '' }}{% if w.year %} · {{ w.year }}{%
+                                endif %}</div>
+                        </td>
+                        <td class="text-sm whitespace-nowrap">{% if w.acquired %}{{ w.acquired | fmtdate(date_format)
+                            }}{% else %}—{% endif %}</td>
+                        <td class="text-right">{% if w.purchase_price > 0 %}€{{ '{:,.2f}'.format(w.purchase_price) }}{%
+                            else %}<span class="opacity-50">—</span>{% endif %}</td>
+                        <td class="text-right">{% if w.service_cost > 0 %}<span class="text-error">€{{
+                                '{:,.2f}'.format(w.service_cost) }}</span>{% else %}<span class="opacity-50">—</span>{%
+                            endif %}</td>
+                        <td class="text-right">€{{ '{:,.2f}'.format(w.total_cost) }}</td>
+                        <td>
+                            {% if w.logs %}
+                            <div class="text-sm">{{ w.logs[0].log_date | fmtdate(date_format) }}</div>
+                            <div class="text-xs opacity-70 truncate max-w-[150px]">{{ w.logs[0].description }}</div>
+                            {% else %}<span class="opacity-50">—</span>{% endif %}
+                        </td>
+                        <td onclick="event.preventDefault(); event.stopPropagation();">
+                            <div class="flex gap-3 text-sm">
+                                <button class="link link-primary link-hover" onclick="openEditColl({{ w.id }});">{{
+                                    _('Edit') }}</button>
+                                <button class="link link-error link-hover"
+                                    onclick="deleteCollConfirm({{ w.id }}, this)">{{ _('Delete') }}</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr id="coll-active-empty">
+                        <td colspan="7" class="text-center py-8 opacity-50">{{ _('No watches in collection.') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Wishlist -->
+<div class="card bg-base-100 shadow-sm border border-base-200 mb-8">
+    <div class="card-body p-0">
+        <div class="font-bold p-4 border-b border-base-200 bg-base-200/50">WISHLIST</div>
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr class="uppercase">
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('watch') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="1">{{
+                            _('PRICE') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="2">{{ _('NOTES') }}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="coll-wishlist-tbody">
+                    {% for w in wishlist %}
+                    <tr id="coll-row-{{ w.id }}" class="hover cursor-pointer" onclick="openEditColl({{ w.id }})">
+                        <td>
+                            <div class="font-semibold">{{ w.brand }} {{ w.model }}</div>
+                            <div class="text-xs opacity-70">{{ w.reference or '' }}</div>
+                        </td>
+                        <td class="text-right">{% if w.purchase_price > 0 %}€{{ '{:,.2f}'.format(w.purchase_price) }}{%
+                            else %}<span class="opacity-50">—</span>{% endif %}</td>
+                        <td class="text-sm opacity-80 max-w-sm">
+                            <div class="truncate">{{ w.notes }}</div>
+                        </td>
+                        <td onclick="event.preventDefault(); event.stopPropagation();">
+                            <div class="flex gap-3 text-sm justify-end">
+                                <button class="link link-primary link-hover" onclick="openEditColl({{ w.id }});">{{
+                                    _('Edit') }}</button>
+                                <button class="link link-error link-hover"
+                                    onclick="deleteCollConfirm({{ w.id }}, this)">{{ _('Delete') }}</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr id="coll-wishlist-empty">
+                        <td colspan="4" class="text-center py-6 opacity-50">{{ _('No watches in wishlist.') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Sold watches -->
+{% if sold_watches %}
+<div class="card bg-base-100 shadow-sm border border-base-200 mb-8">
+    <div class="card-body p-0">
+        <div class="font-bold p-4 border-b border-base-200 bg-base-200/50">{{ _('SOLD') }} ({{ sold_count_coll }})</div>
+        <div class="overflow-x-auto">
+            <table class="table" id="coll-sold-table">
+                <thead>
+                    <tr class="uppercase">
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('watch') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('SOLD ON') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="2">{{ _('TOTAL
+                            COST') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{
+                            _('SOLD') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="4">{{
+                            _('PROFIT') }}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="coll-sold-tbody">
+                    {% for w in sold_watches %}
+                    <tr id="coll-row-{{ w.id }}"
+                        onclick="window.location='{{ url_for('collection_detail', wid=w.id) }}'"
+                        class="hover cursor-pointer opacity-70">
+                        <td>
+                            <div class="font-semibold">{{ w.brand }} {{ w.model }}</div>
+                            <div class="text-xs">{{ w.reference or '' }}{% if w.year %} · {{ w.year }}{% endif %}</div>
+                        </td>
+                        <td class="text-sm whitespace-nowrap">{% if w.sold_date %}{{ w.sold_date | fmtdate(date_format)
+                            }}{% else %}—{% endif %}</td>
+                        <td class="text-right">€{{ '{:,.2f}'.format(w.total_cost) }}</td>
+                        <td class="text-right">€{{ '{:,.2f}'.format(w.sold_price) }}</td>
+                        <td class="text-right"><span
+                                class="{{ 'text-success' if (w.gain or 0) >= 0 else 'text-error' }}">€{{
+                                '{:,.2f}'.format(w.gain or 0) }}</span></td>
+                        <td onclick="event.preventDefault(); event.stopPropagation();">
+                            <div class="flex gap-3 text-sm justify-end">
+                                <button class="link link-primary link-hover" onclick="openEditColl({{ w.id }});">{{
+                                    _('Edit') }}</button>
+                                <button class="link link-error link-hover"
+                                    onclick="deleteCollConfirm({{ w.id }}, this)">{{ _('Delete') }}</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+<script>
+    window.DATE_FORMAT = '{{ date_format }}';
+    window.I18N_ADD_WATCH_FORM  = {{ _('Add Watch (Quick Form)') | tojson }};
+    window.I18N_ADD             = {{ _('Add') | tojson }};
+    window.I18N_EDIT_WATCH_FORM = {{ _('Edit Watch') | tojson }};
+    window.I18N_SAVE            = {{ _('Save') | tojson }};
+    
+    // Wishlist Button UI Logic for Ajax Modal
+    const textAdd = "{{ _('Add to Wishlist') }}";
+    const textRemove = "{{ _('Remove from Wishlist') }}";
+    
+    window.updateWishlistBtnUI = function() {
+        const btn = document.getElementById('wishlist_btn');
+        const checkbox = document.getElementById('nc-wishlist');
+        const textSpan = document.getElementById('wishlist_text');
+        if (!btn || !checkbox || !textSpan) return;
+        
+        if (checkbox.checked) {
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-error');
+            textSpan.textContent = textRemove;
+        } else {
+            btn.classList.remove('btn-error');
+            btn.classList.add('btn-success');
+            textSpan.textContent = textAdd;
+        }
+    };
+    
+    window.toggleNcWishlist = function() {
+        const checkbox = document.getElementById('nc-wishlist');
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+            window.updateWishlistBtnUI();
+        }
+    };
+</script>
+{% endblock %}

@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import cat_select with context %}
+{% block breadcrumb %}<a href="{{ url_for('flips') }}" class="link">Flips</a> <span class="opacity-50 mx-2">/</span>{%
+endblock %}
+{% block page_title %}{{ flip.brand }} {{ flip.model }}{% endblock %}
+{% block page_actions %}
+<div class="flex gap-2">
+    <button class="btn btn-outline btn-sm" onclick="toggleFlipEdit()">{{ _('Edit') }}</button>
+    <button class="btn btn-error btn-sm" onclick="deleteFlip({{ flip.id }}, this)">{{ _('Delete') }}</button>
+</div>
+{% endblock %}
+{% block content %}
+<div id="flip-view">
+    <div class="flex flex-wrap gap-2 mb-6">
+        {% set st = flip.status|lower|replace(' ','-') %}
+        <span
+            class="badge {% if st == 'sold' %}badge-success{% elif st == 'for-sale' %}badge-info{% elif st == 'in-progress' %}badge-warning{% else %}badge-ghost{% endif %} badge-lg">{{
+            _(flip.status) }}</span>
+        {% if flip.reference %}<span class="badge badge-outline badge-lg">{{ flip.reference }}</span>{% endif %}
+        {% if flip.year %}<span class="badge badge-outline badge-lg">{{ flip.year }}</span>{% endif %}
+        {% if flip.hours > 0 %}<span class="badge badge-outline badge-lg">{{ '{:.1f}'.format(flip.hours) }}h
+            {{ _('worked') }}</span>{% endif %}
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+            <div class="card-body p-4 text-center">
+                <div class="text-xs opacity-70 font-bold">{{ _('PAID') }}</div>
+                <div class="text-xl font-bold">€{{ '{:,.2f}'.format(flip.paid) }}</div>
+            </div>
+        </div>
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+            <div class="card-body p-4 text-center">
+                <div class="text-xs opacity-70 font-bold">{{ _('LOG EXPENSES') }}</div>
+                <div class="text-xl font-bold {% if log_cost > 0 %}text-error{% endif %}">€{{ '{:,.2f}'.format(log_cost)
+                    }}
+                </div>
+            </div>
+        </div>
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+            <div class="card-body p-4 text-center">
+                <div class="text-xs opacity-70 font-bold">{{ _('LABOR') }}</div>
+                <div class="text-xl font-bold {% if labor_cost > 0 %}text-error{% endif %}">€{{
+                    '{:,.2f}'.format(labor_cost)
+                    }}</div>
+                <div class="text-xs opacity-60">{{ '{:.1f}'.format(flip.hours) }}h × €{{ '{:.0f}'.format(hourly_rate)
+                    }}/h
+                </div>
+            </div>
+        </div>
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+            <div class="card-body p-4 text-center">
+                <div class="text-xs opacity-70 font-bold">{{ _('TOTAL COST') }}</div>
+                <div class="text-xl font-bold">€{{ '{:,.2f}'.format(total_cost) }}</div>
+                <div class="text-xs opacity-60">{{ _('acq + parts + lab.') }}</div>
+            </div>
+        </div>
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+            <div class="card-body p-4 text-center">
+                <div class="text-xs opacity-70 font-bold">{{ _('SOLD') }}</div>
+                {% if flip.sold > 0 %}<div class="text-xl font-bold">€{{ '{:,.2f}'.format(flip.sold) }}</div>
+                {% else %}<div class="text-xl font-bold opacity-50">—</div>{% endif %}
+            </div>
+        </div>
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+            <div class="card-body p-4 text-center">
+                <div class="text-xs opacity-70 font-bold">{{ _('PROFIT / ROI') }}</div>
+                {% if profit is not none %}
+                <div class="text-xl font-bold {{ 'text-success' if profit >= 0 else 'text-error' }}">€{{
+                    '{:,.2f}'.format(profit) }}</div>
+                <div class="text-xs font-bold {{ 'text-success' if profit >= 0 else 'text-error' }}">{{
+                    '{:.1f}'.format(roi)
+                    }}%</div>
+                {% else %}<div class="text-xl font-bold opacity-50">—</div>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if flip.notes %}
+    <div class="card bg-base-100 shadow-sm border border-base-200 mb-8 w-fit min-w-[50%]">
+        <div class="card-body p-0">
+            <div class="font-bold p-4 border-b border-base-200 bg-base-200/50">{{ _('NOTES') }}</div>
+            <div class="p-4 whitespace-pre-wrap">{{ flip.notes }}</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div id="flip-edit" class="hidden mb-8 max-w-4xl">
+    <div class="card bg-base-100 shadow-sm border border-base-200">
+        <div class="card-body">
+            <h3 class="card-title text-base border-b border-base-200 pb-2 mb-4">{{ _('Edit Flip') }}</h3>
+            <form method="post" action="{{ url_for('flip_detail', fid=flip.id) }}">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Brand') }}</span></label>
+                        <input type="text" name="brand" value="{{ flip.brand }}" class="input input-bordered w-full"
+                            required>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Model') }}</span></label>
+                        <input type="text" name="model" value="{{ flip.model }}" class="input input-bordered w-full"
+                            required>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Reference') }}</span></label>
+                        <input type="text" name="reference" value="{{ flip.reference or '' }}"
+                            class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Year') }}</span></label>
+                        <input type="number" name="year" value="{{ flip.year or '' }}"
+                            class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Status') }}</span></label>
+                        <select name="status" class="select select-bordered w-full">
+                            <option value="Acquired" {% if flip.status=='Acquired' %}selected{% endif %}>{{ _('Acquired') }}</option>
+                            <option value="In progress" {% if flip.status=='In progress' %}selected{% endif %}>{{ _('In progress') }}</option>
+                            <option value="For sale" {% if flip.status=='For sale' %}selected{% endif %}>{{ _('For sale') }}</option>
+                            <option value="Sold" {% if flip.status=='Sold' %}selected{% endif %}>{{ _('Sold') }}</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Paid (€)') }}</span></label>
+                        <input type="number" step="0.01" name="paid" value="{{ flip.paid }}"
+                            class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Sold (€)') }}</span></label>
+                        <input type="number" step="0.01" name="sold" value="{{ flip.sold }}"
+                            class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">{{ _('Hours worked') }}</span></label>
+                        <input type="number" step="0.5" name="hours" value="{{ flip.hours }}"
+                            class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control md:col-span-2">
+                        <label class="label"><span class="label-text">{{ _('Notes') }}</span></label>
+                        <textarea name="notes" class="textarea textarea-bordered w-full"
+                            rows="3">{{ flip.notes or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" class="btn btn-ghost" onclick="toggleFlipEdit()">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('Save Changes') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-base-100 shadow-sm border border-base-200 mb-8">
+    <div class="card-body p-0">
+        <div class="font-bold p-4 border-b border-base-200 bg-base-200/50">{{ _('EXPENSE & SERVICE LOG') }}</div>
+        <div class="overflow-x-auto">
+            <table class="table" id="log-table">
+                <thead>
+                    <tr>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('DATE') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('DESCRIPTION') }}
+                        </th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="2">{{ _('CATEGORY') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{
+                            _('COST') }}</th>
+                        <th class="text-center">{{ _('INV.') }}</th>
+                        <th class="text-right">{{ _('ACTIONS') }}</th>
+                    </tr>
+                </thead>
+                <tbody id="log-tbody">
+                    {% for e in log %}
+                    <tr id="log-row-{{ e.id }}" class="data-row hover">
+                        <td class="whitespace-nowrap">{{ e.log_date | fmtdate(date_format) }}</td>
+                        <td>{{ e.description }}</td>
+                        <td>
+                            {% if e.category %}<span class="badge badge-outline badge-sm" data-cat="{{ e.category }}">{{
+                                e.category }}</span>
+                            {% else %}<span class="opacity-50">—</span>{% endif %}
+                        </td>
+                        <td class="text-right">{% if e.cost > 0 %}€{{ '{:,.2f}'.format(e.cost) }}{% else %}<span
+                                class="opacity-50">—</span>{% endif %}</td>
+                        <td class="text-center">{% if e.add_to_inventory %}<span
+                                class="text-success font-bold">✓</span>{% else %}<span class="opacity-50">—</span>{%
+                            endif %}</td>
+                        <td>
+                            <div class="flex gap-3 justify-end text-sm">
+                                <button class="link link-primary link-hover"
+                                    onclick="toggleLogEdit('flip',{{ e.id }})">{{ _('Edit') }}</button>
+                                <button class="link link-error link-hover"
+                                    onclick="deleteFlipLogConfirm({{ e.id }},{{ flip.id }},this)">{{ _('Del')
+                                    }}</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="log-edit-{{ e.id }}" class="edit-row hidden bg-base-200">
+                        <td colspan="6" class="p-4">
+                            <form class="flex flex-col lg:flex-row gap-4 items-center w-full"
+                                onsubmit="submitLogEdit(event,'flip',{{ e.id }},{{ flip.id }})">
+                                <input type="date" name="log_date" value="{{ e.log_date }}"
+                                    class="input input-bordered input-sm">
+                                <input type="text" name="description" value="{{ e.description }}" required
+                                    class="input input-bordered input-sm flex-1">
+                                {{ cat_select('category', e.category, extra_class='select-sm', cats=categories) }}
+                                <input type="number" step="0.01" name="cost" value="{{ e.cost }}" min="0"
+                                    class="input input-bordered input-sm w-24 text-right">
+                                <label class="cursor-pointer label gap-2">
+                                    <input type="checkbox" name="add_to_inventory" class="checkbox checkbox-sm" {% if
+                                        e.add_to_inventory %}checked{% endif %}>
+                                    <span class="label-text">Inv.</span>
+                                </label>
+                                <div class="flex gap-2">
+                                    <button type="submit" class="btn btn-primary btn-sm">{{ _('Save') }}</button>
+                                    <button type="button" class="btn btn-ghost btn-sm"
+                                        onclick="toggleLogEdit('flip',{{ e.id }})">{{ _('Cancel') }}</button>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="bg-base-200/50">
+                    <tr class="add-row">
+                        <td class="p-2 w-40"><input type="date" id="log-date"
+                                class="input input-bordered input-sm w-full" value="{{ today }}"></td>
+                        <td class="p-2"><input type="text" id="log-desc" class="input input-bordered input-sm w-full"
+                                placeholder="{{ _('e.g. Moebius 9010, shipping…') }}"></td>
+                        <td class="p-2 w-48">{{ cat_select('', '', id='log-cat', extra_class='select-sm w-full',
+                            cats=categories) }}</td>
+                        <td class="p-2 w-28"><input type="number" step="0.01" id="log-cost"
+                                class="input input-bordered input-sm w-full text-right" value="0" min="0"></td>
+                        <td class="p-2 text-center w-24">
+                            <label class="cursor-pointer label justify-center gap-2 m-0 p-0">
+                                <input type="checkbox" id="log-inv" class="checkbox checkbox-sm">
+                            </label>
+                        </td>
+                        <td class="p-2 text-right"><button class="btn btn-primary btn-sm"
+                                onclick="addFlipLog({{ flip.id }})">+ {{ _('Add') }}</button></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="p-4 bg-base-200/50 border-t border-base-200 text-right text-sm">
+            Spese: <strong id="log-cost-total">€{{ '{:,.2f}'.format(log_cost) }}</strong> —
+            {{ _('Total cost:') }} <strong id="total-cost-val" class="text-primary">€{{ '{:,.2f}'.format(total_cost)
+                }}</strong>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.CUSTOM_CATEGORIES = {{ categories | tojson }};
+    window.FLIP_ID = {{ flip.id }};
+
+    function toggleFlipEdit() {
+        document.getElementById('flip-view').classList.toggle('hidden');
+        document.getElementById('flip-edit').classList.toggle('hidden');
+    }
+    if (new URLSearchParams(window.location.search).get('edit') == '1') {
+        document.addEventListener('DOMContentLoaded', toggleFlipEdit);
+    }
+</script>
+{% endblock %}

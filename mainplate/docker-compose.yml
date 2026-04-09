@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    container_name: mainplate
+    ports:
+      - "5000:5000"
+    volumes:
+      - mainplate_data:/app/data
+    restart: unless-stopped
+    environment:
+      - DATA_DIR=/app/data
+
+volumes:
+  mainplate_data:

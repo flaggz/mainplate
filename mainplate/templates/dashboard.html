@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_actions %}
+{% endblock %}
+{% block content %}
+
+<div class="stats stats-vertical lg:stats-horizontal shadow bg-base-100 w-full mb-6">
+    <div class="stat">
+        <div class="stat-title">{{ _('NET PROFIT') }}</div>
+        <div class="stat-value {% if total_profit >= 0 %}text-success{% else %}text-error{% endif %}">€{{
+            '{:,.2f}'.format(total_profit) }}</div>
+        <div class="stat-desc">{{ sold_count }} {{ _('sold') }}</div>
+    </div>
+    <div class="stat">
+        <div class="stat-title">{{ _('TOTAL CAPITAL') }}</div>
+        <div class="stat-value">€{{ '{:,.2f}'.format(capital) }}</div>
+        <div class="stat-desc">{{ flip_count }} {{ _('flips (incl. parts + labor)') }}</div>
+    </div>
+    <div class="stat">
+        <div class="stat-title">{{ _('AVG ROI') }}</div>
+        <div class="stat-value">{{ '{:.1f}'.format(avg_roi) }}%</div>
+    </div>
+    <div class="stat">
+        <div class="stat-title">{{ _('HOURS / LABOR') }}</div>
+        <div class="stat-value">{{ '{:.0f}'.format(total_hours) }}h</div>
+        <div class="stat-desc">€{{ '{:,.2f}'.format(imputed_labor) }} (€{{ '{:.0f}'.format(hourly_rate) }}/h)</div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="widget-grid">
+
+    <!-- FLIPS RECENTI -->
+    <div class="widget card bg-base-100 shadow-sm border border-base-200" data-id="flips">
+        <div class="card-body p-0">
+            <div class="flex justify-between items-center p-4 border-b border-base-200 bg-base-200/50 rounded-box">
+                <span class="font-bold">{{ _('RECENT FLIPS') }}</span>
+                <div class="flex gap-2 items-center text-sm">
+                    <a href="{{ url_for('flips') }}" class="">{{ _('See all →') }}</a>
+                    <button class="btn btn-xs btn-ghost" onclick="toggleWidgetWidth('flips')"
+                        title="Full/Half width">⇔</button>
+                    <span class="drag-handle cursor-move opacity-50 hover:opacity-100"
+                        title="{{ _('Drag to reorder') }}">⠿</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="table" id="recent-flips-table">
+                    <thead>
+                        <tr class="uppercase">
+                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('watch') }}</th>
+                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('STATUS') }}</th>
+                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="2">{{
+                                _('PAID') }}</th>
+                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{
+                                _('EXPENSES') }}</th>
+                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="4">{{
+                                _('SOLD') }}</th>
+                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="5">{{
+                                _('PROFIT') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for f in flips[:6] %}
+                        <tr onclick="window.location='{{ url_for('flip_detail', fid=f.id) }}'"
+                            class="data-row hover cursor-pointer">
+                            <td>
+                                <div class="font-semibold">{{ f.brand }} {{ f.model }}</div>
+                                <div class="text-xs opacity-70">{{ f.reference or '' }}{% if f.year %} · {{ f.year }}{%
+                                    endif %}</div>
+                            </td>
+                            <td>
+                                {% set st = f.status|lower|replace(' ','-') %}
+                                <span
+                                    class="badge {% if st == 'sold' %}badge-success{% elif st == 'for-sale' %}badge-info{% elif st == 'in-progress' %}badge-warning{% else %}badge-ghost{% endif %} badge-sm">{{
+                                    f.status }}</span>
+                            </td>
+                            <td class="text-right">€{{ '{:,.2f}'.format(f.paid) }}</td>
+                            <td class="text-right">{% if f.log_cost > 0 %}<span class="text-error">€{{
+                                    '{:,.2f}'.format(f.log_cost) }}</span>{% else %}<span class="opacity-50">—</span>{%
+                                endif %}</td>
+                            <td class="text-right">{% if f.sold > 0 %}€{{ '{:,.2f}'.format(f.sold) }}{% else %}<span
+                                    class="opacity-50">—</span>{% endif %}</td>
+                            <td class="text-right">{% if f.profit is not none %}<span
+                                    class="{{ 'text-success' if f.profit >= 0 else 'text-error' }}">€{{
+                                    '{:,.2f}'.format(f.profit) }}</span>{% else %}<span class="opacity-50">—</span>{%
+                                endif %}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 opacity-50">{{ _('No flips.') }} <a
+                                    href="{{ url_for('add_flip') }}" class="link">{{ _('Add one →') }}</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- {{ _('collection') }} -->
+    <div class="widget card bg-base-100 shadow-sm border border-base-200" data-id="collection">
+        <div class="card-body p-0">
+            <div class="flex justify-between items-center p-4 border-b border-base-200 bg-base-200/50 rounded-box">
+                <span class="font-bold uppercase">{{ _('collection') }}</span>
+                <div class="flex gap-2 items-center text-sm">
+                    <a href="{{ url_for('collection') }}" class="">{{ _('See all →') }}</a>
+                    <button class="btn btn-xs btn-ghost" onclick="toggleWidgetWidth('collection')"
+                        title="Full/Half width">⇔</button>
+                    <span class="drag-handle cursor-move opacity-50 hover:opacity-100"
+                        title="{{ _('Drag to reorder') }}">⠿</span>
+                </div>
+            </div>
+            <div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-sm border-b border-base-200">
+                <div>
+                    <div class="font-bold text-lg">{{ collection_count }}</div>
+                    <div class="opacity-70 text-xs">{{ _('watches') }}</div>
+                </div>
+                <div>
+                    <div class="font-bold text-lg">€{{ '{:,.2f}'.format(collection_total_purchase) }}</div>
+                    <div class="opacity-70 text-xs">{{ _('purchase') }}</div>
+                </div>
+                <div>
+                    <div class="font-bold text-lg">€{{ '{:,.2f}'.format(collection_total_service) }}</div>
+                    <div class="opacity-70 text-xs">{{ _('services') }}</div>
+                </div>
+                <div>
+                    <div class="font-bold text-lg">€{{ '{:,.2f}'.format(collection_total_invested) }}</div>
+                    <div class="opacity-70 text-xs uppercase">{{ _('total') }}</div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('watch') }}</th>
+                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('ACQUIRED') }}
+                            </th>
+                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="2">{{ _('LAST LOG') }}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for w in collection_watches[:6] %}
+                        <tr onclick="window.location='{{ url_for('collection_detail', wid=w.id) }}'"
+                            class="data-row hover cursor-pointer">
+                            <td>
+                                <div class="font-semibold">{{ w.brand }} {{ w.model }}</div>
+                                <div class="text-xs opacity-70">{{ w.reference or '' }}{% if w.year %} · {{ w.year }}{%
+                                    endif %}</div>
+                            </td>
+                            <td class="text-xs whitespace-nowrap">{{ w.fmt_acquired or '—' }}</td>
+                            <td>
+                                {% if w.logs %}
+                                <div class="text-xs">{{ w.logs[0].log_date | fmtdate(date_format) }}</div>
+                                <div class="text-xs opacity-70">{{ w.logs[0].description[:30] }}</div>
+                                {% else %}<span class="opacity-50">—</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4 opacity-50">{{ _('No watches.') }} <a
+                                    href="{{ url_for('add_collection') }}" class="link">{{ _('Add one →') }}</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- {{ _('PARTS INVENTORY') }} -->
+    <div class="widget card bg-base-100 shadow-sm border border-base-200" data-id="parts">
+        <div class="card-body p-0">
+            <div class="flex justify-between items-center p-4 border-b border-base-200 bg-base-200/50 rounded-box">
+                <span class="font-bold">{{ _('PARTS INVENTORY') }}</span>
+                <div class="flex gap-2 items-center text-sm">
+                    <button class="btn btn-xs btn-ghost" onclick="toggleWidgetWidth('parts')"
+                        title="Full/Half width">⇔</button>
+                    <span class="drag-handle cursor-move opacity-50 hover:opacity-100"
+                        title="{{ _('Drag to reorder') }}">⠿</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="table" id="dash-parts-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('PART') }}</th>
+                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('CAT') }}</th>
+                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="2">{{
+                                _('QTY')}}
+                            </th>
+                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{
+                                _('VALUE') }}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in parts[:6] %}
+                        <tr class="data-row hover">
+                            <td>{{ p.name }}</td>
+                            <td>{% if p.category %}<span class="badge badge-sm badge-outline">{{ p.category }}</span>{%
+                                else %}<span class="opacity-50">—</span>{% endif %}</td>
+                            <td class="text-right">{{ p.quantity }}</td>
+                            <td class="text-right">€{{ '{:,.2f}'.format(p.value) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 opacity-50">{{ _('Inventory empty.') }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% if parts_count > 6 %}
+                        <tr>
+                            <td colspan="4" class="text-center text-sm opacity-70 p-2">+ {{ parts_count - 6 }} {{
+                                _('others') }} ·
+                                <a href="{{ url_for('inventory') }}" class="">{{ _('see all →') }}</a>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                    <tfoot class="bg-base-200/50">
+                        <tr>
+                            <td colspan="3" class="text-right font-bold uppercase">{{ _('total') }}</td>
+                            <td class="text-right font-bold">€{{ '{:,.2f}'.format(parts_value) }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- {{ _('EQUIPMENT') }} -->
+    <div class="widget card bg-base-100 shadow-sm border border-base-200" data-id="equipment">
+        <div class="card-body p-0">
+            <div class="flex justify-between items-center p-4 border-b border-base-200 bg-base-200/50 rounded-box">
+                <span class="font-bold">{{ _('EQUIPMENT') }}</span>
+                <div class="flex gap-2 items-center text-sm">
+                    <button class="btn btn-xs btn-ghost" onclick="toggleWidgetWidth('equipment')"
+                        title="Full/Half width">⇔</button>
+                    <span class="drag-handle cursor-move opacity-50 hover:opacity-100"
+                        title="{{ _('Drag to reorder') }}">⠿</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto rounded-box">
+                <table class="table rounded-box" id="dash-equip-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('TOOL') }}</th>
+                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="1">{{
+                                _('VALUE') }}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in equipment[:6] %}
+                        <tr class="data-row hover">
+                            <td>{{ e.name }}</td>
+                            <td class="text-right">€{{ '{:,.2f}'.format(e.value) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2" class="text-center py-4 opacity-50">{{ _('No tools.') }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% if equip_count > 6 %}
+                        <tr>
+                            <td colspan="2" class="text-center text-sm opacity-70 p-2">+ {{ equip_count - 6 }} {{
+                                _('others') }} ·
+                                <a href="{{ url_for('equipment') }}" class="">{{ _('see all →') }}</a>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                    <tfoot class="bg-base-200/50">
+                        <tr>
+                            <td class="text-right font-bold uppercase">{{ _('total') }}</td>
+                            <td class="text-right font-bold">€{{ '{:,.2f}'.format(equip_value) }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

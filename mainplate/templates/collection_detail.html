@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import cat_select with context %}
+{% block breadcrumb %}<a href="{{ url_for('collection') }}" class="link">Collezione</a> <span
+    class="opacity-50 mx-2">/</span>{% endblock %}
+{% block page_title %}{{ watch.brand }} {{ watch.model }}{% endblock %}
+{% block page_actions %}
+<div class="flex gap-2">
+    <a href="{{ url_for('edit_collection', wid=watch.id) }}" class="btn btn-outline btn-sm">Modifica</a>
+    <form method="post" action="{{ url_for('delete_collection', wid=watch.id) }}"
+        onsubmit="return confirm('Eliminare questo orologio dalla collezione?')">
+        <button type="submit" class="btn btn-error btn-sm">Elimina</button>
+    </form>
+</div>
+{% endblock %}
+{% block content %}
+{% set is_sold = watch.sold_price and watch.sold_date %}
+<div class="flex flex-wrap gap-2 mb-6">
+    {% if is_sold %}<span class="badge badge-success badge-lg">Venduto</span>{% endif %}
+    {% if watch.reference %}<span class="badge badge-outline badge-lg">{{ watch.reference }}</span>{% endif %}
+    {% if watch.year %}<span class="badge badge-outline badge-lg">{{ watch.year }}</span>{% endif %}
+    {% if watch.acquired %}<span class="badge badge-outline badge-lg">Acq. {{ watch.acquired | fmtdate(date_format)
+        }}</span>{% endif %}
+    {% if is_sold %}<span class="badge badge-outline badge-lg">Vend. {{ watch.sold_date | fmtdate(date_format)
+        }}</span>{% endif %}
+</div>
+
+{% set total_cost = (watch.purchase_price or 0) + service_cost %}
+{% set gain = (watch.sold_price - total_cost) if is_sold else none %}
+
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+    <div class="card bg-base-100 shadow-sm border border-base-200">
+        <div class="card-body p-4 text-center">
+            <div class="text-xs opacity-70 font-bold uppercase">{{ _('PURCHASE PRICE')}}</div>
+            <div class="text-xl font-bold">€{{ '{:,.2f}'.format(watch.purchase_price or 0) }}</div>
+        </div>
+    </div>
+    <div class="card bg-base-100 shadow-sm border border-base-200">
+        <div class="card-body p-4 text-center">
+            <div class="text-xs opacity-70 font-bold uppercase">{{ _('SERVICE COST')}}</div>
+            <div class="text-xl font-bold {% if service_cost > 0 %}text-error{% endif %}">€{{
+                '{:,.2f}'.format(service_cost) }}</div>
+            <div class="text-xs opacity-60">revisioni, parti…</div>
+        </div>
+    </div>
+    <div class="card bg-base-100 shadow-sm border border-base-200">
+        <div class="card-body p-4 text-center">
+            <div class="text-xs opacity-70 font-bold uppercase">{{ _('TOTAL COST')}}</div>
+            <div class="text-xl font-bold">€{{ '{:,.2f}'.format(total_cost) }}</div>
+        </div>
+    </div>
+    {% if is_sold %}
+    <div class="card bg-base-100 shadow-sm border border-base-200 lg:col-span-2">
+        <div class="card-body p-4 text-center">
+            <div class="text-xs opacity-70 font-bold uppercase">{{ _('SOLD')}} / {{ _('PROFIT')}}</div>
+            <div class="text-xl font-bold">€{{ '{:,.2f}'.format(watch.sold_price) }}</div>
+            <div class="text-xs font-bold {{ 'text-success' if gain >= 0 else 'text-error' }}">
+                {% if gain is not none %}€{{ '{:,.2f}'.format(gain) }} ({{ '{:.1f}'.format(gain/total_cost*100 if
+                total_cost else 0) }}%){% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card bg-base-100 shadow-sm border border-base-200">
+        <div class="card-body p-4 text-center">
+            <div class="text-xs opacity-70 font-bold uppercase">{{ _('services')}}</div>
+            <div class="text-xl font-bold">{{ logs|length }}</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if watch.notes %}
+<div class="card bg-base-100 shadow-sm border border-base-200 mb-8 w-fit min-w-[50%]">
+    <div class="card-body p-0">
+        <div class="font-bold p-4 border-b border-base-200 bg-base-200/50">{{ _('NOTES')}}</div>
+        <div class="p-4 whitespace-pre-wrap">{{ watch.notes }}</div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card bg-base-100 shadow-sm border border-base-200 mb-8">
+    <div class="card-body p-0">
+        <div class="font-bold p-4 border-b border-base-200 bg-base-200/50">{{ _('LOG EXPENSES')}}</div>
+        <div class="overflow-x-auto">
+            <table class="table" id="clog-table">
+                <thead>
+                    <tr>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('DATE')}}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('DESCRIPTION')}}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="2">{{ _('CATEGORY')}}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{
+                            _('COST')}}</th>
+                        <th class="text-right">{{ _('ACTIONS')}}</th>
+                    </tr>
+                </thead>
+                <tbody id="clog-tbody">
+                    {% for e in logs %}
+                    <tr id="clog-row-{{ e.id }}" class="data-row hover">
+                        <td class="whitespace-nowrap">{{ e.log_date | fmtdate(date_format) }}</td>
+                        <td>{{ e.description }}</td>
+                        <td>
+                            {% if e.category %}<span class="badge badge-outline badge-sm" data-cat="{{ e.category }}">{{
+                                e.category }}</span>
+                            {% else %}<span class="opacity-50">—</span>{% endif %}
+                        </td>
+                        <td class="text-right">{% if e.cost > 0 %}€{{ '{:,.2f}'.format(e.cost) }}{% else %}<span
+                                class="opacity-50">—</span>{% endif %}</td>
+                        <td>
+                            <div class="flex gap-3 justify-end text-sm">
+                                <button class="link link-primary link-hover"
+                                    onclick="toggleLogEdit('coll',{{ e.id }})">{{ _('Edit') }}</button>
+                                <button class="link link-error link-hover"
+                                    onclick="deleteCollLog({{ e.id }},{{ watch.id }})">{{ _('Delete') }}</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="clog-edit-{{ e.id }}" class="edit-row hidden bg-base-200">
+                        <td colspan="5" class="p-4">
+                            <form class="flex flex-col lg:flex-row gap-4 items-center w-full"
+                                onsubmit="submitLogEdit(event,'coll',{{ e.id }},{{ watch.id }})">
+                                <input type="date" name="log_date" value="{{ e.log_date }}"
+                                    class="input input-bordered input-sm">
+                                <input type="text" name="description" value="{{ e.description }}" required
+                                    class="input input-bordered input-sm flex-1">
+                                {{ cat_select('category', e.category, extra_class='select-sm', cats=categories) }}
+                                <input type="number" step="0.01" name="cost" value="{{ e.cost }}" min="0"
+                                    class="input input-bordered input-sm w-24 text-right">
+                                <div class="flex gap-2">
+                                    <button type="submit" class="btn btn-primary btn-sm">{{ _('Save') }}</button>
+                                    <button type="button" class="btn btn-ghost btn-sm"
+                                        onclick="toggleLogEdit('coll',{{ e.id }})">{{ _('Cancel') }}</button>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="bg-base-200/50">
+                    <tr class="add-row">
+                        <td class="p-2 w-40"><input type="date" id="clog-date"
+                                class="input input-bordered input-sm w-full" value="{{ today }}"></td>
+                        <td class="p-2"><input type="text" id="clog-desc" class="input input-bordered input-sm w-full"
+                                placeholder="{{ _('ex. Complete service, crown replacement…') }}"></td>
+                        <td class="p-2 w-48">{{ cat_select('', '', id='clog-cat', extra_class='select-sm w-full',
+                            cats=categories) }}</td>
+                        <td class="p-2 w-28"><input type="number" step="0.01" id="clog-cost"
+                                class="input input-bordered input-sm w-full text-right" value="0" min="0"></td>
+                        <td class="p-2 text-right"><button class="btn btn-primary btn-sm"
+                                onclick="addCollLog({{ watch.id }})">+ {{ _('Add') }}</button></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="p-4 bg-base-200/50 border-t border-base-200 text-right text-sm">
+            {{ _('Total costs')}}: <strong id="clog-cost-total" class="text-primary">€{{ '{:,.2f}'.format(service_cost)
+                }}</strong>
+        </div>
+    </div>
+</div>
+{% endblock %}
