@@ -1,34 +1,33 @@
 {% extends 'base.html' %}
-{% block page_title %}{{ _('EQUIPMENT') }}{% endblock %}
+{% block page_title %}{{ _('equipment') }}{% endblock %}
 {% block content %}
 <div class="card bg-base-100 shadow-sm border border-base-200 mb-8">
     <div class="card-body p-0">
-        <div class="flex justify-between items-center p-4 border-b border-base-200 bg-base-200/50">
-            <span class="font-bold">{{ _('EQUIPMENT & TOOLS') }}</span>
-            <span class="opacity-70 text-xs" id="equip-total-label">€{{ '{:,.2f}'.format(total) }} {{ _('total')
+        <div class="flex justify-between items-center p-4 border-b border-base-200 bg-base-200/50 rounded-box">
+            <span class="font-bold uppercase">{{ _('equipment & tools') }}</span>
+            <span class="opacity-70 text-xs" id="equip-total-label">{{ currency_symbol }}{{ '{:,.2f}'.format(total) }} {{ _('total')
                 }}</span>
         </div>
         <div class="overflow-x-auto">
             <table class="table" id="equip-table">
                 <thead>
                     <tr>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('TOOL') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="1">{{
-                            _('VALUE') }}</th>
-                        <th class="text-right">{{ _('ACTIONS') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="0">{{ _('tool') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="1">{{ _('value') }}</th>
+                        <th class="text-right uppercase">{{ _('actions') }}</th>
                     </tr>
                 </thead>
                 <tbody id="equip-tbody">
                     {% for e in equipment %}
                     <tr id="equip-row-{{ e.id }}" class="data-row hover">
                         <td>{{ e.name }}</td>
-                        <td class="text-right">€{{ '{:,.2f}'.format(e.value) }}</td>
+                        <td class="text-right">{{ currency_symbol }}{{ '{:,.2f}'.format(e.value) }}</td>
                         <td>
                             <div class="flex justify-end gap-3 text-sm">
                                 <button class="link link-primary link-hover"
-                                    onclick="toggleEditRow('equip',{{ e.id }})">Edit</button>
+                                    onclick="toggleEditRow('equip',{{ e.id }})">{{ _('edit') }}</button>
                                 <button class="link link-error link-hover"
-                                    onclick="ajaxDelete('equip',{{ e.id }})">Delete</button>
+                                    onclick="ajaxDelete('equip',{{ e.id }})">{{ _('delete') }}</button>
                             </div>
                         </td>
                     </tr>
@@ -43,9 +42,9 @@
                                         class="input input-bordered input-sm w-32 text-right">
                                 </div>
                                 <div class="flex gap-2">
-                                    <button type="submit" class="btn btn-primary btn-sm">{{ _('Save') }}</button>
+                                    <button type="submit" class="btn btn-primary btn-sm">{{ _('save') }}</button>
                                     <button type="button" class="btn btn-ghost btn-sm"
-                                        onclick="toggleEditRow('equip',{{ e.id }})">{{ _('Cancel') }}</button>
+                                        onclick="toggleEditRow('equip',{{ e.id }})">{{ _('cancel') }}</button>
                                 </div>
                             </form>
                         </td>
@@ -54,19 +53,19 @@
                 </tbody>
                 <tfoot class="bg-base-200/50">
                     <tr class="total-row">
-                        <td class="text-right font-bold py-4">{{ _('Total') }}</td>
-                        <td class="text-right font-bold text-primary" id="equip-total-cell">€{{ '{:,.2f}'.format(total)
+                        <td class="text-right font-bold py-4 uppercase">{{ _('total') }}</td>
+                        <td class="text-right font-bold text-primary" id="equip-total-cell">{{ currency_symbol }}{{ '{:,.2f}'.format(total)
                             }}</td>
                         <td></td>
                     </tr>
                     <tr class="add-row">
                         <td class="p-2"><input type="text" id="new-equip-name"
-                                class="input input-bordered input-sm w-full" placeholder="{{ _('Tool name…') }}"></td>
+                                class="input input-bordered input-sm w-full" placeholder="{{ _('tool name…') }}"></td>
                         <td class="p-2 text-right"><input type="number" id="new-equip-val"
                                 class="input input-bordered input-sm w-32 text-right" step="0.01" value="0" min="0">
                         </td>
                         <td class="p-2 flex justify-end"><button class="btn btn-primary btn-sm"
-                                onclick="ajaxAddEquip()">+ {{ _('Add') }}</button></td>
+                                onclick="ajaxAddEquip()">+ {{ _('add') }}</button></td>
                     </tr>
                 </tfoot>
             </table>

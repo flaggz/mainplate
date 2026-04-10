@@ -348,8 +348,8 @@ function submitLogEdit(event, type, id, parentId) {
             } else {
                 document.getElementById('clog-cost-total').textContent = `€${fmtDec(d.service_cost)}`;
             }
-            showFlash('Aggiornato!');
-        }).catch(() => showFlash('Errore.', 'info'));
+            showFlash(window.I18N.updated);
+        }).catch(() => showFlash(window.I18N.error, 'info'));
 }
 
 // ── Flip Log add/delete ────────────────────────────────────
@@ -394,8 +394,8 @@ function addFlipLog(flipId) {
             document.getElementById('log-desc').value = ''; document.getElementById('log-cost').value = '0'; document.getElementById('log-inv').checked = false;
             document.getElementById('log-cost-total').textContent = `€${fmtDec(data.log_cost)}`;
             document.getElementById('total-cost-val').textContent = `€${fmtDec(data.total_cost)}`;
-            showFlash(inv ? 'Voce aggiunta e inserita in inventario!' : 'Voce aggiunta!');
-        }).catch(() => showFlash('Errore.', 'info'));
+            showFlash(inv ? window.I18N.entry_added_inventory : window.I18N.entry_added);
+        }).catch(() => showFlash(window.I18N.error, 'info'));
 }
 
 function deleteFlipLog(lid, flipId) {
@@ -408,8 +408,8 @@ function deleteFlipLog(lid, flipId) {
                 row.remove(); if (edit) edit.remove();
                 document.getElementById('log-cost-total').textContent = `€${fmtDec(data.log_cost)}`;
                 document.getElementById('total-cost-val').textContent = `€${fmtDec(data.total_cost)}`;
-                showFlash('Eliminato.', 'info');
-            }).catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash('Errore.', 'info'); });
+                showFlash(window.I18N.entry_deleted, 'info');
+            }).catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash(window.I18N.error, 'info'); });
     });
 }
 
@@ -451,8 +451,8 @@ function addCollLog(watchId) {
             animateIn(tr);
             document.getElementById('clog-desc').value = ''; document.getElementById('clog-cost').value = '0';
             document.getElementById('clog-cost-total').textContent = `€${fmtDec(data.service_cost)}`;
-            showFlash('Voce aggiunta!');
-        }).catch(() => showFlash('Errore.', 'info'));
+            showFlash(window.I18N.entry_added);
+        }).catch(() => showFlash(window.I18N.error, 'info'));
 }
 
 function deleteCollLog(lid, watchId) {
@@ -464,8 +464,8 @@ function deleteCollLog(lid, watchId) {
             .then(data => {
                 row.remove(); if (edit) edit.remove();
                 document.getElementById('clog-cost-total').textContent = `€${fmtDec(data.service_cost)}`;
-                showFlash('Eliminato.', 'info');
-            }).catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash('Errore.', 'info'); });
+                showFlash(window.I18N.entry_deleted, 'info');
+            }).catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash(window.I18N.error, 'info'); });
     });
 }
 
@@ -479,10 +479,10 @@ function importDB(input) {
         fetch('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: e.target.result })
             .then(r => r.json())
             .then(d => {
-                if (d.ok) { showFlash('Import completato! Ricarico…'); setTimeout(() => location.reload(), 1200); }
-                else showFlash('Errore: ' + d.error, 'info');
+                if (d.ok) { showFlash(window.I18N.import_done); setTimeout(() => location.reload(), 1200); }
+                else showFlash((window.I18N.error || 'Error') + ': ' + d.error, 'info');
             })
-            .catch(() => showFlash("Errore durante l'import.", 'info'));
+            .catch(() => showFlash(window.I18N.import_error, 'info'));
     };
     reader.readAsText(file); input.value = '';
 }
@@ -515,8 +515,8 @@ function saveCatRow(id) {
             body: JSON.stringify({ name, color })
         })
             .then(r => r.json())
-            .then(() => { updateCatPreview(id); showFlash('Categoria aggiornata!'); })
-            .catch(() => showFlash('Errore.', 'info'));
+            .then(() => { updateCatPreview(id); showFlash(window.I18N.category_updated); })
+            .catch(() => showFlash(window.I18N.error, 'info'));
     }, 400);
 }
 
@@ -561,11 +561,11 @@ function addCat() {
             document.getElementById('new-cat-name').value = '';
             document.getElementById('new-cat-color').value = '#4a90d9';
             updateNewCatPreview();
-            showFlash(`Categoria "${name}" aggiunta!`);
+            showFlash(window.I18N.category_updated);
             // Also add to window.CUSTOM_CATEGORIES for live selects
             if (!window.CUSTOM_CATEGORIES) window.CUSTOM_CATEGORIES = [];
             window.CUSTOM_CATEGORIES.push({ id, name, color });
-        }).catch(() => showFlash('Errore.', 'info'));
+        }).catch(() => showFlash(window.I18N.error, 'info'));
 }
 
 function deleteCat(id) {
@@ -577,8 +577,8 @@ function deleteCat(id) {
                 row.remove();
                 if (window.CUSTOM_CATEGORIES)
                     window.CUSTOM_CATEGORIES = window.CUSTOM_CATEGORIES.filter(c => c.id !== id);
-                showFlash('Eliminata.', 'info');
-            }).catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash('Errore.', 'info'); });
+                showFlash(window.I18N.category_deleted, 'info');
+            }).catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash(window.I18N.error, 'info'); });
     });
 }
 
@@ -741,8 +741,8 @@ function deleteFlipConfirm(fid, btn) {
         animateOut(row, () => {
             fetch(`/api/flips/${fid}`, { method: 'DELETE' })
                 .then(r => r.json())
-                .then(() => { row.remove(); showFlash('Flip eliminato.', 'info'); })
-                .catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash('Errore.', 'info'); });
+                .then(() => { row.remove(); showFlash(window.I18N.flip_deleted, 'info'); })
+                .catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash(window.I18N.error, 'info'); });
         });
     });
 }
@@ -753,7 +753,7 @@ function deleteFlip(fid, btn) {
         fetch(`/api/flips/${fid}`, { method: 'DELETE' })
             .then(r => r.json())
             .then(() => { window.location = '/flips'; })
-            .catch(() => showFlash('Errore.', 'info'));
+            .catch(() => showFlash(window.I18N.error, 'info'));
     });
 }
 
@@ -769,8 +769,8 @@ function deleteCollConfirm(wid, btn) {
         animateOut(row, () => {
             fetch(`/api/collection/${wid}`, { method: 'DELETE' })
                 .then(r => r.json())
-                .then(() => { row.remove(); showFlash('Orologio eliminato.', 'info'); })
-                .catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash('Errore.', 'info'); });
+                .then(() => { row.remove(); showFlash(window.I18N.watch_deleted, 'info'); })
+                .catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash(window.I18N.error, 'info'); });
         });
     });
 }
@@ -824,9 +824,9 @@ function deleteCat(id) {
                 .then(() => {
                     _originals[id] = { name, color }; // update original
                     updateCatPreview(id);
-                    showFlash('Categoria aggiornata!');
+                    showFlash(window.I18N.category_updated);
                 })
-                .catch(() => showFlash('Errore.', 'info'));
+                .catch(() => showFlash(window.I18N.error, 'info'));
         }, 400);
     };
 })();
@@ -840,17 +840,17 @@ function toggleAddFlipForm() {
         wrap.classList.remove('hidden');
         animateIn(wrap);
         document.getElementById('nf-brand')?.focus();
-        document.getElementById('add-flip-btn').textContent = '✕ ' + (window.I18N_CANCEL || 'Cancel');
+        document.getElementById('add-flip-btn').textContent = I18N_CANCEL;
     } else {
         wrap.classList.add('hidden');
-        document.getElementById('add-flip-btn').textContent = '+ ' + (window.I18N_NEW_FLIP || 'New Flip');
+        document.getElementById('add-flip-btn').textContent = I18N_NEW_FLIP;
     }
 }
 
 function ajaxAddFlip() {
     const brand = document.getElementById('nf-brand')?.value.trim();
     const model = document.getElementById('nf-model')?.value.trim();
-    if (!brand || !model) { showFlash('Brand e Modello sono obbligatori.', 'info'); return; }
+    if (!brand || !model) { showFlash(window.I18N.brand_model_required, 'info'); return; }
     const data = {
         brand, model,
         reference: document.getElementById('nf-ref')?.value.trim() || '',
@@ -899,8 +899,8 @@ function ajaxAddFlip() {
                 const el = document.getElementById(id); if (el) el.value = '0';
             });
             toggleAddFlipForm();
-            showFlash(`Flip "${f.brand} ${f.model}" aggiunto!`);
-        }).catch(() => showFlash('Errore durante aggiunta.', 'info'));
+            showFlash(`"${f.brand} ${f.model}" ` + (window.I18N.entry_added || 'added!'));
+        }).catch(() => showFlash(window.I18N.error_adding, 'info'));
 }
 
 // ── Inline add collection watch ────────────────────────────
@@ -922,9 +922,9 @@ function toggleAddCollForm() {
         if (window.updateWishlistBtnUI) window.updateWishlistBtnUI();
 
         const title = wrap.querySelector('.form-section-title');
-        if (title) title.textContent = window.I18N_ADD_WATCH_FORM || 'Add Watch (Quick Form)';
+        if (title) title.textContent = "Aggiungi Orologio (Form Veloce)";
         const saveBtn = wrap.querySelector('.btn-primary');
-        if (saveBtn) saveBtn.textContent = window.I18N_ADD || 'Add';
+        if (saveBtn) saveBtn.textContent = "Aggiungi";
 
         wrap.classList.remove('hidden');
         animateIn(wrap);
@@ -961,10 +961,10 @@ function openEditColl(wid) {
             const wrap = document.getElementById('add-coll-form-wrap');
             wrap.classList.remove('hidden');
             let formTitle = wrap.querySelector('.form-section-title');
-            if (formTitle) formTitle.textContent = window.I18N_EDIT_WATCH_FORM || 'Edit Watch';
+            if (formTitle) formTitle.textContent = "Modifica Orologio";
 
             let saveBtn = wrap.querySelector('.btn-primary');
-            if (saveBtn) saveBtn.textContent = window.I18N_SAVE || 'Save';
+            if (saveBtn) saveBtn.textContent = "Salva";
 
             animateIn(wrap);
             window.scrollTo({ top: wrap.offsetTop - 20, behavior: 'smooth' });
@@ -974,7 +974,7 @@ function openEditColl(wid) {
 function ajaxAddCollection() {
     const brand = document.getElementById('nc-brand')?.value.trim();
     const model = document.getElementById('nc-model')?.value.trim();
-    if (!brand || !model) { showFlash('Brand e Modello sono obbligatori.', 'info'); return; }
+    if (!brand || !model) { showFlash(window.I18N.brand_model_required, 'info'); return; }
     const data = {
         brand, model,
         reference: document.getElementById('nc-ref')?.value.trim() || '',
@@ -1065,14 +1065,14 @@ function ajaxAddCollection() {
 
             toggleAddCollForm();
             animateIn(tr);
-            showFlash(`"${w.brand} ${w.model}" ${isEdit ? 'aggiornato' : 'aggiunto'}!`);
+            showFlash(`"${w.brand} ${w.model}" ` + (isEdit ? window.I18N.updated : window.I18N.entry_added));
 
             // To be 100% accurate on KPIs and since we don't have them in API response, 
             // a fast quiet reload will refresh numbers
             if (isEdit || wasInTable !== targetTable) {
                 setTimeout(() => location.reload(), 600);
             }
-        }).catch(() => showFlash('Errore salvataggio.', 'info'));
+        }).catch(() => showFlash(window.I18N.error_saving, 'info'));
 }
 
 // ── Apply colors on load ───────────────────────────────────

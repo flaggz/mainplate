@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, Response
-import sqlite3, os, json, datetime
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, Response, send_from_directory
+import sqlite3, os, json, datetime, uuid, zipfile, io
+from PIL import Image
 import werkzeug.serving
 
 werkzeug.serving.WSGIRequestHandler.address_string = lambda self: self.client_address[0]
@@ -9,6 +10,12 @@ app.secret_key = os.environ.get('SECRET_KEY', 'mainplate-secret')
 DATA_DIR = os.environ.get('DATA_DIR', '/app/data')
 os.makedirs(DATA_DIR, exist_ok=True)
 DB = os.path.join(DATA_DIR, 'mainplate.db')
+IMAGE_DIR = os.path.join(DATA_DIR, 'images')
+os.makedirs(IMAGE_DIR, exist_ok=True)
+
+IMAGE_MAX_PX = 2400
+IMAGE_QUALITY = 85
+ALLOWED_MIME = {'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'}
 
 
 # ── LANG ────────────────────────────────────────────────────
@@ -64,6 +71,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS collection (id INTEGER PRIMARY KEY AUTOINCREMENT, brand TEXT NOT NULL, model TEXT NOT NULL, reference TEXT, year INTEGER, acquired TEXT, purchase_price REAL DEFAULT 0, sold_date TEXT, sold_price REAL DEFAULT 0, notes TEXT DEFAULT '', is_deleted INTEGER DEFAULT 0, is_wishlist INTEGER DEFAULT 0);
     CREATE TABLE IF NOT EXISTS collection_log (id INTEGER PRIMARY KEY AUTOINCREMENT, watch_id INTEGER NOT NULL REFERENCES collection(id) ON DELETE CASCADE, log_date TEXT NOT NULL, description TEXT NOT NULL, cost REAL DEFAULT 0, category TEXT DEFAULT '');
     CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
+    CREATE TABLE IF NOT EXISTS images (id INTEGER PRIMARY KEY AUTOINCREMENT, entity_type TEXT NOT NULL, entity_id INTEGER NOT NULL, filename TEXT NOT NULL, sort_order INTEGER DEFAULT 0);
     ''')
     conn.commit()
 
@@ -83,6 +91,27 @@ def get_all_categories():
     """Return all categories from the DB (the single source of truth)."""
     return [dict(r) for r in q('SELECT * FROM categories ORDER BY name')]
 
+def get_images(entity_type, entity_id):
+    """Return ordered images for a flip or collection watch."""
+    rows = q('SELECT * FROM images WHERE entity_type=? AND entity_id=? ORDER BY sort_order, id',
+             (entity_type, entity_id))
+    return [dict(r) | {'url': f'/uploads/{r["filename"]}'} for r in rows]
+
+def _save_image(file_storage):
+    """Process uploaded file with Pillow, save as JPEG, return filename."""
+    img = Image.open(file_storage.stream)
+    # Convert to RGB (handles RGBA, palette, etc.)
+    if img.mode not in ('RGB',):
+        img = img.convert('RGB')
+    # Resize if larger than IMAGE_MAX_PX on long side
+    w, h = img.size
+    if max(w, h) > IMAGE_MAX_PX:
+        factor = IMAGE_MAX_PX / max(w, h)
+        img = img.resize((int(w * factor), int(h * factor)), Image.LANCZOS)
+    filename = uuid.uuid4().hex + '.jpg'
+    img.save(os.path.join(IMAGE_DIR, filename), 'JPEG', quality=IMAGE_QUALITY, optimize=True)
+    return filename
+
 @app.context_processor
 def inject_globals():
     """Inject categories and date_format into every template automatically."""
@@ -96,6 +125,7 @@ def inject_globals():
         categories_all=get_all_categories(),
         date_format=s.get('date_format','DD-MM-YYYY'),
         hourly_rate_global=float(s.get('hourly_rate','0') or 0),
+        currency_symbol=s.get('currency_symbol','{{ currency_symbol }}'),
         _=_
     )
 
@@ -524,6 +554,56 @@ def api_delete_category(cid):
     run('DELETE FROM categories WHERE id=?',(cid,)); return jsonify(ok=True)
 
 # ══════════════════════════════════════════════════════════
+# IMAGES
+# ══════════════════════════════════════════════════════════
+@app.route('/uploads/<path:filename>')
+def serve_image(filename):
+    """Serve uploaded images from DATA_DIR/images/."""
+    return send_from_directory(IMAGE_DIR, filename)
+
+@app.route('/api/images/upload/<entity_type>/<int:eid>', methods=['POST'])
+def api_upload_image(entity_type, eid):
+    if entity_type not in ('flip', 'collection'):
+        return jsonify(ok=False, error='Invalid type'), 400
+    files = request.files.getlist('images')
+    if not files:
+        return jsonify(ok=False, error='No files'), 400
+    results = []
+    max_order = q('SELECT COALESCE(MAX(sort_order),0) as m FROM images WHERE entity_type=? AND entity_id=?',
+                  (entity_type, eid), one=True)['m']
+    for i, f in enumerate(files):
+        try:
+            filename = _save_image(f)
+            iid = run('INSERT INTO images (entity_type, entity_id, filename, sort_order) VALUES (?,?,?,?)',
+                      (entity_type, eid, filename, max_order + i + 1))
+            results.append({'id': iid, 'url': f'/uploads/{filename}', 'filename': filename,
+                            'sort_order': max_order + i + 1})
+        except Exception as e:
+            return jsonify(ok=False, error=str(e)), 400
+    return jsonify(ok=True, images=results)
+
+@app.route('/api/images/<int:iid>', methods=['DELETE'])
+def api_delete_image(iid):
+    row = q('SELECT filename FROM images WHERE id=?', (iid,), one=True)
+    if not row:
+        return jsonify(ok=False, error='Not found'), 404
+    run('DELETE FROM images WHERE id=?', (iid,))
+    filepath = os.path.join(IMAGE_DIR, row['filename'])
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    return jsonify(ok=True)
+
+@app.route('/api/images/<int:iid>/sort', methods=['POST'])
+def api_sort_image(iid):
+    d = request.json
+    run('UPDATE images SET sort_order=? WHERE id=?', (int(d.get('sort_order', 0)), iid))
+    return jsonify(ok=True)
+
+@app.route('/api/images/<entity_type>/<int:eid>', methods=['GET'])
+def api_list_images(entity_type, eid):
+    return jsonify(get_images(entity_type, eid))
+
+# ══════════════════════════════════════════════════════════
 # INVENTORY
 # ══════════════════════════════════════════════════════════
 @app.route('/inventory')
@@ -586,7 +666,7 @@ def api_delete_equipment(eid): run('DELETE FROM equipment WHERE id=?',(eid,)); r
 @app.route('/settings',methods=['GET','POST'])
 def settings():
     if request.method == 'POST':
-        for k in ['date_format', 'hourly_rate', 'language']:
+        for k in ['date_format', 'hourly_rate', 'language', 'currency_symbol']:
             v = request.form.get(k, '')
             if v != '':
                 run('INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?', (k, v, v))
@@ -598,27 +678,58 @@ def settings():
 
 @app.route('/api/export')
 def api_export():
-    conn=get_db()
-    data={t:[dict(r) for r in conn.execute(f'SELECT * FROM {t}').fetchall()]
-          for t in ['flips','flip_log','categories','parts','equipment','collection','collection_log','settings']}
+    """Export all data as a ZIP: data.json + images/ directory."""
+    conn = get_db()
+    tables = ['flips','flip_log','categories','parts','equipment',
+              'collection','collection_log','settings','images']
+    data = {t: [dict(r) for r in conn.execute(f'SELECT * FROM {t}').fetchall()]
+            for t in tables}
     conn.close()
-    js=json.dumps(data,indent=2,ensure_ascii=False)
-    return Response(js,mimetype='application/json',
-        headers={'Content-Disposition':'attachment; filename=mainplate_backup.json'})
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr('data.json', json.dumps(data, indent=2, ensure_ascii=False))
+        for row in data.get('images', []):
+            fpath = os.path.join(IMAGE_DIR, row['filename'])
+            if os.path.exists(fpath):
+                zf.write(fpath, f'images/{row["filename"]}')
+    buf.seek(0)
+    return Response(buf.read(), mimetype='application/zip',
+        headers={'Content-Disposition': 'attachment; filename=mainplate_backup.zip'})
 
-@app.route('/api/import',methods=['POST'])
+@app.route('/api/import', methods=['POST'])
 def api_import():
+    """Import from ZIP (new format) or plain JSON (legacy format)."""
     try:
-        data=json.loads(request.data); conn=get_db(); c=conn.cursor()
-        for t in ['flip_log','collection_log','flips','categories','parts','equipment','collection','settings']:
+        raw = request.data
+        # Detect ZIP vs JSON by magic bytes
+        if raw[:2] == b'PK':
+            buf = io.BytesIO(raw)
+            with zipfile.ZipFile(buf, 'r') as zf:
+                data = json.loads(zf.read('data.json'))
+                for name in zf.namelist():
+                    if name.startswith('images/') and name != 'images/':
+                        fname = os.path.basename(name)
+                        dest = os.path.join(IMAGE_DIR, fname)
+                        with zf.open(name) as src, open(dest, 'wb') as dst:
+                            dst.write(src.read())
+        else:
+            data = json.loads(raw)
+
+        conn = get_db(); c = conn.cursor()
+        for t in ['flip_log','collection_log','images','flips','categories',
+                  'parts','equipment','collection','settings']:
             if t in data: c.execute(f'DELETE FROM {t}')
-        for t in ['flips','collection','categories','parts','equipment','settings','flip_log','collection_log']:
+        for t in ['flips','collection','categories','parts','equipment',
+                  'settings','flip_log','collection_log','images']:
             if t not in data or not data[t]: continue
-            cols=list(data[t][0].keys()); ph=','.join('?'*len(cols))
+            cols = list(data[t][0].keys()); ph = ','.join('?' * len(cols))
             for row in data[t]:
-                c.execute(f'INSERT OR REPLACE INTO {t} ({",".join(cols)}) VALUES ({ph})',[row[c2] for c2 in cols])
-        conn.commit(); conn.close(); return jsonify(ok=True)
-    except Exception as e: return jsonify(ok=False,error=str(e)),400
+                c.execute(f'INSERT OR REPLACE INTO {t} ({",".join(cols)}) VALUES ({ph})',
+                          [row[c2] for c2 in cols])
+        conn.commit(); conn.close()
+        return jsonify(ok=True)
+    except Exception as e:
+        return jsonify(ok=False, error=str(e)), 400
 
 init_db()
 if __name__=='__main__': app.run(host='0.0.0.0',port=5000,debug=False)

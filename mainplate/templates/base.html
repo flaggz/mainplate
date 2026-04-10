@@ -11,8 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-    <!-- DaisyUI via CDN (compresso e ultra veloce) e Tailwind precompilato locale -->
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.1/dist/full.min.css" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='css/daisyui.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ url_for('static', filename='css/tailwind.css') }}" rel="stylesheet" type="text/css">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -33,24 +32,18 @@
 
             <a class="btn btn-ghost text-xl gap-2" href="{{ url_for('dashboard') }}">
                 <img src="{{ url_for('static', filename='img/logo.svg') }}" class="h-8 w-8" alt="Mainplate logo">
-                <span>Mainplate</span>
+                <span>MAINPLATE</span>
             </a>
         </div>
 
         <div class="navbar-center hidden lg:flex">
             <ul class="menu menu-horizontal px-1 gap-1 uppercase">
-                <li><a href="{{ url_for('dashboard') }}" class="{% if active=='dashboard' %}active{% endif %}">{{
-                        _('Dashboard') }}</a></li>
-                <li><a href="{{ url_for('flips') }}" class="{% if active=='flips' %}active{% endif %}">{{ _('Flips')
-                        }}</a></li>
-                <li><a href="{{ url_for('collection') }}" class="{% if active=='collection' %}active{% endif %}">{{
-                        _('collection') }}</a></li>
-                <li><a href="{{ url_for('inventory') }}" class="{% if active=='inventory' %}active{% endif %}">{{
-                        _('Inventory') }}</a></li>
-                <li><a href="{{ url_for('equipment') }}" class="{% if active=='equipment' %}active{% endif %}">{{
-                        _('Equipment') }}</a></li>
-                <li><a href="{{ url_for('settings') }}" class="{% if active=='settings' %}active{% endif %}">{{
-                        _('Settings') }}</a></li>
+                <li><a href="{{ url_for('dashboard') }}" class="{% if active=='dashboard' %}active{% endif %}">{{ _('dashboard') }}</a></li>
+                <li><a href="{{ url_for('flips') }}" class="{% if active=='flips' %}active{% endif %}">{{ _('flips') }}</a></li>
+                <li><a href="{{ url_for('collection') }}" class="{% if active=='collection' %}active{% endif %}">{{ _('collection') }}</a></li>
+                <li><a href="{{ url_for('inventory') }}" class="{% if active=='inventory' %}active{% endif %}">{{ _('inventory') }}</a></li>
+                <li><a href="{{ url_for('equipment') }}" class="{% if active=='equipment' %}active{% endif %}">{{ _('equipment') }}</a></li>
+                <li><a href="{{ url_for('settings') }}" class="{% if active=='settings' %}active{% endif %}">{{ _('settings') }}</a></li>
             </ul>
         </div>
 
@@ -99,7 +92,7 @@
                 <div class="text-sm breadcrumbs mb-1 opacity-70">
                     {% block breadcrumb %}{% endblock %}
                 </div>
-                <h1 class="text-3xl font-bold">{% block page_title %}{% endblock %}</h1>
+                <h1 class="text-3xl font-bold uppercase">{% block page_title %}{% endblock %}</h1>
             </div>
             <div class="mt-4 md:mt-0 flex flex-wrap gap-2">
                 {% block page_actions %}{% endblock %}
@@ -114,10 +107,25 @@
     <script>
         window.CUSTOM_CATEGORIES = {{ (categories_all | default ([])) | tojson }};
         window.DATE_FORMAT = {{ (date_format | default ('DD-MM-YYYY')) | tojson }};
+        window.CURRENCY = {{ (currency_symbol | default ('€')) | tojson }};
         window.I18N = {
-            confirm_delete: "{{ _('Are you sure you want to delete this item?') }}",
-            saved_successfully: "{{ _('Item saved successfully') }}",
-            error_saving: "{{ _('Error saving item') }}"
+            confirm_delete: "{{ _('are you sure you want to delete this item?') }}",
+            saved_successfully: "{{ _('item saved successfully') }}",
+            error_saving: "{{ _('error saving item') }}",
+            updated: "{{ _('updated') }}",
+            error: "{{ _('error') }}",
+            entry_added: "{{ _('entry added!') }}",
+            entry_added_inventory: "{{ _('entry added and added to inventory!') }}",
+            entry_deleted: "{{ _('deleted') }}",
+            import_done: "{{ _('import complete! reloading') }}",
+            import_error: "{{ _('error during import.') }}",
+            category_updated: "{{ _('category updated!') }}",
+            category_deleted: "{{ _('category deleted.') }}",
+            flip_deleted: "{{ _('flip deleted') }}",
+            watch_deleted: "{{ _('watch deleted') }}",
+            brand_model_required: "{{ _('brand and model are required') }}",
+            error_adding: "{{ _('error while adding') }}",
+            error_saving: "{{ _('error saving') }}"
         };
 
         // Update theme toggle UI logic

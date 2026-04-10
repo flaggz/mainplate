@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
-{% block page_title %}{{ _('Settings') }}{% endblock %}
+{% block page_title %}{{ _('settings') }}{% endblock %}
 {% block content %}
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
     <!-- Preferenze -->
     <div class="card bg-base-100 shadow-sm border border-base-200">
         <div class="card-body">
-            <h2 class="card-title text-base border-b border-base-200 pb-2 mb-2">{{ _('Preferences') }}</h2>
+            <h2 class="card-title text-base border-b border-base-200 pb-2 mb-2 uppercase">{{ _('preferences') }}</h2>
             <form method="post">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="form-control">
-                        <label class="label"><span class="label-text">{{ _('Date format') }}</span></label>
+                        <label class="label"><span class="label-text uppercase">{{ _('date format') }}</span></label>
                         <select name="date_format" class="select select-bordered w-full">
                             <option value="DD-MM-YYYY" {% if settings.get('date_format', 'DD-MM-YYYY' )=='DD-MM-YYYY'
                                 %}selected{% endif %}>GG-MM-AAAA</option>
@@ -20,12 +20,17 @@
                         </select>
                     </div>
                     <div class="form-control">
-                        <label class="label"><span class="label-text">{{ _('Hourly cost') }}</span></label>
+                        <label class="label"><span class="label-text uppercase">{{ _('hourly cost') }}</span></label>
                         <input type="number" step="0.01" name="hourly_rate"
                             value="{{ settings.get('hourly_rate','0') }}" min="0" class="input input-bordered w-full">
                     </div>
                     <div class="form-control">
-                        <label class="label"><span class="label-text">{{ _('Language') }}</span></label>
+                        <label class="label"><span class="label-text uppercase">{{ _('currency symbol') }}</span></label>
+                        <input type="text" name="currency_symbol" maxlength="5"
+                            value="{{ settings.get('currency_symbol','€') }}" class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text uppercase">{{ _('language') }}</span></label>
                         <select name="language" class="select select-bordered w-full uppercase">
                             {% for l in langs %}
                             <option value="{{ l }}" {% if settings.get('language', 'en' )==l %}selected{% endif %}>{{ l
@@ -35,7 +40,7 @@
                     </div>
                 </div>
                 <div class="card-actions justify-end mt-4">
-                    <button type="submit" class="btn btn-primary">{{ _('Save') }}</button>
+                    <button type="submit" class="btn btn-primary uppercase">{{ _('save') }}</button>
                 </div>
             </form>
         </div>
@@ -44,24 +49,24 @@
     <!-- Backup & Ripristino -->
     <div class="card bg-base-100 shadow-sm border border-base-200">
         <div class="card-body">
-            <h2 class="card-title text-base border-b border-base-200 pb-2 mb-2">{{ _('Backup & Restore') }}</h2>
-            <p class="text-sm opacity-70">{{ _('Export all data to JSON for backup or transfer. Importing overwrites all
+            <h2 class="card-title text-base border-b border-base-200 pb-2 mb-2 uppercase">{{ _('backup & restore') }}</h2>
+            <p class="text-sm opacity-70">{{ _('export all data to JSON for backup or transfer. Importing overwrites all
                 current data.') }}</p>
             <div class="flex gap-4 mt-auto pt-4">
-                <button class="btn btn-primary" onclick="exportDB()">
+                <button class="btn btn-primary uppercase" onclick="exportDB()">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
                     </svg>
-                    {{ _('Export JSON') }}
+                    {{ _('export JSON') }}
                 </button>
-                <label class="btn btn-outline cursor-pointer">
+                <label class="btn btn-outline cursor-pointer uppercase">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
                     </svg>
-                    {{ _('Import JSON') }}
+                    {{ _('import JSON') }}
                     <input type="file" accept=".json" class="hidden" onchange="importDB(this)">
                 </label>
             </div>
@@ -72,17 +77,17 @@
     <div class="card bg-base-100 shadow-sm border border-base-200 md:col-span-2 mt-4">
         <div class="card-body p-0">
             <div class="p-4 border-b border-base-200 bg-base-200/50">
-                <h2 class="card-title text-base">{{ _('Categories') }}</h2>
-                <p class="text-sm border-0 opacity-70 mt-1">{{ _('Available in all dropdown menus. Click on name or color to edit, press Enter to save.') }}</p>
+                <h2 class="card-title text-base uppercase">{{ _('categories') }}</h2>
+                <p class="text-sm border-0 opacity-70 mt-1">{{ _('available in all dropdown menus. click on name or color to edit, press enter to save.') }}</p>
             </div>
             <div class="overflow-x-auto">
                 <table class="table" id="cat-table">
                     <thead>
                         <tr>
-                            <th class="w-1/3">{{ _('NAME') }}</th>
-                            <th class="w-24">{{ _('COLOR') }}</th>
-                            <th>{{ _('PREVIEW') }}</th>
-                            <th class="text-right w-24">{{ _('ACTIONS') }}</th>
+                            <th class="w-1/3 uppercase">{{ _('name') }}</th>
+                            <th class="w-24 uppercase">{{ _('color') }}</th>
+                            <th class="uppercase">{{ _('preview') }}</th>
+                            <th class="text-right w-24 uppercase">{{ _('actions') }}</th>
                         </tr>
                     </thead>
                     <tbody id="cat-tbody">
@@ -109,12 +114,12 @@
                             </td>
                             <td class="p-2">
                                 <div class="flex justify-end"><button class="link link-error link-hover text-sm"
-                                        onclick="deleteCat({{ cat.id }})">{{ _('Delete') }}</button></div>
+                                        onclick="deleteCat({{ cat.id }})">{{ _('delete') }}</button></div>
                             </td>
                         </tr>
                         {% else %}
                         <tr id="cat-empty">
-                            <td colspan="4" class="text-center py-6 opacity-50">{{ _('No categories found. Add below.')
+                            <td colspan="4" class="text-center py-6 opacity-50">{{ _('no categories found. add below.')
                                 }}</td>
                         </tr>
                         {% endfor %}
@@ -124,7 +129,7 @@
                             <td class="p-2">
                                 <input type="text" id="new-cat-name"
                                     class="input input-sm input-bordered w-full uppercase"
-                                    placeholder="{{ _('ex. LUBRICANTS') }}"
+                                    placeholder="{{ _('ex. lubricants')}}"
                                     onkeydown="if(event.key==='Enter'){event.preventDefault();addCat();}">
                             </td>
                             <td class="p-2">
@@ -136,10 +141,10 @@
                             <td class="p-2">
                                 <span id="new-cat-preview" class="badge badge-outline"
                                     style="background-color:#4a90d920;color:#4a90d9;border-color:#4a90d940">{{
-                                    _('PREVIEW') }}</span>
+                                    _('preview') }}</span>
                             </td>
                             <td class="p-2 text-right">
-                                <button class="btn btn-primary btn-sm" onclick="addCat()">{{ _('+ Add') }}</button>
+                                <button class="btn btn-primary btn-sm uppercase" onclick="addCat()">+ {{ _('add') }}</button>
                             </td>
                         </tr>
                     </tfoot>
