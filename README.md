@@ -40,7 +40,7 @@ Built with Flask + SQLite, runs entirely in Docker with no external dependencies
 | **Collection** | Personal watches with service/intervention diary and cost tracking |
 | **Inventory** | Parts, oils, gaskets — with quantity and value per item |
 | **Equipment** | Tools and instruments with total value |
-| **Settings** | Purchase goal, language, and full JSON export/import |
+| **Settings** | Language and full JSON export/import |
 
 ### Flip Log
 Each flip has a detailed log with **date + description + optional cost**. Log entries contribute to the net profit calculation and can optionally add parts to inventory automatically.
