@@ -61,7 +61,7 @@ UI language is switchable from Settings. Translations live in `lang/it.json` and
 **Requirements:** Docker and Docker Compose.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/mainplate.git
+git clone https://github.com/flaggz/mainplate.git
 cd mainplate
 docker compose up --build
 ```
