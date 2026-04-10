@@ -16,16 +16,16 @@ Built with Flask + SQLite, runs entirely in Docker with no external dependencies
 
 | Light Mode | Dark Mode |
 |:----------:|:---------:|
-| ![Dashboard](/screens/dashboard_light.jpg?raw=true "Dashboard") | ![Dashboard Dark](/screens/dashboard_dark.jpg?raw=true "Dashboard Dark mode") |
-| ![Flips](/screens/flips_light.jpg?raw=true "Flips") | ![Flips Dark](/screens/flips_dark.jpg?raw=true "Flips Dark mode") |
-| ![Add Flip](/screens/flips_add_light.jpg?raw=true "Add Flip") | ![Add Flip Dark](/screens/flips_add_dark.jpg?raw=true "Add Flip Dark mode") |
-| ![Flip Detail](/screens/flips_detail_light.jpg?raw=true "Flip Detail") | ![Flip Detail Dark](/screens/flips_detail_dark.jpg?raw=true "Flip Detail Dark Mode") |
-| ![Collection](/screens/collection_light.jpg?raw=true "Collection") | ![Collection Dark](/screens/collection_dark.jpg?raw=true "Collection Dark Mode") |
-| ![Add to Collection](/screens/collection_add_light.jpg?raw=true "Add to Collection") | ![Add to Collection Dark](/screens/collection_add_dark.jpg?raw=true "Add to Collection Dark Mode") |
-| ![Collection Detail](/screens/collection_detail_light.jpg?raw=true "Collection detail") | ![Collection Detail Dark](/screens/collection_detail_dark.jpg?raw=true "Collection detail Dark Mode") |
-| ![Equipment](/screens/equipment_light.jpg?raw=true "Equipment") | ![Equipment Dark](/screens/equipment_dark.jpg?raw=true "Equipment Dark Mode") |
-| ![Inventory](/screens/inventory_light.jpg?raw=true "Inventory") | ![Inventory Dark](/screens/inventory_dark.jpg?raw=true "Inventory Dark Mode") |
-| ![Settings](/screens/settings_light.jpg?raw=true "Settings") | ![Settings Dark](/screens/settings_dark.jpg?raw=true "Settings Dark Mode") |
+| ![Dashboard](/screens/dashboard_light.jpg "Dashboard") | ![Dashboard Dark](/screens/dashboard_dark.jpg "Dashboard Dark mode") |
+| ![Flips](/screens/flips_light.jpg "Flips") | ![Flips Dark](/screens/flips_dark.jpg "Flips Dark mode") |
+| ![Add Flip](/screens/flips_add_light.jpg "Add Flip") | ![Add Flip Dark](/screens/flips_add_dark.jpg "Add Flip Dark mode") |
+| ![Flip Detail](/screens/flips_detail_light.jpg "Flip Detail") | ![Flip Detail Dark](/screens/flips_detail_dark.jpg "Flip Detail Dark Mode") |
+| ![Collection](/screens/collection_light.jpg "Collection") | ![Collection Dark](/screens/collection_dark.jpg "Collection Dark Mode") |
+| ![Add to Collection](/screens/collection_add_light.jpg "Add to Collection") | ![Add to Collection Dark](/screens/collection_add_dark.jpg "Add to Collection Dark Mode") |
+| ![Collection Detail](/screens/collection_detail_light.jpg "Collection detail") | ![Collection Detail Dark](/screens/collection_detail_dark.jpg "Collection detail Dark Mode") |
+| ![Equipment](/screens/equipment_light.jpg "Equipment") | ![Equipment Dark](/screens/equipment_dark.jpg "Equipment Dark Mode") |
+| ![Inventory](/screens/inventory_light.jpg "Inventory") | ![Inventory Dark](/screens/inventory_dark.jpg "Inventory Dark Mode") |
+| ![Settings](/screens/settings_light.jpg "Settings") | ![Settings Dark](/screens/settings_dark.jpg "Settings Dark Mode") |
 
 ---
 
