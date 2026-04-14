@@ -1,32 +1,26 @@
-/* Custom CSS removed during migration to Tailwind/DaisyUI */
+/* DaisyUI overrides ──────────────────────────────────────── */
+/* card-body default padding conflicts with p-0 utility */
+.card-body.p-0 { padding: 0 !important; }
 
-th.sortable-th {
-    position: relative;
-    user-select: none;
+/* ── Sort indicators ──────────────────────────────────────── */
+th.sortable-th { position: relative; user-select: none; }
+th.sort-asc::after  { content: " \25B2"; font-size: 0.7em; opacity: 0.6; margin-left: 4px; }
+th.sort-desc::after { content: " \25BC"; font-size: 0.7em; opacity: 0.6; margin-left: 4px; }
+
+/* ── Image grid ───────────────────────────────────────────── */
+/* auto-fill minmax has no standard Tailwind utility */
+.img-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+
+[data-theme="light"] .pattern {
+  background-color: #f4f6f8;
+  background-image:
+    repeating-radial-gradient(circle at 0 0, transparent 0, #f4f6f8 10px),
+    repeating-linear-gradient(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.04));
 }
 
-th.sort-asc::after {
-    content: " \25B2";
-    font-size: 0.7em;
-    opacity: 0.6;
-    margin-left: 4px;
-}
-
-th.sort-desc::after {
-    content: " \25BC";
-    font-size: 0.7em;
-    opacity: 0.6;
-    margin-left: 4px;
-}
-
-.card-body.p-0 {
-    padding: 0 !important;
-}
-
-.card.bg-base-100 {
-    background-color: color-mix(in oklab, oklch(var(--b1) / 1) 50%, oklch(var(--b2) / 1) 50%) !important;
-}
-
-.widget.full-width {
-    grid-column: 1 / -1 !important;
+[data-theme="dark"] .pattern {
+  background-color: #191E25;
+  background-image:
+    repeating-radial-gradient(circle at 0 0, transparent 0, #191E25 10px),
+    repeating-linear-gradient(#1D232A55, #1D232A);
 }

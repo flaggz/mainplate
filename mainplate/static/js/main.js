@@ -190,10 +190,10 @@ function submitEdit(event, type, id) {
             }
             er.classList.add('hidden');
             animateFlash(vr);
-            showFlash('Aggiornato!');
+            showFlash(window.I18N.updated);
             refreshTotal(type);
         })
-        .catch(() => showFlash('Errore nel salvataggio.', 'info'));
+        .catch(() => showFlash(window.I18N.error_saving, 'info'));
 }
 
 function ajaxDelete(type, id) {
@@ -203,8 +203,8 @@ function ajaxDelete(type, id) {
     animateOut(row, () => {
         fetch(url, { method: 'DELETE' })
             .then(r => r.json())
-            .then(() => { row.remove(); if (edit) edit.remove(); showFlash('Eliminato.', 'info'); refreshTotal(type); })
-            .catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash('Errore.', 'info'); });
+            .then(() => { row.remove(); if (edit) edit.remove(); showFlash(window.I18N.entry_deleted, 'info'); refreshTotal(type); })
+            .catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash(window.I18N.error, 'info'); });
     });
 }
 
@@ -263,8 +263,8 @@ function ajaxAddPart() {
             document.getElementById('new-part-qty').value = '1';
             document.getElementById('new-part-val').value = '0';
             document.getElementById('new-part-name').focus();
-            showFlash('Parte aggiunta!'); refreshTotal('part');
-        }).catch(() => showFlash('Errore.', 'info'));
+            showFlash(window.I18N.part_added); refreshTotal('part');
+        }).catch(() => showFlash(window.I18N.error, 'info'));
 }
 
 // ── Ajax Add Equipment ─────────────────────────────────────
@@ -301,8 +301,8 @@ function ajaxAddEquip() {
             document.getElementById('new-equip-name').value = '';
             document.getElementById('new-equip-val').value = '0';
             document.getElementById('new-equip-name').focus();
-            showFlash('Strumento aggiunto!'); refreshTotal('equip');
-        }).catch(() => showFlash('Errore.', 'info'));
+            showFlash(window.I18N.tool_added); refreshTotal('equip');
+        }).catch(() => showFlash(window.I18N.error, 'info'));
 }
 
 // ── Log edit (flip & collection) ───────────────────────────
@@ -475,8 +475,8 @@ function importDB(input) {
     const file = input.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = e => {
-        if (!confirm('Sovrascrivere tutti i dati con il backup selezionato?')) return;
-        fetch('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: e.target.result })
+        if (!confirm(window.I18N.confirm_import)) return;
+        fetch('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: e.target.result })
             .then(r => r.json())
             .then(d => {
                 if (d.ok) { showFlash(window.I18N.import_done); setTimeout(() => location.reload(), 1200); }
@@ -484,7 +484,7 @@ function importDB(input) {
             })
             .catch(() => showFlash(window.I18N.import_error, 'info'));
     };
-    reader.readAsText(file); input.value = '';
+    reader.readAsArrayBuffer(file); input.value = '';
 }
 
 // ── Categories (Settings page) ─────────────────────────────
@@ -591,7 +591,7 @@ function deleteCat(id) {
         if (!grid) return;
         const order = [...grid.querySelectorAll('.widget')].map(w => w.dataset.id);
         const widths = {};
-        grid.querySelectorAll('.widget').forEach(w => { widths[w.dataset.id] = w.classList.contains('full-width') ? 'full' : 'half'; });
+        grid.querySelectorAll('.widget').forEach(w => { widths[w.dataset.id] = w.classList.contains('col-span-full') ? 'full' : 'half'; });
         localStorage.setItem(KEY, JSON.stringify({ order, widths }));
     }
 
@@ -601,10 +601,16 @@ function deleteCat(id) {
         try {
             const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
             if (!saved) return;
+            const isMobile = window.innerWidth < 768;
             grid.querySelectorAll('.widget').forEach(w => {
                 const id = w.dataset.id;
-                if (saved.widths?.[id] === 'full') w.classList.add('full-width');
-                else w.classList.remove('full-width');
+                if (!isMobile && saved.widths?.[id] === 'full') {
+                    w.classList.add('col-span-full');
+                    w.querySelectorAll('.flip-card-grid, .coll-card-grid').forEach(g => { g.classList.remove('grid-cols-2', 'md:grid-cols-3'); g.classList.add('grid-cols-3', 'md:grid-cols-6'); });
+                } else {
+                    w.classList.remove('col-span-full');
+                    w.querySelectorAll('.flip-card-grid, .coll-card-grid').forEach(g => { g.classList.remove('grid-cols-3', 'md:grid-cols-6'); g.classList.add('grid-cols-2', 'md:grid-cols-3'); });
+                }
             });
             if (saved.order) saved.order.forEach(id => {
                 const w = grid.querySelector(`[data-id="${id}"]`);
@@ -636,15 +642,23 @@ function deleteCat(id) {
 })();
 
 function toggleWidgetWidth(id) {
+    if (window.innerWidth < 768) return;
     const w = document.querySelector(`.widget[data-id="${id}"]`);
     if (!w) return;
-    w.classList.toggle('full-width');
+    w.classList.toggle('col-span-full');
+    w.querySelectorAll('.flip-card-grid, .coll-card-grid').forEach(g => {
+        const isFull = w.classList.contains('col-span-full');
+        g.classList.toggle('grid-cols-2', !isFull);
+        g.classList.toggle('md:grid-cols-3', !isFull);
+        g.classList.toggle('grid-cols-3', isFull);
+        g.classList.toggle('md:grid-cols-6', isFull);
+    });
     w.querySelectorAll('table').forEach(t => initSortable(t));
     const grid = document.getElementById('widget-grid');
     if (grid) {
         const order = [...grid.querySelectorAll('.widget')].map(w2 => w2.dataset.id);
         const widths = {};
-        grid.querySelectorAll('.widget').forEach(w2 => { widths[w2.dataset.id] = w2.classList.contains('full-width') ? 'full' : 'half'; });
+        grid.querySelectorAll('.widget').forEach(w2 => { widths[w2.dataset.id] = w2.classList.contains('col-span-full') ? 'full' : 'half'; });
         localStorage.setItem('mp-widget-layout', JSON.stringify({ order, widths }));
     }
 }
@@ -786,8 +800,8 @@ function deleteCat(id) {
                     row.remove();
                     if (window.CUSTOM_CATEGORIES)
                         window.CUSTOM_CATEGORIES = window.CUSTOM_CATEGORIES.filter(c => c.id !== id);
-                    showFlash('Eliminata.', 'info');
-                }).catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash('Errore.', 'info'); });
+                    showFlash(window.I18N.category_deleted, 'info');
+                }).catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash(window.I18N.error, 'info'); });
         });
     });
 }
@@ -924,7 +938,7 @@ function toggleAddCollForm() {
         const title = wrap.querySelector('.form-section-title');
         if (title) title.textContent = "Aggiungi Orologio (Form Veloce)";
         const saveBtn = wrap.querySelector('.btn-primary');
-        if (saveBtn) saveBtn.textContent = "Aggiungi";
+        if (saveBtn) saveBtn.textContent = window.I18N.add;
 
         wrap.classList.remove('hidden');
         animateIn(wrap);
@@ -1019,41 +1033,54 @@ function ajaxAddCollection() {
             tr.className = 'data-row clickable-row' + (w.is_sold ? ' sold-row' : '');
 
             if (targetTable === 'coll-wishlist-tbody') {
-                tr.onclick = function (e) { if (!e.defaultPrevented) openEditColl(w.id); };
+                tr.onclick = function (e) { if (!e.defaultPrevented) window.location = '/collection/' + w.id; };
                 tr.innerHTML = `
-                <td><div class="watch-name">${w.brand} ${w.model}</div><div class="watch-ref">${w.reference || ''}</div></td>
-                <td class="num">${w.purchase_price > 0 ? '€' + fmtNum(w.purchase_price) : '<span class="muted">—</span>'}</td>
-                <td>${w.notes || ''}</td>
-                <td onclick="event.preventDefault(); event.stopPropagation();"><div class="row-actions">
-                    <button class="action-link" onclick="openEditColl(${w.id})">Edit</button>
-                    <button class="action-link danger" onclick="deleteCollConfirm(${w.id},this)">Del</button>
-                </div></td>`;
+                <td class="p-2">
+                    <div class="img-thumb-cell w-10 h-10 rounded overflow-hidden" data-thumb-type="collection" data-thumb-id="${w.id}">
+                        <div class="w-full h-full bg-base-200"></div>
+                    </div>
+                </td>
+                <td><div class="font-semibold">${w.brand} ${w.model}</div><div class="text-xs opacity-70">${w.reference || ''}</div></td>
+                <td class="text-right">${w.purchase_price > 0 ? (window.CURRENCY || '€') + fmtNum(w.purchase_price) : '<span class="opacity-50">—</span>'}</td>
+                <td class="text-sm opacity-80 max-w-sm"><div class="truncate">${w.notes || ''}</div></td>
+                <td onclick="event.preventDefault(); event.stopPropagation();">
+                    <div class="flex gap-3 text-sm justify-end">
+                        <button class="btn btn-primary btn-outline btn-sm uppercase" onclick="openWishlistInlineEdit(${w.id})">Edit</button>
+                        <button class="btn btn-error btn-outline btn-sm uppercase" onclick="deleteCollConfirm(${w.id},this)">Del</button>
+                    </div>
+                </td>`;
             } else if (targetTable === 'coll-sold-tbody') {
                 tr.onclick = function (e) { if (!e.defaultPrevented) window.location = '/collection/' + w.id; };
                 let gainClass = (w.gain || 0) >= 0 ? 'green' : 'red';
                 tr.innerHTML = `
-                <td><div class="watch-name">${w.brand} ${w.model}</div><div class="watch-ref">${w.reference || ''}${w.year ? ' · ' + w.year : ''}</div></td>
-                <td style="font-size:12px">${w.fmt_sold_date || w.sold_date || '—'}</td>
-                <td class="num">€${fmtNum(w.total_cost)}</td>
-                <td class="num">€${fmtNum(w.sold_price)}</td>
-                <td class="num"><span class="${gainClass}">€${fmtNum(w.gain || 0)}</span></td>
-                <td onclick="event.preventDefault(); event.stopPropagation();"><div class="row-actions">
-                    <button class="action-link" onclick="openEditColl(${w.id})">Edit</button>
-                    <button class="action-link danger" onclick="deleteCollConfirm(${w.id},this)">Del</button>
-                </div></td>`;
+                <td class="p-2"><div class="img-thumb-cell w-10 h-10 rounded overflow-hidden" data-thumb-type="collection" data-thumb-id="${w.id}"><div class="w-full h-full bg-base-200"></div></div></td>
+                <td><div class="font-semibold">${w.brand} ${w.model}</div><div class="text-xs opacity-70">${w.reference || ''}${w.year ? ' · ' + w.year : ''}</div></td>
+                <td class="text-sm whitespace-nowrap">${w.fmt_sold_date || w.sold_date || '—'}</td>
+                <td class="text-right">${(window.CURRENCY || '€')}${fmtNum(w.total_cost)}</td>
+                <td class="text-right">${(window.CURRENCY || '€')}${fmtNum(w.sold_price)}</td>
+                <td class="text-right"><span class="${gainClass}">${(window.CURRENCY || '€')}${fmtNum(w.gain || 0)}</span></td>
+                <td onclick="event.preventDefault(); event.stopPropagation();">
+                    <div class="flex gap-3 text-sm justify-end">
+                        <button class="btn btn-primary btn-outline btn-sm uppercase" onclick="openCollInlineEdit(${w.id})">Edit</button>
+                        <button class="btn btn-error btn-outline btn-sm uppercase" onclick="deleteCollConfirm(${w.id},this)">Del</button>
+                    </div>
+                </td>`;
             } else {
                 tr.onclick = function (e) { if (!e.defaultPrevented) window.location = '/collection/' + w.id; };
                 tr.innerHTML = `
-                <td><div class="watch-name">${w.brand} ${w.model}</div><div class="watch-ref">${w.reference || ''}${w.year ? ' · ' + w.year : ''}</div></td>
-                <td style="font-size:12px">${w.fmt_acquired || w.acquired || '—'}</td>
-                <td class="num">${w.purchase_price > 0 ? '€' + fmtNum(w.purchase_price) : '<span class="muted">—</span>'}</td>
-                <td class="num">${w.service_cost > 0 ? '<span class="red">€' + fmtNum(w.service_cost) + '</span>' : '<span class="muted">—</span>'}</td>
-                <td class="num">€${fmtNum(w.total_cost)}</td>
-                <td><span class="muted">—</span></td>
-                <td onclick="event.preventDefault(); event.stopPropagation();"><div class="row-actions">
-                    <button class="action-link" onclick="openEditColl(${w.id})">Edit</button>
-                    <button class="action-link danger" onclick="deleteCollConfirm(${w.id},this)">Del</button>
-                </div></td>`;
+                <td class="p-2"><div class="img-thumb-cell w-10 h-10 rounded overflow-hidden" data-thumb-type="collection" data-thumb-id="${w.id}"><div class="w-full h-full bg-base-200"></div></div></td>
+                <td><div class="font-semibold">${w.brand} ${w.model}</div><div class="text-xs opacity-70">${w.reference || ''}${w.year ? ' · ' + w.year : ''}</div></td>
+                <td class="text-sm whitespace-nowrap">${w.fmt_acquired || w.acquired || '—'}</td>
+                <td class="text-right">${w.purchase_price > 0 ? (window.CURRENCY || '€') + fmtNum(w.purchase_price) : '<span class="opacity-50">—</span>'}</td>
+                <td class="text-right">${w.service_cost > 0 ? '<span class="text-error">' + (window.CURRENCY || '€') + fmtNum(w.service_cost) + '</span>' : '<span class="opacity-50">—</span>'}</td>
+                <td class="text-right">${(window.CURRENCY || '€')}${fmtNum(w.total_cost)}</td>
+                <td><span class="opacity-50">—</span></td>
+                <td onclick="event.preventDefault(); event.stopPropagation();">
+                    <div class="flex gap-3 text-sm">
+                        <button class="btn btn-primary btn-outline btn-sm uppercase" onclick="openCollInlineEdit(${w.id})">Edit</button>
+                        <button class="btn btn-error btn-outline btn-sm uppercase" onclick="deleteCollConfirm(${w.id},this)">Del</button>
+                    </div>
+                </td>`;
             }
 
             if (!tr.parentNode) {
@@ -1110,3 +1137,184 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// ── Lightbox ────────────────────────────────────────────────
+let _lbImages = [], _lbIdx = 0;
+
+function openLightbox(images, index) {
+    _lbImages = images; _lbIdx = index;
+    _lbShow();
+    const _lbEl = document.getElementById('lightbox');
+    _lbEl.classList.remove('hidden');
+    _lbEl.classList.add('flex');
+    document.addEventListener('keydown', _lbKey);
+    document.getElementById('lightbox').addEventListener('click', _lbBgClick);
+}
+
+function closeLightbox() {
+    const _lbEl = document.getElementById('lightbox');
+    _lbEl.classList.add('hidden');
+    _lbEl.classList.remove('flex');
+    document.removeEventListener('keydown', _lbKey);
+}
+
+function navLightbox(delta) {
+    _lbIdx = (_lbIdx + delta + _lbImages.length) % _lbImages.length;
+    _lbShow();
+}
+
+function _lbShow() {
+    document.getElementById('lb-img').src = _lbImages[_lbIdx].url;
+    document.getElementById('lb-counter').textContent = (_lbIdx + 1) + ' / ' + _lbImages.length;
+}
+
+function _lbKey(e) {
+    if (e.key === 'ArrowLeft')  navLightbox(-1);
+    if (e.key === 'ArrowRight') navLightbox(1);
+    if (e.key === 'Escape')     closeLightbox();
+}
+
+function _lbBgClick(e) {
+    if (e.target === document.getElementById('lightbox') || e.target === document.getElementById('lb-img')) {
+        if (e.target === document.getElementById('lightbox')) closeLightbox();
+    }
+}
+
+// ── ImageManager ────────────────────────────────────────────
+const ImageManager = (() => {
+    let _type, _id, _images = [];
+
+    function init(type, id, initialImages) {
+        _type = type; _id = id; _images = initialImages || [];
+        _renderGallery();
+        _setupDropZone();
+    }
+
+    function _renderGallery() {
+        const grid = document.getElementById('img-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        _images.forEach((img, idx) => {
+            const tile = document.createElement('div');
+            tile.className = 'group aspect-square relative rounded overflow-hidden cursor-pointer';
+            tile.draggable = true;
+            tile.dataset.idx = idx;
+            tile.innerHTML = `<img src="${img.url}" loading="lazy" alt="" class="absolute inset-0 w-full h-full object-cover object-center block">
+                <button class="img-tile-del absolute top-0.5 right-0.5 bg-black/60 text-white border-none rounded-full w-5 h-5 text-[11px] cursor-pointer hidden group-hover:flex items-center justify-center" title="Elimina" onclick="ImageManager.deleteImage(${img.id}, event)">&#x2715;</button>`;
+            tile.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('img-tile-del')) openLightbox(_images, idx);
+            });
+            _initTileDrag(tile);
+            grid.appendChild(tile);
+        });
+
+        const dz = document.createElement('div');
+        dz.className = 'img-drop-zone aspect-square min-w-20 flex flex-col items-center justify-center border-2 border-dashed border-base-content/30 rounded cursor-pointer text-xs text-base-content/40 transition-colors hover:border-primary hover:bg-primary/10';
+        dz.id = 'img-drop-zone';
+        dz.innerHTML = `<span class="text-2xl mb-0.5">&#x1F4F7;</span><span>${window.I18N.add}</span>`;
+        dz.addEventListener('click', () => document.getElementById('img-file-input').click());
+        dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('!border-primary', '!bg-primary/10'); });
+        dz.addEventListener('dragleave', () => dz.classList.remove('!border-primary', '!bg-primary/10'));
+        dz.addEventListener('drop', e => {
+            e.preventDefault(); dz.classList.remove('!border-primary', '!bg-primary/10');
+            uploadFiles(e.dataTransfer.files);
+        });
+        grid.appendChild(dz);
+
+        _updateHero();
+    }
+
+    function _updateHero() {
+        const heroWrap = document.getElementById('img-hero-wrap');
+        if (!heroWrap) return;
+        if (_images.length > 0) {
+            heroWrap.innerHTML = `<img class="aspect-square w-full object-cover object-center rounded-lg cursor-pointer" src="${_images[0].url}" alt="" onclick="openLightbox(ImageManager.getImages(), 0)">`;
+        } else {
+            heroWrap.innerHTML = `<div class="aspect-square w-full flex items-center justify-center bg-base-200 rounded-lg text-base-content/30 text-5xl">&#x1F4F7;</div>`;
+        }
+    }
+
+    function _setupDropZone() {
+        const input = document.getElementById('img-file-input');
+        if (!input) return;
+        input.addEventListener('change', () => { uploadFiles(input.files); input.value = ''; });
+
+        const hero = document.getElementById('img-hero-wrap');
+        if (hero) {
+            hero.addEventListener('dragover', e => { e.preventDefault(); });
+            hero.addEventListener('drop', e => { e.preventDefault(); uploadFiles(e.dataTransfer.files); });
+        }
+    }
+
+    function uploadFiles(files) {
+        if (!files || !files.length) return;
+        const fd = new FormData();
+        Array.from(files).forEach(f => fd.append('images', f));
+        fetch(`/api/images/upload/${_type}/${_id}`, { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(d => {
+                if (d.ok) { _images.push(...d.images); _renderGallery(); showFlash(window.I18N.photos_added); }
+                else showFlash(window.I18N.upload_error, 'error');
+            })
+            .catch(() => showFlash(window.I18N.upload_error, 'error'));
+    }
+
+    function deleteImage(iid, e) {
+        if (e) { e.stopPropagation(); }
+        if (!confirm(window.I18N.confirm_delete_photo)) return;
+        fetch(`/api/images/${iid}`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(d => {
+                if (d.ok) { _images = _images.filter(i => i.id !== iid); _renderGallery(); }
+            });
+    }
+
+    function _initTileDrag(tile) {
+        tile.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('text/plain', tile.dataset.idx);
+            tile.style.opacity = '0.5';
+        });
+        tile.addEventListener('dragend', () => { tile.style.opacity = ''; });
+        tile.addEventListener('dragover', e => { e.preventDefault(); tile.classList.add('outline', 'outline-2', 'outline-primary', 'outline-offset-2'); });
+        tile.addEventListener('dragleave', () => tile.classList.remove('outline', 'outline-2', 'outline-primary', 'outline-offset-2'));
+        tile.addEventListener('drop', e => {
+            e.preventDefault(); tile.classList.remove('outline', 'outline-2', 'outline-primary', 'outline-offset-2');
+            const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+            const toIdx = parseInt(tile.dataset.idx);
+            if (fromIdx === toIdx) return;
+            const moved = _images.splice(fromIdx, 1)[0];
+            _images.splice(toIdx, 0, moved);
+            _renderGallery();
+            _images.forEach((img, i) => {
+                fetch(`/api/images/${img.id}/sort`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sort_order: i })
+                });
+            });
+        });
+    }
+
+    function getImages() { return _images; }
+
+    return { init, uploadFiles, deleteImage, getImages };
+})();
+
+// ── Thumbnail loading ────────────────────────────────────────
+function loadThumbnails(type, ids) {
+    if (!ids || !ids.length) return;
+    fetch(`/api/images/first/${type}?ids=${ids.join(',')}`)
+        .then(r => r.json())
+        .then(data => {
+            document.querySelectorAll(`[data-thumb-type="${type}"]`).forEach(cell => {
+                const id = cell.dataset.thumbId;
+                if (data[id]) {
+                    cell.innerHTML = '';
+                    cell.style.backgroundImage = `url('${data[id].url}')`;
+                    cell.style.backgroundSize = 'cover';
+                    cell.style.backgroundPosition = 'center';
+                }
+            });
+        });
+}

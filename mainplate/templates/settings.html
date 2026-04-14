@@ -3,7 +3,7 @@
 {% block content %}
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
     <!-- Preferenze -->
-    <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
         <div class="card-body">
             <h2 class="card-title text-base border-b border-base-200 pb-2 mb-2 uppercase">{{ _('preferences') }}</h2>
             <form method="post">
@@ -47,10 +47,10 @@
     </div>
 
     <!-- Backup & Ripristino -->
-    <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
         <div class="card-body">
             <h2 class="card-title text-base border-b border-base-200 pb-2 mb-2 uppercase">{{ _('backup & restore') }}</h2>
-            <p class="text-sm opacity-70">{{ _('export all data to JSON for backup or transfer. Importing overwrites all
+            <p class="text-sm opacity-70">{{ _('export all data to ZIP for backup or transfer. Importing overwrites all
                 current data.') }}</p>
             <div class="flex gap-4 mt-auto pt-4">
                 <button class="btn btn-primary uppercase" onclick="exportDB()">
@@ -59,31 +59,31 @@
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
                     </svg>
-                    {{ _('export JSON') }}
+                    {{ _('export ZIP') }}
                 </button>
                 <label class="btn btn-outline cursor-pointer uppercase">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
                     </svg>
-                    {{ _('import JSON') }}
-                    <input type="file" accept=".json" class="hidden" onchange="importDB(this)">
+                    {{ _('import ZIP') }}
+                    <input type="file" accept=".zip" class="hidden" onchange="importDB(this)">
                 </label>
             </div>
         </div>
     </div>
 
     <!-- {{ _('Categories') }} -->
-    <div class="card bg-base-100 shadow-sm border border-base-200 md:col-span-2 mt-4">
+    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] md:col-span-2 mt-4">
         <div class="card-body p-0">
-            <div class="p-4 border-b border-base-200 bg-base-200/50">
+            <div class="p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200">
                 <h2 class="card-title text-base uppercase">{{ _('categories') }}</h2>
                 <p class="text-sm border-0 opacity-70 mt-1">{{ _('available in all dropdown menus. click on name or color to edit, press enter to save.') }}</p>
             </div>
             <div class="overflow-x-auto">
                 <table class="table" id="cat-table">
                     <thead>
-                        <tr>
+                        <tr class="opacity-60">
                             <th class="w-1/3 uppercase">{{ _('name') }}</th>
                             <th class="w-24 uppercase">{{ _('color') }}</th>
                             <th class="uppercase">{{ _('preview') }}</th>
@@ -113,8 +113,7 @@
                                 </span>
                             </td>
                             <td class="p-2">
-                                <div class="flex justify-end"><button class="link link-error link-hover text-sm"
-                                        onclick="deleteCat({{ cat.id }})">{{ _('delete') }}</button></div>
+                                <div class="flex justify-end"><button class="btn btn-error btn-outline btn-sm gap-1 uppercase" onclick="deleteCat({{ cat.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>{{ _('delete') }}</button></div>
                             </td>
                         </tr>
                         {% else %}
@@ -124,7 +123,7 @@
                         </tr>
                         {% endfor %}
                     </tbody>
-                    <tfoot class="bg-base-200/50">
+                    <tfoot class="bg-gradient-to-r from-base-200/60 to-base-100/30">
                         <tr class="add-row">
                             <td class="p-2">
                                 <input type="text" id="new-cat-name"

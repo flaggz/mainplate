@@ -11,7 +11,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-    <link href="{{ url_for('static', filename='css/daisyui.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ url_for('static', filename='css/tailwind.css') }}" rel="stylesheet" type="text/css">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -25,43 +24,56 @@
     </script>
 </head>
 
-<body class="bg-base-200 min-h-screen font-sans">
+<body class="bg-base-200 min-h-screen font-sans pattern">
+
+    <!-- Mobile drawer -->
+    <div class="drawer">
+        <input id="mobile-drawer" type="checkbox" class="drawer-toggle" />
+        <div class="drawer-content flex flex-col">
 
     <header class="navbar bg-base-100 shadow-sm sticky top-0 z-30">
         <div class="navbar-start">
-
+            <!-- Mobile hamburger -->
+            <label for="mobile-drawer" class="btn btn-ghost btn-circle lg:!hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </label>
             <a class="btn btn-ghost text-xl gap-2" href="{{ url_for('dashboard') }}">
                 <img src="{{ url_for('static', filename='img/logo.svg') }}" class="h-8 w-8" alt="Mainplate logo">
-                <span>MAINPLATE</span>
+                <span class="hidden sm:!inline">MAINPLATE</span>
             </a>
         </div>
 
-        <div class="navbar-center hidden lg:flex">
-            <ul class="menu menu-horizontal px-1 gap-1 uppercase">
-                <li><a href="{{ url_for('dashboard') }}" class="{% if active=='dashboard' %}active{% endif %}">{{ _('dashboard') }}</a></li>
-                <li><a href="{{ url_for('flips') }}" class="{% if active=='flips' %}active{% endif %}">{{ _('flips') }}</a></li>
-                <li><a href="{{ url_for('collection') }}" class="{% if active=='collection' %}active{% endif %}">{{ _('collection') }}</a></li>
-                <li><a href="{{ url_for('inventory') }}" class="{% if active=='inventory' %}active{% endif %}">{{ _('inventory') }}</a></li>
-                <li><a href="{{ url_for('equipment') }}" class="{% if active=='equipment' %}active{% endif %}">{{ _('equipment') }}</a></li>
-                <li><a href="{{ url_for('settings') }}" class="{% if active=='settings' %}active{% endif %}">{{ _('settings') }}</a></li>
+        <div class="navbar-center">
+            <span class="!inline sm:!hidden">MAINPLATE</span>
+            <ul class="menu menu-horizontal px-1 gap-1 uppercase text-sm font-medium !hidden lg:!flex">
+                <li><a href="{{ url_for('dashboard') }}" class="gap-2 {% if active=='dashboard' %}active{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    {{ _('dashboard') }}</a></li>
+                <li><a href="{{ url_for('flips') }}" class="gap-2 {% if active=='flips' %}active{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+                    {{ _('flips') }}</a></li>
+                <li><a href="{{ url_for('collection') }}" class="gap-2 {% if active=='collection' %}active{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    {{ _('collection') }}</a></li>
+                <li><a href="{{ url_for('inventory') }}" class="gap-2 {% if active=='inventory' %}active{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    {{ _('inventory') }}</a></li>
+                <li><a href="{{ url_for('equipment') }}" class="gap-2 {% if active=='equipment' %}active{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                    {{ _('equipment') }}</a></li>
+                <li><a href="{{ url_for('settings') }}" class="gap-2 {% if active=='settings' %}active{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    {{ _('settings') }}</a></li>
             </ul>
         </div>
 
         <div class="navbar-end">
-            <!-- Theme Toggle using swap component -->
             <label class="swap swap-rotate btn btn-ghost btn-circle">
                 <input type="checkbox" id="theme-toggle-checkbox" onclick="toggleTheme()" />
-
-                <!-- sun icon -->
-                <svg class="swap-on fill-current w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path
-                        d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z" />
-                </svg>
-                <!-- moon icon -->
-                <svg class="swap-off fill-current w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path
-                        d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z" />
-                </svg>
+                <svg class="swap-on fill-current w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/></svg>
+                <svg class="swap-off fill-current w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"/></svg>
             </label>
         </div>
     </header>
@@ -104,6 +116,40 @@
         </div>
     </main>
 
+        </div><!-- /drawer-content -->
+
+        <!-- Mobile drawer sidebar -->
+        <div class="drawer-side z-40">
+            <label for="mobile-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+            <div class="menu bg-base-100 min-h-full w-72 p-4 flex flex-col gap-1">
+                <a class="flex items-center gap-3 p-3 mb-4 font-bold text-lg" href="{{ url_for('dashboard') }}">
+                    <img src="{{ url_for('static', filename='img/logo.svg') }}" class="h-8 w-8" alt="">
+                    MAINPLATE
+                </a>
+                <ul class="menu menu-lg w-full uppercase font-medium gap-1">
+                    <li><a href="{{ url_for('dashboard') }}" class="gap-3 {% if active=='dashboard' %}active{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                        {{ _('dashboard') }}</a></li>
+                    <li><a href="{{ url_for('flips') }}" class="gap-3 {% if active=='flips' %}active{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+                        {{ _('flips') }}</a></li>
+                    <li><a href="{{ url_for('collection') }}" class="gap-3 {% if active=='collection' %}active{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                        {{ _('collection') }}</a></li>
+                    <li><a href="{{ url_for('inventory') }}" class="gap-3 {% if active=='inventory' %}active{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        {{ _('inventory') }}</a></li>
+                    <li><a href="{{ url_for('equipment') }}" class="gap-3 {% if active=='equipment' %}active{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                        {{ _('equipment') }}</a></li>
+                    <li><a href="{{ url_for('settings') }}" class="gap-3 {% if active=='settings' %}active{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        {{ _('settings') }}</a></li>
+                </ul>
+            </div>
+        </div>
+    </div><!-- /drawer -->
+
     <script>
         window.CUSTOM_CATEGORIES = {{ (categories_all | default ([])) | tojson }};
         window.DATE_FORMAT = {{ (date_format | default ('DD-MM-YYYY')) | tojson }};
@@ -125,7 +171,14 @@
             watch_deleted: "{{ _('watch deleted') }}",
             brand_model_required: "{{ _('brand and model are required') }}",
             error_adding: "{{ _('error while adding') }}",
-            error_saving: "{{ _('error saving') }}"
+            error_saving: "{{ _('error saving') }}",
+            part_added: "{{ _('part added!') }}",
+            tool_added: "{{ _('tool added!') }}",
+            confirm_import: "{{ _('overwrite all data with the selected backup?') }}",
+            photos_added: "{{ _('photos added!') }}",
+            upload_error: "{{ _('upload error') }}",
+            confirm_delete_photo: "{{ _('delete this photo?') }}",
+            add: "{{ _('add') }}"
         };
 
         // Update theme toggle UI logic
@@ -144,6 +197,15 @@
         }
     </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <!-- Lightbox (global) -->
+    <div id="lightbox" class="fixed inset-0 bg-black/90 z-[9999] items-center justify-center hidden">
+        <button id="lb-close" class="fixed top-4 right-4 bg-white/10 hover:bg-white/25 border-none text-white cursor-pointer rounded-full w-11 h-11 text-2xl flex items-center justify-center transition-colors" onclick="closeLightbox()">&#x2715;</button>
+        <button id="lb-prev"  class="fixed left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/25 border-none text-white cursor-pointer rounded-full w-11 h-11 text-2xl flex items-center justify-center transition-colors" onclick="navLightbox(-1)">&#x2039;</button>
+        <img id="lb-img" class="max-w-[90vw] max-h-[90vh] object-contain rounded select-none" src="" alt="">
+        <button id="lb-next"  class="fixed right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/25 border-none text-white cursor-pointer rounded-full w-11 h-11 text-2xl flex items-center justify-center transition-colors" onclick="navLightbox(1)">&#x203A;</button>
+        <div id="lb-counter" class="fixed bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm"></div>
+    </div>
 </body>
 
 </html>

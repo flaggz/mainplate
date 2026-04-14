@@ -197,4 +197,12 @@
   "category deleted!": "categoria eliminata!",
   "brand and model are required": "brand e modello sono obbligatori",
   "error while adding": "errore durante l'aggiunta",
+  "photos": "foto",
+  "part added!": "parte aggiunta!",
+  "tool added!": "strumento aggiunto!",
+  "overwrite all data with the selected backup?": "sovrascrivere tutti i dati con il backup selezionato?",
+  "photos added!": "foto aggiunte!",
+  "upload error": "errore upload",
+  "delete this photo?": "eliminare questa foto?",
+  "close": "chiudi"
 }

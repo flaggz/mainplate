@@ -100,8 +100,16 @@ def get_images(entity_type, entity_id):
 def _save_image(file_storage):
     """Process uploaded file with Pillow, save as JPEG, return filename."""
     img = Image.open(file_storage.stream)
-    # Convert to RGB (handles RGBA, palette, etc.)
-    if img.mode not in ('RGB',):
+    # Flatten transparency onto black background before converting to RGB.
+    # A direct .convert('RGB') on RGBA/PA/LA composites onto black by default,
+    # which causes fringing artifacts on semi-transparent edges.
+    if img.mode in ('RGBA', 'LA', 'PA'):
+        background = Image.new('RGB', img.size, (0, 0, 0))
+        # Use the alpha channel as mask when available
+        mask = img.split()[-1] if img.mode != 'PA' else img.convert('RGBA').split()[-1]
+        background.paste(img.convert('RGB'), mask=mask)
+        img = background
+    elif img.mode != 'RGB':
         img = img.convert('RGB')
     # Resize if larger than IMAGE_MAX_PX on long side
     w, h = img.size
@@ -144,7 +152,7 @@ app.jinja_env.filters['fmtdate'] = fmt_date
 
 # ── Stats helpers ───────────────────────────────────────────
 def flip_stats(hourly_rate=0):
-    flips = q('SELECT * FROM flips')
+    flips = q('SELECT * FROM flips ORDER BY id DESC')
     enriched = []
     for f in flips:
         lc = q('SELECT COALESCE(SUM(cost),0) as s FROM flip_log WHERE flip_id=?',(f['id'],),one=True)['s']
@@ -274,7 +282,8 @@ def flip_detail(fid):
     return render_template('flip_detail.html',flip=flip,log=log,
         log_cost=lc,labor_cost=labor,total_cost=tc,profit=profit,roi=roi,
         hourly_rate=hr,today=today(),categories=get_all_categories(),
-        date_format=s.get('date_format','DD-MM-YYYY'),active='flips')
+        date_format=s.get('date_format','DD-MM-YYYY'),active='flips',
+        images=get_images('flip',fid))
 
 
 
@@ -412,7 +421,7 @@ def collection():
         FROM collection c
         LEFT JOIN collection_log l ON c.id = l.watch_id
         WHERE c.is_deleted=0 AND c.is_wishlist=0 AND (c.sold_price=0 OR c.sold_price IS NULL)
-        GROUP BY c.id ORDER BY c.id DESC
+        GROUP BY c.id ORDER BY c.acquired DESC, c.id DESC
     """
     sold_query = """
         SELECT c.*, COALESCE(SUM(l.cost), 0) as service_cost
@@ -437,8 +446,6 @@ def collection():
     for w in sold_watches:
         w['total_cost'] = w['purchase_price'] + w['service_cost']
         w['gain'] = w['sold_price'] - w['total_cost']
-        total_purchase += w['purchase_price']
-        total_service += w['service_cost']
 
     return render_template('collection.html',
         active_watches=active_watches,
@@ -477,7 +484,8 @@ def collection_detail(wid):
     s=get_settings()
     return render_template('collection_detail.html',watch=watch,logs=logs,
         service_cost=sc,today=today(),categories=get_all_categories(),
-        date_format=s.get('date_format','DD-MM-YYYY'),active='collection')
+        date_format=s.get('date_format','DD-MM-YYYY'),active='collection',
+        images=get_images('collection',wid))
 
 @app.route('/collection/<int:wid>/edit',methods=['GET','POST'])
 def edit_collection(wid):
@@ -602,6 +610,23 @@ def api_sort_image(iid):
 @app.route('/api/images/<entity_type>/<int:eid>', methods=['GET'])
 def api_list_images(entity_type, eid):
     return jsonify(get_images(entity_type, eid))
+
+@app.route('/api/images/first/<entity_type>', methods=['GET'])
+def api_images_first(entity_type):
+    ids_str = request.args.get('ids','')
+    if not ids_str:
+        return jsonify({})
+    try:
+        ids = [int(x) for x in ids_str.split(',') if x.strip()]
+    except ValueError:
+        return jsonify({})
+    result = {}
+    for eid in ids:
+        row = q('SELECT id,filename FROM images WHERE entity_type=? AND entity_id=? ORDER BY sort_order,id LIMIT 1',
+                (entity_type, eid), one=True)
+        if row:
+            result[str(eid)] = {'id': row['id'], 'url': f"/uploads/{row['filename']}"}
+    return jsonify(result)
 
 # ══════════════════════════════════════════════════════════
 # INVENTORY

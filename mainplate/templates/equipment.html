@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% block page_title %}{{ _('equipment') }}{% endblock %}
 {% block content %}
-<div class="card bg-base-100 shadow-sm border border-base-200 mb-8">
+<div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-8">
     <div class="card-body p-0">
-        <div class="flex justify-between items-center p-4 border-b border-base-200 bg-base-200/50 rounded-box">
+        <div class="flex justify-between items-center p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 rounded-box">
             <span class="font-bold uppercase">{{ _('equipment & tools') }}</span>
             <span class="opacity-70 text-xs" id="equip-total-label">{{ currency_symbol }}{{ '{:,.2f}'.format(total) }} {{ _('total')
                 }}</span>
@@ -11,7 +11,7 @@
         <div class="overflow-x-auto">
             <table class="table" id="equip-table">
                 <thead>
-                    <tr>
+                    <tr class="opacity-60">
                         <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="0">{{ _('tool') }}</th>
                         <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="1">{{ _('value') }}</th>
                         <th class="text-right uppercase">{{ _('actions') }}</th>
@@ -24,10 +24,8 @@
                         <td class="text-right">{{ currency_symbol }}{{ '{:,.2f}'.format(e.value) }}</td>
                         <td>
                             <div class="flex justify-end gap-3 text-sm">
-                                <button class="link link-primary link-hover"
-                                    onclick="toggleEditRow('equip',{{ e.id }})">{{ _('edit') }}</button>
-                                <button class="link link-error link-hover"
-                                    onclick="ajaxDelete('equip',{{ e.id }})">{{ _('delete') }}</button>
+                                <button class="btn btn-primary btn-outline btn-sm gap-1 uppercase" onclick="toggleEditRow('equip',{{ e.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>{{ _('edit') }}</button>
+                                <button class="btn btn-error btn-outline btn-sm gap-1 uppercase" onclick="ajaxDelete('equip',{{ e.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>{{ _('delete') }}</button>
                             </div>
                         </td>
                     </tr>
@@ -51,7 +49,7 @@
                     </tr>
                     {% endfor %}
                 </tbody>
-                <tfoot class="bg-base-200/50">
+                <tfoot class="bg-gradient-to-r from-base-200/60 to-base-100/30">
                     <tr class="total-row">
                         <td class="text-right font-bold py-4 uppercase">{{ _('total') }}</td>
                         <td class="text-right font-bold text-primary" id="equip-total-cell">{{ currency_symbol }}{{ '{:,.2f}'.format(total)

@@ -80,9 +80,7 @@
 
                 <div class="mt-8 flex justify-end gap-2 border-t border-base-200 pt-4">
                     <a href="{{ url_for('collection') }}" class="btn btn-ghost">{{ _('cancel') }}</a>
-                    <button type="submit" class="btn btn-primary">{% if watch %}{{ _('save') }}{% else %}{{ _('add')
-                        }}{% endif
-                        %}</button>
+                    <button type="submit" class="btn btn-primary">{% if watch %}{{ _('save') }}{% else %}{{ _('add') }}{% endif %}</button>
                 </div>
             </form>
         </div>

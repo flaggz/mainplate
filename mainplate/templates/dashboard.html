@@ -1,219 +1,384 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% block page_title %}Dashboard{% endblock %}
-{% block page_actions %}
-{% endblock %}
+{% block page_actions %}{% endblock %}
 {% block content %}
 
-<div class="stats stats-vertical lg:stats-horizontal shadow bg-base-100 w-full mb-6">
+{# ── Sparkline data ───────────────────────────────────────── #}
+{% set sp_profits = [] %}
+{% for f in flips %}{% if f.profit is not none %}{% set _ = sp_profits.append(f.profit) %}{% endif %}{% endfor %}
+
+{# ── KPI Cards ───────────────────────────────────────────── #}
+<div class="stats stats-vertical lg:stats-horizontal shadow-lg bg-gradient-to-br from-base-100 to-base-200/60 w-full mb-6 ring-1 ring-base-200/70">
+
+    {# — Net Profit — #}
     <div class="stat">
-        <div class="stat-title uppercase">{{ _('net profit') }}</div>
-        <div class="stat-value {% if total_profit >= 0 %}text-success{% else %}text-error{% endif %}">{{ currency_symbol }}{{
-            '{:,.2f}'.format(total_profit) }}</div>
-        <div class="stat-desc">{{ sold_count }} {{ _('sold') }}</div>
+        <div class="flex items-start justify-between mb-3">
+            <span class="text-xs font-semibold uppercase tracking-widest opacity-50">{{ _('net profit') }}</span>
+            <span
+                class="p-1.5 rounded-lg {% if total_profit >= 0 %}bg-success/10 text-success{% else %}bg-error/10 text-error{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    {% if total_profit >= 0 %}
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                    <polyline points="17 6 23 6 23 12" />{% else %}
+                    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+                    <polyline points="17 18 23 18 23 12" />{% endif %}
+                </svg>
+            </span>
+        </div>
+        <div
+            class="text-3xl font-bold tracking-tight {% if total_profit >= 0 %}text-success{% else %}text-error{% endif %}">
+            {{ currency_symbol }}{{ '{:,.0f}'.format(total_profit) }}
+        </div>
+        <div class="text-xs opacity-40 mt-1 mb-3">{{ sold_count }} {{ _('sold') }}</div>
+        {# mini sparkline #}
+        {% if sp_profits | length >= 2 %}
+        {% set sp_w = 120 %} {% set sp_h = 32 %}
+        {% set sp_min = sp_profits | min %} {% set sp_max = sp_profits | max %}
+        {% set sp_range = (sp_max - sp_min) if (sp_max > sp_min) else 1 %}
+        {% set ns = namespace(pts='') %}
+        {% for p in sp_profits %}
+        {% set x = (loop.index0 / ((sp_profits | length) - 1) * sp_w) | round(1) %}
+        {% set y = (sp_h - ((p - sp_min) / sp_range * sp_h * 0.85 + sp_h * 0.08)) | round(1) %}
+        {% if loop.first %}{% set ns.pts = x|string ~ ',' ~ y|string %}
+        {% else %}{% set ns.pts = ns.pts ~ ' ' ~ x|string ~ ',' ~ y|string %}{% endif %}
+        {% endfor %}
+        <svg width="{{ sp_w }}" height="{{ sp_h }}" viewBox="0 0 {{ sp_w }} {{ sp_h }}"
+            class="{% if total_profit >= 0 %}text-success{% else %}text-error{% endif %} opacity-50 -mx-1">
+            <polyline points="{{ ns.pts }}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+        </svg>
+        {% endif %}
     </div>
+
+    {# — Capital — #}
     <div class="stat">
-        <div class="stat-title uppercase">{{ _('total capital') }}</div>
-        <div class="stat-value">{{ currency_symbol }}{{ '{:,.2f}'.format(capital) }}</div>
-        <div class="stat-desc">{{ flip_count }} {{ _('flips (incl. parts + labor)') }}</div>
+        <div class="flex items-start justify-between mb-3">
+            <span class="text-xs font-semibold uppercase tracking-widest opacity-50">{{ _('capital') }}</span>
+            <span class="p-1.5 rounded-lg bg-primary/10 text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+            </span>
+        </div>
+        <div class="text-3xl font-bold tracking-tight">{{ currency_symbol }}{{ '{:,.0f}'.format(capital) }}</div>
+        <div class="text-xs opacity-40 mt-1">{{ flip_count }} {{ _('flips') }}</div>
     </div>
+
+    {# — Avg ROI — #}
     <div class="stat">
-        <div class="stat-title uppercase">{{ _('avg roi') }}</div>
-        <div class="stat-value">{{ '{:.1f}'.format(avg_roi) }}%</div>
+        <div class="flex items-start justify-between mb-3">
+            <span class="text-xs font-semibold uppercase tracking-widest opacity-50">{{ _('avg roi') }}</span>
+            <span class="p-1.5 rounded-lg bg-accent/10 text-accent">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20V10" />
+                    <path d="M18 20V4" />
+                    <path d="M6 20v-4" />
+                </svg>
+            </span>
+        </div>
+        <div class="text-3xl font-bold tracking-tight">{{ '{:.1f}'.format(avg_roi) }}%</div>
+        <div class="text-xs opacity-40 mt-1">{{ _('return on investment') }}</div>
     </div>
+
+    {# — Hours / Labor — #}
     <div class="stat">
-        <div class="stat-title uppercase">{{ _('hours / labor') }}</div>
-        <div class="stat-value">{{ '{:.0f}'.format(total_hours) }}h</div>
-        <div class="stat-desc">{{ currency_symbol }}{{ '{:,.2f}'.format(imputed_labor) }} ({{ currency_symbol }}{{ '{:.0f}'.format(hourly_rate) }}/h)</div>
+        <div class="flex items-start justify-between mb-3">
+            <span class="text-xs font-semibold uppercase tracking-widest opacity-50">{{ _('hours') }}</span>
+            <span class="p-1.5 rounded-lg bg-secondary/10 text-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+            </span>
+        </div>
+        <div class="text-3xl font-bold tracking-tight">{{ '{:.0f}'.format(total_hours) }}<span
+                class="text-base opacity-60 font-normal">h</span></div>
+        <div class="text-xs opacity-40 mt-1">{{ currency_symbol }}{{ '{:,.0f}'.format(imputed_labor) }} {{
+            _('labor') }}</div>
     </div>
 </div>
 
+{# ── Widget Grid ──────────────────────────────────────────── #}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="widget-grid">
 
-    <!-- {{ _('recent flips') }} -->
-    <div class="widget card bg-base-100 shadow-sm border border-base-200" data-id="flips">
+    {# ── Recent Flips ─────────────────────────────────────── #}
+    <div class="widget card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]" data-id="flips">
         <div class="card-body p-0">
-            <div class="flex justify-between items-center p-4 border-b border-base-200 bg-base-200/50 rounded-box">
-                <span class="font-bold uppercase">{{ _('recent flips') }}</span>
-                <div class="flex gap-2 items-center text-sm">
-                    <a href="{{ url_for('flips') }}" class="">{{ _('see all') }} →</a>
-                    <button class="btn btn-xs btn-ghost" onclick="toggleWidgetWidth('flips')"
-                        title="Full/Half width">⇔</button>
-                    <span class="drag-handle cursor-move opacity-50 hover:opacity-100"
+            <div class="flex justify-between items-center px-5 py-3.5 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200">
+                <span class="font-bold uppercase tracking-wide text-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    {{ _('recent flips') }}
+                </span>
+                <div class="flex gap-1 items-center">
+                    <a href="{{ url_for('flips') }}" class="btn btn-xs btn-ghost font-normal">{{ _('see all') }} →</a>
+                    <button class="btn btn-xs btn-ghost opacity-40 hover:opacity-100 hidden md:inline-flex"
+                        onclick="toggleWidgetWidth('flips')" title="Full/Half width">⇔</button>
+                    <span class="drag-handle cursor-move opacity-30 hover:opacity-70 text-lg px-1"
                         title="{{ _('Drag to reorder') }}">⠿</span>
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="table" id="recent-flips-table">
-                    <thead>
-                        <tr class="uppercase">
-                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('watch') }}</th>
-                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('status') }}</th>
-                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="2">{{ _('paid') }}</th>
-                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{ _('expenses') }}</th>
-                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="4">{{ _('sold') }}</th>
-                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="5">{{ _('profit') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for f in flips[:6] %}
-                        <tr onclick="window.location='{{ url_for('flip_detail', fid=f.id) }}'"
-                            class="data-row hover cursor-pointer">
-                            <td>
-                                <div class="font-semibold">{{ f.brand }} {{ f.model }}</div>
-                                <div class="text-xs opacity-70">{{ f.reference or '' }}{% if f.year %} · {{ f.year }}{%
-                                    endif %}</div>
-                            </td>
-                            <td>
-                                {% set st = f.status|lower|replace(' ','-') %}
-                                <span
-                                    class="badge {% if st == 'sold' %}badge-success{% elif st == 'for-sale' %}badge-info{% elif st == 'in-progress' %}badge-warning{% else %}badge-ghost{% endif %} badge-sm">{{
-                                    f.status }}</span>
-                            </td>
-                            <td class="text-right">{{ currency_symbol }}{{ '{:,.2f}'.format(f.paid) }}</td>
-                            <td class="text-right">{% if f.log_cost > 0 %}<span class="text-error">{{ currency_symbol }}{{
-                                    '{:,.2f}'.format(f.log_cost) }}</span>{% else %}<span class="opacity-50">—</span>{%
-                                endif %}</td>
-                            <td class="text-right">{% if f.sold > 0 %}{{ currency_symbol }}{{ '{:,.2f}'.format(f.sold) }}{% else %}<span
-                                    class="opacity-50">—</span>{% endif %}</td>
-                            <td class="text-right">{% if f.profit is not none %}<span
-                                    class="{{ 'text-success' if f.profit >= 0 else 'text-error' }}">{{ currency_symbol }}{{
-                                    '{:,.2f}'.format(f.profit) }}</span>{% else %}<span class="opacity-50">—</span>{%
-                                endif %}</td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center py-4 opacity-50">{{ _('no flips.') }} <a
-                                    href="{{ url_for('add_flip') }}" class="link">{{ _('add one') }} →</a></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+
+            <div class="flip-card-grid grid grid-cols-2 md:grid-cols-6 gap-4 p-4">
+                {% for f in flips[:6] %}
+                <a href="{{ url_for('flip_detail', fid=f.id) }}"
+                    class="flip-card-item group bg-gradient-to-b from-base-100 to-base-200/80 border border-base-200/60 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-black/[.08] flex flex-col">
+
+                    {# Image #}
+                    <div class="relative h-40 overflow-hidden shrink-0">
+                        <div class="img-thumb-cell absolute inset-0" data-thumb-type="flip" data-thumb-id="{{ f.id }}">
+                            <div class="w-full h-full bg-base-200"></div>
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent from-0% via-transparent via-85% to-black/50 to-100% pointer-events-none z-10"></div>
+                        <div class="absolute top-2.5 left-2.5 z-20">
+                            {% set st = f.status|lower|replace(' ','-') %}
+                            <span class="badge badge-s {% if st == 'sold' %}badge-success{% elif st == 'for-sale' %}badge-info{% elif st == 'in-progress' %}badge-warning{% else %}badge-ghost{% endif %}">{{ f.status }}</span>
+                        </div>
+                    </div>
+
+                    {# Content #}
+                    <div class="p-3.5 flex flex-col gap-2.5 flex-1">
+                        <div>
+                            <div class="font-semibold text-sm leading-snug">{{ f.brand }} {{ f.model }}</div>
+                            <div class="text-xs opacity-40 mt-0.5">{{ f.reference or '' }}{% if f.year %} · {{ f.year }}{% endif %}</div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                            <div>
+                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('paid') }}</div>
+                                <div class="text-xs font-medium tabular-nums mt-0.5">{{ currency_symbol }}{{ '{:,.0f}'.format(f.paid) }}</div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('exp') }}</div>
+                                <div class="text-xs font-medium tabular-nums mt-0.5 {% if f.log_cost > 0 %}text-error/80{% else %}opacity-30{% endif %}">
+                                    {% if f.log_cost > 0 %}{{ currency_symbol }}{{ '{:,.0f}'.format(f.log_cost) }}{% else %}—{% endif %}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('total') }}</div>
+                                <div class="text-xs font-medium tabular-nums mt-0.5">{{ currency_symbol }}{{ '{:,.0f}'.format(f.total_cost) }}</div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('sold') }}</div>
+                                <div class="text-xs font-medium tabular-nums mt-0.5 {% if not f.sold %}opacity-30{% endif %}">
+                                    {% if f.sold > 0 %}{{ currency_symbol }}{{ '{:,.0f}'.format(f.sold) }}{% else %}—{% endif %}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('hours') }}</div>
+                                <div class="text-xs font-medium tabular-nums mt-0.5 {% if not f.hours %}opacity-30{% endif %}">
+                                    {% if f.hours > 0 %}{{ '{:.1f}'.format(f.hours) }}h{% else %}—{% endif %}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('labor') }}</div>
+                                <div class="text-xs font-medium tabular-nums mt-0.5 {% if f.labor_cost > 0 %}text-error/80{% else %}opacity-30{% endif %}">
+                                    {% if f.labor_cost > 0 %}{{ currency_symbol }}{{ '{:,.0f}'.format(f.labor_cost) }}{% else %}—{% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between mt-auto pt-2.5 border-t border-base-200">
+                            {% if f.profit is not none %}
+                            <div class="text-sm font-bold {{ 'text-success' if f.profit >= 0 else 'text-error' }}">
+                                {{ '+' if f.profit >= 0 else '' }}{{ currency_symbol }}{{ '{:,.0f}'.format(f.profit) }}
+                            </div>
+                            {% if f.roi is not none %}
+                            <div class="text-xs font-semibold {{ 'text-success' if f.roi >= 0 else 'text-error' }}">
+                                {{ '+' if f.roi >= 0 else '' }}{{ '{:.1f}'.format(f.roi) }}% ROI
+                            </div>
+                            {% endif %}
+                            {% else %}
+                            <div class="text-xs opacity-30">—</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div class="text-center text-xs bg-base-300 rounded-xl py-1.5 font-medium tracking-wide">{{ _('details') }} →</div>
+                        </div>
+                    </div>
+                </a>
+                {% else %}
+                <div class="col-span-full flex flex-col items-center justify-center py-16 gap-3 opacity-30">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <p class="text-sm">{{ _('no flips.') }} <a href="{{ url_for('add_flip') }}" class="link link-primary opacity-100">{{ _('add one') }}</a></p>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
 
-    <!-- {{ _('collection') }} -->
-    <div class="widget card bg-base-100 shadow-sm border border-base-200" data-id="collection">
+    {# ── Collection ───────────────────────────────────────── #}
+    <div class="widget card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]" data-id="collection">
         <div class="card-body p-0">
-            <div class="flex justify-between items-center p-4 border-b border-base-200 bg-base-200/50 rounded-box">
-                <span class="font-bold uppercase">{{ _('collection') }}</span>
-                <div class="flex gap-2 items-center text-sm">
-                    <a href="{{ url_for('collection') }}" class="">{{ _('see all') }} →</a>
-                    <button class="btn btn-xs btn-ghost" onclick="toggleWidgetWidth('collection')"
-                        title="Full/Half width">⇔</button>
-                    <span class="drag-handle cursor-move opacity-50 hover:opacity-100"
+            <div class="flex justify-between items-center px-5 py-3.5 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200">
+                <span class="font-bold uppercase tracking-wide text-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-error" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                    {{ _('collection') }}
+                </span>
+                <div class="flex gap-1 items-center">
+                    <a href="{{ url_for('collection') }}" class="btn btn-xs btn-ghost font-normal">{{ _('see all') }}
+                        →</a>
+                    <button class="btn btn-xs btn-ghost opacity-40 hover:opacity-100 hidden md:inline-flex"
+                        onclick="toggleWidgetWidth('collection')" title="Full/Half width">⇔</button>
+                    <span class="drag-handle cursor-move opacity-30 hover:opacity-70 text-lg px-1"
                         title="{{ _('Drag to reorder') }}">⠿</span>
                 </div>
             </div>
-            <div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-sm border-b border-base-200">
-                <div>
-                    <div class="font-bold text-lg">{{ collection_count }}</div>
-                    <div class="opacity-70 text-xs">{{ _('watches') }}</div>
+
+            {# Mini stats bar #}
+            <div class="grid grid-cols-4 text-center stats bg-gradient-to-r from-base-200/40 via-base-100 to-base-200/40 border-b border-base-200/60">
+                <div class="stat">
+                    <div class="text-lg font-bold">{{ collection_count }}</div>
+                    <div class="text-xs opacity-40 uppercase tracking-wide">{{ _('pieces') }}</div>
                 </div>
-                <div>
-                    <div class="font-bold text-lg">{{ currency_symbol }}{{ '{:,.2f}'.format(collection_total_purchase) }}</div>
-                    <div class="opacity-70 text-xs">{{ _('purchase') }}</div>
+                <div class="stat">
+                    <div class="text-sm font-bold tabular-nums">{{ currency_symbol }}{{ '{:,.0f}'.format(collection_total_purchase) }}</div>
+                    <div class="text-xs opacity-40 uppercase tracking-wide">{{ _('buy') }}</div>
                 </div>
-                <div>
-                    <div class="font-bold text-lg">{{ currency_symbol }}{{ '{:,.2f}'.format(collection_total_service) }}</div>
-                    <div class="opacity-70 text-xs">{{ _('services') }}</div>
+                <div class="stat">
+                    <div class="text-sm font-bold tabular-nums {% if collection_total_service > 0 %}text-error/70{% endif %}">{{ currency_symbol }}{{ '{:,.0f}'.format(collection_total_service) }}</div>
+                    <div class="text-xs opacity-40 uppercase tracking-wide">{{ _('services') }}</div>
                 </div>
-                <div>
-                    <div class="font-bold text-lg">{{ currency_symbol }}{{ '{:,.2f}'.format(collection_total_invested) }}</div>
-                    <div class="opacity-70 text-xs">{{ _('total') }}</div>
+                <div class="stat">
+                    <div class="text-sm font-bold tabular-nums">{{ currency_symbol }}{{ '{:,.0f}'.format(collection_total_invested) }}</div>
+                    <div class="text-xs opacity-40 uppercase tracking-wide">{{ _('tot') }}</div>
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="table">
-                    <thead>
-                        <tr class="uppercase">
-                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('watch') }}</th>
-                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('acquired') }}
-                            </th>
-                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="2">{{ _('last log') }}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for w in collection_watches[:6] %}
-                        <tr onclick="window.location='{{ url_for('collection_detail', wid=w.id) }}'"
-                            class="data-row hover cursor-pointer">
-                            <td>
-                                <div class="font-semibold">{{ w.brand }} {{ w.model }}</div>
-                                <div class="text-xs opacity-70">{{ w.reference or '' }}{% if w.year %} · {{ w.year }}{%
-                                    endif %}</div>
-                            </td>
-                            <td class="text-xs whitespace-nowrap">{{ w.fmt_acquired or '—' }}</td>
-                            <td>
+
+            <div class="coll-card-grid grid grid-cols-2 md:grid-cols-6 gap-4 p-4">
+                {% for w in collection_watches[:6] %}
+                <a href="{{ url_for('collection_detail', wid=w.id) }}"
+                    class="coll-card-item group bg-gradient-to-b from-base-100 to-base-200/80 border border-base-200/60 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-black/[.08] flex flex-col">
+
+                    {# Image #}
+                    <div class="relative h-40 overflow-hidden shrink-0">
+                        <div class="img-thumb-cell absolute inset-0" data-thumb-type="collection" data-thumb-id="{{ w.id }}">
+                            <div class="w-full h-full bg-base-200"></div>
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent from-0% via-transparent via-85% to-black/50 to-100% pointer-events-none z-10"></div>
+                    </div>
+
+                    {# Content #}
+                    <div class="p-3.5 flex flex-col gap-2.5 flex-1">
+                        <div>
+                            <div class="font-semibold text-sm leading-snug">{{ w.brand }} {{ w.model }}</div>
+                            <div class="text-xs opacity-40 mt-0.5">{{ w.reference or '' }}{% if w.year %} · {{ w.year }}{% endif %}</div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                            <div>
+                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('paid') }}</div>
+                                <div class="text-xs font-medium tabular-nums mt-0.5">{{ currency_symbol }}{{ '{:,.0f}'.format(w.purchase_price or 0) }}</div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('services') }}</div>
+                                <div class="text-xs font-medium tabular-nums mt-0.5 {% if w.service_cost and w.service_cost > 0 %}text-error/80{% else %}opacity-30{% endif %}">
+                                    {% if w.service_cost and w.service_cost > 0 %}{{ currency_symbol }}{{ '{:,.0f}'.format(w.service_cost) }}{% else %}—{% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-end justify-between mt-auto pt-2.5 border-t border-base-200">
+                            <div>
+                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('total') }}</div>
+                                <div class="text-sm font-bold tabular-nums mt-0.5">{{ currency_symbol }}{{ '{:,.0f}'.format(w.total_cost or w.purchase_price or 0) }}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs opacity-40">{{ w.fmt_acquired or '—' }}</div>
                                 {% if w.logs %}
-                                <div class="text-xs">{{ w.logs[0].log_date | fmtdate(date_format) }}</div>
-                                <div class="text-xs opacity-70">{{ w.logs[0].description[:30] }}</div>
-                                {% else %}<span class="opacity-50">—</span>{% endif %}
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="3" class="text-center py-4 opacity-50 capitalize">{{ _('no watches.') }} <a
-                                    href="{{ url_for('add_collection') }}" class="link">{{ _('add one') }} →</a></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                <div class="text-xs opacity-40 max-w-24 truncate mt-0.5">{{ w.logs[0].description[:20] }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div class="text-center text-xs bg-base-300 rounded-xl py-1.5 font-medium tracking-wide">{{ _('details') }} →</div>
+                        </div>
+                    </div>
+                </a>
+                {% else %}
+                <div class="col-span-full flex flex-col items-center justify-center py-16 gap-3 opacity-30">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    <p class="text-sm">{{ _('no watches.') }} <a href="{{ url_for('add_collection') }}" class="link link-primary opacity-100">{{ _('add one') }}</a></p>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
 
-    <!-- {{ _('parts inventory') }} -->
-    <div class="widget card bg-base-100 shadow-sm border border-base-200" data-id="parts">
+    {# ── Parts Inventory ──────────────────────────────────── #}
+    <div class="widget card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]" data-id="parts">
         <div class="card-body p-0">
-            <div class="flex justify-between items-center p-4 border-b border-base-200 bg-base-200/50 rounded-box">
-                <span class="font-bold uppercase">{{ _('parts inventory') }}</span>
-                <div class="flex gap-2 items-center text-sm">
-                    <button class="btn btn-xs btn-ghost" onclick="toggleWidgetWidth('parts')"
-                        title="Full/Half width">⇔</button>
-                    <span class="drag-handle cursor-move opacity-50 hover:opacity-100"
+            <div class="flex justify-between items-center px-5 py-3.5 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200">
+                <span class="font-bold uppercase tracking-wide text-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-warning" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                    </svg>
+                    {{ _('parts inventory') }}
+                </span>
+                <div class="flex gap-1 items-center">
+                    <button class="btn btn-xs btn-ghost opacity-40 hover:opacity-100 hidden md:inline-flex"
+                        onclick="toggleWidgetWidth('parts')" title="Full/Half width">⇔</button>
+                    <span class="drag-handle cursor-move opacity-30 hover:opacity-70 text-lg px-1"
                         title="{{ _('drag to reorder') }}">⠿</span>
                 </div>
             </div>
             <div class="overflow-x-auto">
-                <table class="table" id="dash-parts-table">
+                <table class="table table-sm" id="dash-parts-table">
                     <thead>
-                        <tr>
-                            <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="0">{{ _('part') }}</th>
-                            <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="1">{{ _('cat') }}</th>
-                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="2">{{ _('qty')}}
-                            </th>
-                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="3">{{ _('value') }}
-                            </th>
+                        <tr class="text-xs uppercase opacity-60">
+                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('part') }}</th>
+                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('cat') }}</th>
+                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="2">{{
+                                _('qty') }}</th>
+                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{
+                                _('value') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for p in parts[:6] %}
-                        <tr class="data-row hover">
-                            <td>{{ p.name }}</td>
-                            <td>{% if p.category %}<span class="badge badge-sm badge-outline">{{ p.category }}</span>{%
-                                else %}<span class="opacity-50">—</span>{% endif %}</td>
-                            <td class="text-right">{{ p.quantity }}</td>
-                            <td class="text-right">{{ currency_symbol }}{{ '{:,.2f}'.format(p.value) }}</td>
+                        <tr class="data-row hover transition-colors duration-150">
+                            <td class="font-medium">{{ p.name }}</td>
+                            <td>{% if p.category %}<span class="badge badge-s badge-outline">{{ p.category }}</span>{%
+                                else %}<span class="opacity-30">—</span>{% endif %}</td>
+                            <td class="text-right tabular-nums">{{ p.quantity }}</td>
+                            <td class="text-right tabular-nums font-medium">{{ currency_symbol }}{{
+                                '{:,.2f}'.format(p.value) }}</td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4" class="text-center py-4 opacity-50 capitalize">{{ _('inventory empty.') }}</td>
+                            <td colspan="4" class="text-center py-10 opacity-30 text-sm">{{ _('inventory empty.') }}
+                            </td>
                         </tr>
                         {% endfor %}
                         {% if parts_count > 6 %}
                         <tr>
-                            <td colspan="4" class="text-center text-sm opacity-70 p-2">+ {{ parts_count - 6 }} {{
-                                _('others') }} ·
-                                <a href="{{ url_for('inventory') }}" class="">{{ _('see all') }} →</a>
-                            </td>
+                            <td colspan="4" class="text-center text-xs opacity-40 py-2">+ {{ parts_count - 6 }} {{
+                                _('others') }} · <a href="{{ url_for('inventory') }}" class="link">{{ _('see all')
+                                    }}</a></td>
                         </tr>
                         {% endif %}
                     </tbody>
-                    <tfoot class="bg-base-200/50">
-                        <tr>
-                            <td colspan="3" class="text-right font-bold uppercase">{{ _('total') }}</td>
-                            <td class="text-right font-bold">{{ currency_symbol }}{{ '{:,.2f}'.format(parts_value) }}</td>
+                    <tfoot>
+                        <tr class="font-bold border-t-2 border-base-200/70 bg-gradient-to-r from-base-200/50 to-base-100/30">
+                            <td colspan="3" class="text-right text-xs uppercase opacity-50">{{ _('total') }}</td>
+                            <td class="text-right tabular-nums">{{ currency_symbol }}{{ '{:,.2f}'.format(parts_value) }}
+                            </td>
                         </tr>
                     </tfoot>
                 </table>
@@ -221,51 +386,60 @@
         </div>
     </div>
 
-    <!-- {{ _('equipment') }} -->
-    <div class="widget card bg-base-100 shadow-sm border border-base-200" data-id="equipment">
+    {# ── Equipment ────────────────────────────────────────── #}
+    <div class="widget card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]" data-id="equipment">
         <div class="card-body p-0">
-            <div class="flex justify-between items-center p-4 border-b border-base-200 bg-base-200/50 rounded-box">
-                <span class="font-bold uppercase">{{ _('equipment') }}</span>
-                <div class="flex gap-2 items-center text-sm">
-                    <button class="btn btn-xs btn-ghost" onclick="toggleWidgetWidth('equipment')"
-                        title="Full/Half width">⇔</button>
-                    <span class="drag-handle cursor-move opacity-50 hover:opacity-100"
+            <div class="flex justify-between items-center px-5 py-3.5 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200">
+                <span class="font-bold uppercase tracking-wide text-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-secondary" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path
+                            d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                    </svg>
+                    {{ _('equipment') }}
+                </span>
+                <div class="flex gap-1 items-center">
+                    <button class="btn btn-xs btn-ghost opacity-40 hover:opacity-100 hidden md:inline-flex"
+                        onclick="toggleWidgetWidth('equipment')" title="Full/Half width">⇔</button>
+                    <span class="drag-handle cursor-move opacity-30 hover:opacity-70 text-lg px-1"
                         title="{{ _('drag to reorder') }}">⠿</span>
                 </div>
             </div>
-            <div class="overflow-x-auto rounded-box">
-                <table class="table rounded-box" id="dash-equip-table">
+            <div class="overflow-x-auto">
+                <table class="table table-sm" id="dash-equip-table">
                     <thead>
-                        <tr>
-                            <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="0">{{ _('tool') }}</th>
-                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="1">{{ _('value') }}
-                            </th>
+                        <tr class="text-xs uppercase opacity-60">
+                            <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('tool') }}</th>
+                            <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="1">{{
+                                _('value') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for e in equipment[:6] %}
-                        <tr class="data-row hover">
-                            <td>{{ e.name }}</td>
-                            <td class="text-right">{{ currency_symbol }}{{ '{:,.2f}'.format(e.value) }}</td>
+                        <tr class="data-row hover transition-colors duration-150">
+                            <td class="font-medium">{{ e.name }}</td>
+                            <td class="text-right tabular-nums font-medium">{{ currency_symbol }}{{
+                                '{:,.2f}'.format(e.value) }}</td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="2" class="text-center py-4 opacity-50 capitalize">{{ _('no tools.') }}</td>
+                            <td colspan="2" class="text-center py-10 opacity-30 text-sm">{{ _('no tools.') }}</td>
                         </tr>
                         {% endfor %}
                         {% if equip_count > 6 %}
                         <tr>
-                            <td colspan="2" class="text-center text-sm opacity-70 p-2">+ {{ equip_count - 6 }} {{
-                                _('others') }} ·
-                                <a href="{{ url_for('equipment') }}" class="">{{ _('see all') }} →</a>
-                            </td>
+                            <td colspan="2" class="text-center text-xs opacity-40 py-2">+ {{ equip_count - 6 }} {{
+                                _('others') }} · <a href="{{ url_for('equipment') }}" class="link">{{ _('see all')
+                                    }}</a></td>
                         </tr>
                         {% endif %}
                     </tbody>
-                    <tfoot class="bg-base-200/50">
-                        <tr>
-                            <td class="text-right font-bold uppercase">{{ _('total') }}</td>
-                            <td class="text-right font-bold">{{ currency_symbol }}{{ '{:,.2f}'.format(equip_value) }}</td>
+                    <tfoot>
+                        <tr class="font-bold border-t-2 border-base-200/70 bg-gradient-to-r from-base-200/50 to-base-100/30">
+                            <td class="text-right text-xs uppercase opacity-50">{{ _('total') }}</td>
+                            <td class="text-right tabular-nums">{{ currency_symbol }}{{ '{:,.2f}'.format(equip_value) }}
+                            </td>
                         </tr>
                     </tfoot>
                 </table>
@@ -274,4 +448,14 @@
     </div>
 
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const flipIds = {{ flips[:6] | map(attribute = 'id') | list | tojson
+    }};
+    const collIds = {{ collection_watches[:6] | map(attribute = 'id') | list | tojson }};
+    if (flipIds.length) loadThumbnails('flip', flipIds);
+    if (collIds.length) loadThumbnails('collection', collIds);
+    });
+</script>
 {% endblock %}
