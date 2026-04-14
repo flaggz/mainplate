@@ -162,7 +162,6 @@ mainplate/
 └── static/
     ├── css/
     │   ├── tailwind.css
-    │   ├── daisyui.css
     │   └── style.css
     ├── js/
     │   └── main.js
