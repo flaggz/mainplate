@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block page_title %}{{ _('settings') }}{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+    <!-- Preferenze -->
+    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
+        <div class="card-body">
+            <h2 class="card-title text-base border-b border-base-200 pb-2 mb-2 uppercase">{{ _('preferences') }}</h2>
+            <form method="post">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text uppercase">{{ _('date format') }}</span></label>
+                        <select name="date_format" class="select select-bordered w-full">
+                            <option value="DD-MM-YYYY" {% if settings.get('date_format', 'DD-MM-YYYY' )=='DD-MM-YYYY'
+                                %}selected{% endif %}>GG-MM-AAAA</option>
+                            <option value="MM-DD-YYYY" {% if settings.get('date_format', '' )=='MM-DD-YYYY' %}selected{%
+                                endif %}>MM-GG-AAAA</option>
+                            <option value="YYYY-MM-DD" {% if settings.get('date_format', '' )=='YYYY-MM-DD' %}selected{%
+                                endif %}>AAAA-MM-GG</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text uppercase">{{ _('hourly cost') }}</span></label>
+                        <input type="number" step="0.01" name="hourly_rate"
+                            value="{{ settings.get('hourly_rate','0') }}" min="0" class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text uppercase">{{ _('currency symbol') }}</span></label>
+                        <input type="text" name="currency_symbol" maxlength="5"
+                            value="{{ settings.get('currency_symbol','€') }}" class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text uppercase">{{ _('language') }}</span></label>
+                        <select name="language" class="select select-bordered w-full uppercase">
+                            {% for l in langs %}
+                            <option value="{{ l }}" {% if settings.get('language', 'en' )==l %}selected{% endif %}>{{ l
+                                }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="card-actions justify-end mt-4">
+                    <button type="submit" class="btn btn-primary uppercase">{{ _('save') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Backup & Ripristino -->
+    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
+        <div class="card-body">
+            <h2 class="card-title text-base border-b border-base-200 pb-2 mb-2 uppercase">{{ _('backup & restore') }}</h2>
+            <p class="text-sm opacity-70">{{ _('export all data to ZIP for backup or transfer. Importing overwrites all current data.') }}</p>
+            <div class="flex gap-4 mt-auto pt-4">
+                <button class="btn btn-primary uppercase" onclick="exportDB()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+                    </svg>
+                    {{ _('export ZIP') }}
+                </button>
+                <label class="btn btn-outline cursor-pointer uppercase">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+                    </svg>
+                    {{ _('import ZIP') }}
+                    <input type="file" accept=".zip" class="hidden" onchange="importDB(this)">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- {{ _('Categories') }} -->
+    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] md:col-span-2 mt-4">
+        <div class="card-body p-0">
+            <div class="p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200">
+                <h2 class="card-title text-base uppercase">{{ _('categories') }}</h2>
+                <p class="text-sm border-0 opacity-70 mt-1">{{ _('available in all dropdown menus. click on name or color to edit, press enter to save.') }}</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="table" id="cat-table">
+                    <thead>
+                        <tr class="opacity-60">
+                            <th class="w-1/3 uppercase">{{ _('name') }}</th>
+                            <th class="w-24 uppercase">{{ _('color') }}</th>
+                            <th class="uppercase">{{ _('preview') }}</th>
+                            <th class="text-right w-24 uppercase">{{ _('actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cat-tbody">
+                        {% for cat in categories %}
+                        <tr id="cat-row-{{ cat.id }}" class="cat-row data-row hover">
+                            <td class="p-2">
+                                <input type="text"
+                                    class="input input-sm input-ghost w-full uppercase font-medium focus:input-bordered focus:bg-base-100"
+                                    id="cat-name-{{ cat.id }}" value="{{ cat.name }}" onblur="saveCatRow({{ cat.id }})"
+                                    onkeydown="catKeydown(event,{{ cat.id }})">
+                            </td>
+                            <td class="p-2">
+                                <div class="w-10 h-8 rounded overflow-hidden border border-base-300">
+                                    <input type="color" class="w-[150%] h-[150%] -m-2 cursor-pointer"
+                                        id="cat-color-{{ cat.id }}" value="{{ cat.color }}"
+                                        oninput="updateCatPreview({{ cat.id }})" onchange="saveCatRow({{ cat.id }})">
+                                </div>
+                            </td>
+                            <td class="p-2">
+                                <span class="badge badge-outline" id="cat-preview-{{ cat.id }}"
+                                    style="background-color:{{ cat.color }}20;color:{{ cat.color }};border-color:{{ cat.color }}40">
+                                    {{ cat.name }}
+                                </span>
+                            </td>
+                            <td class="p-2">
+                                <div class="flex justify-end"><button class="btn btn-error btn-outline btn-sm gap-1 uppercase" onclick="deleteCat({{ cat.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>{{ _('delete') }}</button></div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr id="cat-empty">
+                            <td colspan="4" class="text-center py-6 opacity-50">{{ _('no categories found. add below.')
+                                }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="bg-gradient-to-r from-base-200/60 to-base-100/30">
+                        <tr class="add-row">
+                            <td class="p-2">
+                                <input type="text" id="new-cat-name"
+                                    class="input input-sm input-bordered w-full uppercase"
+                                    placeholder="{{ _('ex. lubricants')}}"
+                                    onkeydown="if(event.key==='Enter'){event.preventDefault();addCat();}">
+                            </td>
+                            <td class="p-2">
+                                <div class="w-10 h-8 rounded overflow-hidden border border-base-300">
+                                    <input type="color" id="new-cat-color" value="#4a90d9"
+                                        class="w-[150%] h-[150%] -m-2 cursor-pointer" oninput="updateNewCatPreview()">
+                                </div>
+                            </td>
+                            <td class="p-2">
+                                <span id="new-cat-preview" class="badge badge-outline"
+                                    style="background-color:#4a90d920;color:#4a90d9;border-color:#4a90d940">{{
+                                    _('preview') }}</span>
+                            </td>
+                            <td class="p-2 text-right">
+                                <button class="btn btn-primary btn-sm uppercase" onclick="addCat()">+ {{ _('add') }}</button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

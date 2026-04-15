@@ -1,0 +1,32 @@
+﻿{% extends 'base.html' %}
+{% block breadcrumb %}<a href="{{ url_for('flips') }}" class="link">{{ _('flips') }}</a> <span class="opacity-50 mx-2">/</span>{% endblock %}
+{% block page_title %}{% if flip %}Modifica Flip{% else %}Nuovo Flip{% endif %}{% endblock %}
+{% block content %}
+<div class="form-wrap">
+    <div class="form-card">
+        <form method="post">
+            <div class="form-grid">
+                <div class="form-group"><label class="uppercase">Brand *</label><input type="text" name="brand" value="{{ flip.brand if flip else '' }}" required placeholder="es. Seiko"></div>
+                <div class="form-group"><label>Modello *</label><input type="text" name="model" value="{{ flip.model if flip else '' }}" required placeholder="es. 5"></div>
+                <div class="form-group"><label>Referenza</label><input type="text" name="reference" value="{{ flip.reference if flip else '' }}" placeholder="es. 7009A"></div>
+                <div class="form-group"><label>Anno</label><input type="number" name="year" value="{{ flip.year if flip else '' }}" placeholder="es. 1970" min="1800" max="2099"></div>
+                <div class="form-group"><label>Stato</label>
+                    <select name="status">
+                        {% for s in ['Acquired','In Progress','For Sale','Sold'] %}
+                        <option value="{{ s }}" {% if flip and flip.status==s %}selected{% endif %}>{{ _(s) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group"><label>Ore lavorate</label><input type="number" step="0.5" name="hours" value="{{ flip.hours if flip else '0' }}" min="0"></div>
+                <div class="form-group"><label>Pagato ({{ currency_symbol }})</label><input type="number" step="0.01" name="paid" value="{{ flip.paid if flip else '0' }}" min="0"></div>
+                <div class="form-group"><label>Venduto ({{ currency_symbol }})</label><input type="number" step="0.01" name="sold" value="{{ flip.sold if flip else '0' }}" min="0"></div>
+                <div class="form-group full-width"><label>Note</label><textarea name="notes" rows="3" placeholder="Condizioni, fonte di acquisto, note di servizio…">{{ flip.notes if flip else '' }}</textarea></div>
+            </div>
+            <div class="form-actions">
+                <a href="{{ url_for('flips') }}" class="btn-cancel">Annulla</a>
+                <button type="submit" class="btn-primary">{% if flip %}Salva{% else %}Crea Flip{% endif %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

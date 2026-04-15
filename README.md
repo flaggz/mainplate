@@ -16,12 +16,16 @@ Built with Flask + SQLite, runs entirely in Docker with no external dependencies
 
 | Light Mode | Dark Mode |
 |:----------:|:---------:|
-| ![Dashboard](/screens/dashboard.jpg "Dashboard") | ![Dashboard Dark](/screens/dashboard_dark.jpg "Dashboard Dark mode") |
-| ![Flips](/screens/flips.jpg "Flips") | ![Flips Dark](/screens/flips_dark.jpg "Flips Dark mode") |
-| ![Collection](/screens/collection.jpg "Collection") | ![Collection Dark](/screens/collection_dark.jpg "Collection Dark Mode") |
-| ![Equipment](/screens/equipment.jpg "Equipment") | ![Equipment Dark](/screens/equipment_dark.jpg "Equipment Dark Mode") |
-| ![Inventory](/screens/inventory.jpg "Inventory") | ![Inventory Dark](/screens/inventory_dark.jpg "Inventory Dark Mode") |
-| ![Settings](/screens/settings.jpg "Settings") | ![Settings Dark](/screens/settings_dark.jpg "Settings Dark Mode") |
+| ![Dashboard](/screens/dashboard_light.jpg "Dashboard") | ![Dashboard Dark](/screens/dashboard_dark.jpg "Dashboard Dark mode") |
+| ![Flips](/screens/flips_light.jpg "Flips") | ![Flips Dark](/screens/flips_dark.jpg "Flips Dark mode") |
+| ![Add Flip](/screens/flips_add_light.jpg "Add Flip") | ![Add Flip Dark](/screens/flips_add_dark.jpg "Add Flip Dark mode") |
+| ![Flip Detail](/screens/flips_detail_light.jpg "Flip Detail") | ![Flip Detail Dark](/screens/flips_detail_dark.jpg "Flip Detail Dark Mode") |
+| ![Collection](/screens/collection_light.jpg "Collection") | ![Collection Dark](/screens/collection_dark.jpg "Collection Dark Mode") |
+| ![Add to Collection](/screens/collection_add_light.jpg "Add to Collection") | ![Add to Collection Dark](/screens/collection_add_dark.jpg "Add to Collection Dark Mode") |
+| ![Collection Detail](/screens/collection_detail_light.jpg "Collection detail") | ![Collection Detail Dark](/screens/collection_detail_dark.jpg "Collection detail Dark Mode") |
+| ![Equipment](/screens/equipment_light.jpg "Equipment") | ![Equipment Dark](/screens/equipment_dark.jpg "Equipment Dark Mode") |
+| ![Inventory](/screens/inventory_light.jpg "Inventory") | ![Inventory Dark](/screens/inventory_dark.jpg "Inventory Dark Mode") |
+| ![Settings](/screens/settings_light.jpg "Settings") | ![Settings Dark](/screens/settings_dark.jpg "Settings Dark Mode") |
 
 ---
 
@@ -44,6 +48,9 @@ Every flip and every collection watch supports **multiple photos**. Images are p
 ### Flip Log
 Each flip has a detailed log with **date + description + optional cost + category**. Log entries contribute to the net profit calculation and can optionally add parts to inventory automatically.
 
+### Timegrapher
+Each flip has a **timegrapher readings log** to record the movement's timing across the six standard positions (DU, DD, 3U, 6U, 9U, 12U), plus overall amplitude and beat error. The **delta** (max − min spread across positions) is computed automatically and colour-coded: green below 10 s/d, yellow 10–20 s/d, red above 20 s/d. Multiple readings are stored per flip — useful to compare before/after a service — with the latest reading shown as a summary at the top.
+
 ### Collection Log
 Each watch in the collection has a service diary (revisions, part replacements, etc.) with optional cost and category per entry.
 
@@ -63,7 +70,7 @@ Flips and collection watches can be edited directly **inline in the list table**
 Full backup and restore from Settings or Dashboard. The export is a **ZIP archive** containing `data.json` (all tables) plus the `images/` directory. Import accepts both the new ZIP format and the legacy plain-JSON format.
 
 ### Internationalisation
-UI language is switchable from Settings. Translations live in `lang/it.json` and `lang/en.json`.
+UI language is switchable from Settings. Translations live in `lang/en.json` and are also available in Italian, German, French, and Spanish (`lang/it.json`, `de.json`, `fr.json`, `es.json`).
 
 ---
 
@@ -114,7 +121,7 @@ In-app settings (saved to the database via the Settings page):
 
 | Setting | Description |
 |---|---|
-| **Language** | UI language (defaults or any custom translation) |
+| **Language** | UI language (`en`, `it`, or any custom translation) |
 | **Currency symbol** | Symbol shown next to monetary values (e.g. `€`, `$`, `£`) |
 | **Date format** | `DD-MM-YYYY`, `MM-DD-YYYY`, or `YYYY-MM-DD` |
 | **Hourly rate** | Labor cost per hour, added to flip cost calculations |
@@ -140,10 +147,7 @@ mainplate/
 ├── Dockerfile
 ├── docker-compose.yml
 ├── lang/
-│   ├── en.json              # default language: English
-│   ├── es.json              # Spanish translation
-│   ├── fr.json              # Franch translation
-│   ├── de.json              # German translation
+│   ├── en.json              # default language
 │   └── it.json              # Italian translations
 ├── templates/
 │   ├── base.html
@@ -161,6 +165,7 @@ mainplate/
 └── static/
     ├── css/
     │   ├── tailwind.css
+    │   ├── daisyui.css
     │   └── style.css
     ├── js/
     │   └── main.js
@@ -173,7 +178,7 @@ mainplate/
 
 ## Adding a Language
 
-1. Copy `lang/en.json` to `lang/xx.json` (e.g. `jp.json`)
+1. Copy `lang/en.json` to `lang/xx.json` (e.g. `de.json`)
 2. Translate the values (leave the keys as-is)
 3. Restart the container — the new language will appear in Settings
 
