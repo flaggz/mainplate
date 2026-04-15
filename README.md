@@ -114,7 +114,7 @@ In-app settings (saved to the database via the Settings page):
 
 | Setting | Description |
 |---|---|
-| **Language** | UI language (`en`, `it`, or any custom translation) |
+| **Language** | UI language (defaults or any custom translation) |
 | **Currency symbol** | Symbol shown next to monetary values (e.g. `€`, `$`, `£`) |
 | **Date format** | `DD-MM-YYYY`, `MM-DD-YYYY`, or `YYYY-MM-DD` |
 | **Hourly rate** | Labor cost per hour, added to flip cost calculations |
