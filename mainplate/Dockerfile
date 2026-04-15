@@ -26,6 +26,16 @@ os.makedirs('/app/node_modules', exist_ok=True); \
 tarfile.open('/tmp/daisyui.tgz').extractall('/app/node_modules', filter='data'); \
 os.rename('/app/node_modules/package', dest)"
 
+# Download ApexCharts (bundled locally — no CDN at runtime)
+RUN python3 -c "\
+import urllib.request as r, tarfile, shutil, os, json; \
+info = json.loads(r.urlopen('https://registry.npmjs.org/apexcharts/latest').read()); \
+url = info['dist']['tarball']; \
+print('Downloading apexcharts@' + info['version']); \
+r.urlretrieve(url, '/tmp/apexcharts.tgz'); \
+tarfile.open('/tmp/apexcharts.tgz').extractall('/tmp', filter='data'); \
+shutil.copy('/tmp/package/dist/apexcharts.min.js', '/app/static/js/apexcharts.min.js')"
+
 # Rebuild CSS — Tailwind processes DaisyUI as a plugin (only used components + 2 themes)
 RUN tailwindcss -i static/css/input.css -o static/css/tailwind.css --minify
 

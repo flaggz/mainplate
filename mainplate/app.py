@@ -100,12 +100,15 @@ def get_images(entity_type, entity_id):
 def _save_image(file_storage):
     """Process uploaded file with Pillow, save as JPEG, return filename."""
     img = Image.open(file_storage.stream)
+    # Palette images with byte transparency must become RGBA before any further
+    # processing — otherwise Pillow emits a UserWarning and the transparency is lost.
+    if img.mode == 'P' and 'transparency' in img.info:
+        img = img.convert('RGBA')
     # Flatten transparency onto black background before converting to RGB.
     # A direct .convert('RGB') on RGBA/PA/LA composites onto black by default,
     # which causes fringing artifacts on semi-transparent edges.
     if img.mode in ('RGBA', 'LA', 'PA'):
         background = Image.new('RGB', img.size, (0, 0, 0))
-        # Use the alpha channel as mask when available
         mask = img.split()[-1] if img.mode != 'PA' else img.convert('RGBA').split()[-1]
         background.paste(img.convert('RGB'), mask=mask)
         img = background
@@ -404,36 +407,30 @@ def api_delete_flip_log(lid):
 # ══════════════════════════════════════════════════════════
 @app.route('/collection', methods=['GET', 'POST'])
 def collection():
-    conn = get_db(); c = conn.cursor()
-
     if request.method == 'POST':
         f = request.form
-        c.execute('INSERT INTO collection (brand,model,reference,year,acquired,purchase_price,sold_price,sold_date,notes,is_wishlist) VALUES (?,?,?,?,?,?,?,?,?,?)',
+        run('INSERT INTO collection (brand,model,reference,year,acquired,purchase_price,sold_price,sold_date,notes,is_wishlist) VALUES (?,?,?,?,?,?,?,?,?,?)',
             (f['brand'], f['model'], f.get('reference',''), f.get('year') or None,
              f.get('acquired',''), float(f.get('purchase_price',0) or 0),
              float(f.get('sold_price',0) or 0), f.get('sold_date',''), f.get('notes',''), int(f.get('is_wishlist', 0))))
-        conn.commit()
         flash(_('Orologio aggiunto!'), 'success')
         return redirect(url_for('collection'))
 
-    active_query = """
+    active_watches = [dict(w) for w in q("""
         SELECT c.*, COALESCE(SUM(l.cost), 0) as service_cost
         FROM collection c
         LEFT JOIN collection_log l ON c.id = l.watch_id
         WHERE c.is_deleted=0 AND c.is_wishlist=0 AND (c.sold_price=0 OR c.sold_price IS NULL)
         GROUP BY c.id ORDER BY c.acquired DESC, c.id DESC
-    """
-    sold_query = """
+    """)]
+    sold_watches = [dict(w) for w in q("""
         SELECT c.*, COALESCE(SUM(l.cost), 0) as service_cost
         FROM collection c
         LEFT JOIN collection_log l ON c.id = l.watch_id
         WHERE c.is_deleted=0 AND c.is_wishlist=0 AND c.sold_price>0
         GROUP BY c.id ORDER BY c.sold_date DESC
-    """
-    
-    active_watches = [dict(w) for w in c.execute(active_query).fetchall()]
-    sold_watches = [dict(w) for w in c.execute(sold_query).fetchall()]
-    wishlist = c.execute("SELECT * FROM collection WHERE is_deleted=0 AND is_wishlist=1 ORDER BY id DESC").fetchall()
+    """)]
+    wishlist = q("SELECT * FROM collection WHERE is_deleted=0 AND is_wishlist=1 ORDER BY id DESC")
 
     total_purchase = 0
     total_service = 0
@@ -613,20 +610,28 @@ def api_list_images(entity_type, eid):
 
 @app.route('/api/images/first/<entity_type>', methods=['GET'])
 def api_images_first(entity_type):
-    ids_str = request.args.get('ids','')
+    ids_str = request.args.get('ids', '')
     if not ids_str:
         return jsonify({})
     try:
         ids = [int(x) for x in ids_str.split(',') if x.strip()]
     except ValueError:
         return jsonify({})
-    result = {}
-    for eid in ids:
-        row = q('SELECT id,filename FROM images WHERE entity_type=? AND entity_id=? ORDER BY sort_order,id LIMIT 1',
-                (entity_type, eid), one=True)
-        if row:
-            result[str(eid)] = {'id': row['id'], 'url': f"/uploads/{row['filename']}"}
-    return jsonify(result)
+    if not ids:
+        return jsonify({})
+    ph = ','.join('?' * len(ids))
+    rows = q(
+        f'SELECT i.entity_id, i.id, i.filename '
+        f'FROM images i '
+        f'WHERE i.entity_type=? AND i.entity_id IN ({ph}) '
+        f'AND NOT EXISTS ('
+        f'  SELECT 1 FROM images i2 '
+        f'  WHERE i2.entity_type=i.entity_type AND i2.entity_id=i.entity_id '
+        f'  AND (i2.sort_order < i.sort_order OR (i2.sort_order=i.sort_order AND i2.id < i.id))'
+        f')',
+        [entity_type] + ids
+    )
+    return jsonify({str(r['entity_id']): {'id': r['id'], 'url': f"/uploads/{r['filename']}"} for r in rows})
 
 # ══════════════════════════════════════════════════════════
 # INVENTORY
@@ -717,9 +722,8 @@ def api_export():
             fpath = os.path.join(IMAGE_DIR, row['filename'])
             if os.path.exists(fpath):
                 zf.write(fpath, f'images/{row["filename"]}')
-    buf.seek(0)
-    return Response(buf.read(), mimetype='application/zip',
-        headers={'Content-Disposition': 'attachment; filename=mainplate_backup.zip'})
+    return Response(buf.getvalue(), mimetype='application/zip',
+        headers={'Content-Disposition': 'attachment; filename=mainplate_backup_'+today()+'.zip'})
 
 @app.route('/api/import', methods=['POST'])
 def api_import():

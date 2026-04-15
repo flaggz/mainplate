@@ -66,12 +66,12 @@
                 <div class="font-bold text-lg mb-4 mt-8 border-b border-base-200 pb-2">{{ _('sales (optional)') }}</div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="form-control">
-                        <label class="label"><span class="label-text">{{ _('sales date') }}</span></label>
+                        <label class="label"><span class="label-text">{{ _('sale date') }}</span></label>
                         <input type="date" name="sold_date" value="{{ watch.sold_date if watch else '' }}"
                             class="input input-bordered w-full">
                     </div>
                     <div class="form-control">
-                        <label class="label"><span class="label-text">{{ _('sales price') }}</span></label>
+                        <label class="label"><span class="label-text">{{ _('sale price') }}</span></label>
                         <input type="number" step="0.01" name="sold_price"
                             value="{{ watch.sold_price if watch else '0' }}" min="0"
                             class="input input-bordered w-full">

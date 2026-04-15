@@ -504,21 +504,7 @@ function catKeydown(event, id) {
 }
 
 const _catTimers = {};
-function saveCatRow(id) {
-    clearTimeout(_catTimers[id]);
-    _catTimers[id] = setTimeout(() => {
-        const name = (document.getElementById(`cat-name-${id}`)?.value || '').trim().toUpperCase();
-        const color = document.getElementById(`cat-color-${id}`)?.value || '#888888';
-        if (!name) return;
-        fetch(`/api/categories/${id}`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, color })
-        })
-            .then(r => r.json())
-            .then(() => { updateCatPreview(id); showFlash(window.I18N.category_updated); })
-            .catch(() => showFlash(window.I18N.error, 'info'));
-    }, 400);
-}
+const _catOriginals = {};
 
 function updateNewCatPreview() {
     const c = document.getElementById('new-cat-color')?.value || '#4a90d9';
@@ -806,44 +792,35 @@ function deleteCat(id) {
     });
 }
 
-// Override saveCatRow to track original values and skip if unchanged
-(function () {
-    const _originals = {};
-    const origSave = window.saveCatRow;
-    // Track original values on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        applyCategoryColors();
-
-        document.querySelectorAll('[id^="cat-name-"]').forEach(inp => {
-            const id = inp.id.replace('cat-name-', '');
-            const color = document.getElementById(`cat-color-${id}`)?.value || '';
-            _originals[id] = { name: inp.value, color };
-        });
+// Track original category values on page load to skip no-op saves
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[id^="cat-name-"]').forEach(inp => {
+        const id = inp.id.replace('cat-name-', '');
+        _catOriginals[id] = { name: inp.value, color: document.getElementById(`cat-color-${id}`)?.value || '' };
     });
-    window.saveCatRow = function (id) {
-        clearTimeout(window._catTimers?.[id]);
-        window._catTimers = window._catTimers || {};
-        window._catTimers[id] = setTimeout(() => {
-            const name = (document.getElementById(`cat-name-${id}`)?.value || '').trim().toUpperCase();
-            const color = document.getElementById(`cat-color-${id}`)?.value || '#888888';
-            if (!name) return;
-            // Skip if nothing changed
-            const orig = _originals[id];
-            if (orig && orig.name === name && orig.color === color) return;
-            fetch(`/api/categories/${id}`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, color })
+});
+
+function saveCatRow(id) {
+    clearTimeout(_catTimers[id]);
+    _catTimers[id] = setTimeout(() => {
+        const name = (document.getElementById(`cat-name-${id}`)?.value || '').trim().toUpperCase();
+        const color = document.getElementById(`cat-color-${id}`)?.value || '#888888';
+        if (!name) return;
+        const orig = _catOriginals[id];
+        if (orig && orig.name === name && orig.color === color) return;
+        fetch(`/api/categories/${id}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, color })
+        })
+            .then(r => r.json())
+            .then(() => {
+                _catOriginals[id] = { name, color };
+                updateCatPreview(id);
+                showFlash(window.I18N.category_updated);
             })
-                .then(r => r.json())
-                .then(() => {
-                    _originals[id] = { name, color }; // update original
-                    updateCatPreview(id);
-                    showFlash(window.I18N.category_updated);
-                })
-                .catch(() => showFlash(window.I18N.error, 'info'));
-        }, 400);
-    };
-})();
+            .catch(() => showFlash(window.I18N.error, 'info'));
+    }, 400);
+}
 
 // ── Inline add flip ────────────────────────────────────────
 function toggleAddFlipForm() {
@@ -890,7 +867,7 @@ function ajaxAddFlip() {
             const badgeClass = `badge-${(f.status || '').toLowerCase().replace(/ /g, '-')}`;
             tr.innerHTML = `
             <td><div class="watch-name">${f.brand} ${f.model}</div><div class="watch-ref">${f.reference}${f.year ? ' · ' + f.year : ''}</div></td>
-            <td><span class="badge ${badgeClass}">${f.status}</span></td>
+            <td><span class="badge ${badgeClass}">${(window.I18N.statuses || {})[f.status] || f.status}</span></td>
             <td class="num">€${fmtNum(f.paid)}</td>
             <td class="num"><span class="muted">—</span></td>
             <td class="num"><span class="muted">—</span></td>
@@ -1102,41 +1079,6 @@ function ajaxAddCollection() {
         }).catch(() => showFlash(window.I18N.error_saving, 'info'));
 }
 
-// ── Apply colors on load ───────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-    applyCategoryColors();
-
-    applyCategoryColors();
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    applyCategoryColors();
-
-    document.querySelectorAll('th[data-col]').forEach(th => {
-        th.style.cursor = 'pointer';
-        th.addEventListener('click', () => {
-            const table = th.closest('table');
-            const tbody = table.querySelector('tbody') || table;
-            const colIdx = parseInt(th.dataset.col);
-            const isAsc = th.dataset.dir !== 'asc';
-
-            table.querySelectorAll('th').forEach(h => h.dataset.dir = '');
-            th.dataset.dir = isAsc ? 'asc' : 'desc';
-
-            const rows = Array.from(tbody.querySelectorAll('tr:not(.total-row):not(.add-row):not(.dash-more-row):not(.empty-row)'));
-
-            rows.sort((a, b) => {
-                let valA = cellA.dataset.sort || cellA.textContent.trim();
-                let valB = cellB.dataset.sort || cellB.textContent.trim();
-                // Usa ordinamento naturale (numeric: true) per risolvere i problemi "Bergeon" e "Quantità"
-                return isAsc ? vA.localeCompare(vB, undefined, { numeric: true })
-                    : vB.localeCompare(vA, undefined, { numeric: true });
-            });
-
-            rows.forEach(r => tbody.appendChild(r));
-        });
-    });
-});
 
 // ── Lightbox ────────────────────────────────────────────────
 let _lbImages = [], _lbIdx = 0;
@@ -1175,9 +1117,7 @@ function _lbKey(e) {
 }
 
 function _lbBgClick(e) {
-    if (e.target === document.getElementById('lightbox') || e.target === document.getElementById('lb-img')) {
-        if (e.target === document.getElementById('lightbox')) closeLightbox();
-    }
+    if (e.target === document.getElementById('lightbox')) closeLightbox();
 }
 
 // ── ImageManager ────────────────────────────────────────────

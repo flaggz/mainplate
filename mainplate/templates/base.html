@@ -157,7 +157,7 @@
         window.I18N = {
             confirm_delete: "{{ _('are you sure you want to delete this item?') }}",
             saved_successfully: "{{ _('item saved successfully') }}",
-            error_saving: "{{ _('error saving item') }}",
+            error_saving: "{{ _('error saving') }}",
             updated: "{{ _('updated') }}",
             error: "{{ _('error') }}",
             entry_added: "{{ _('entry added!') }}",
@@ -178,7 +178,13 @@
             photos_added: "{{ _('photos added!') }}",
             upload_error: "{{ _('upload error') }}",
             confirm_delete_photo: "{{ _('delete this photo?') }}",
-            add: "{{ _('add') }}"
+            add: "{{ _('add') }}",
+            statuses: {
+                "Acquired":    "{{ _('acquired') }}",
+                "In Progress": "{{ _('in progress') }}",
+                "For Sale":    "{{ _('for sale') }}",
+                "Sold":        "{{ _('sold') }}"
+            }
         };
 
         // Update theme toggle UI logic
@@ -197,6 +203,7 @@
         }
     </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
 
     <!-- Lightbox (global) -->
     <div id="lightbox" class="fixed inset-0 bg-black/90 z-[9999] items-center justify-center hidden">

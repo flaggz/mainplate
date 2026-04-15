@@ -31,30 +31,16 @@
             {{ currency_symbol }}{{ '{:,.0f}'.format(total_profit) }}
         </div>
         <div class="text-xs opacity-40 mt-1 mb-3">{{ sold_count }} {{ _('sold') }}</div>
-        {# mini sparkline #}
+        {# mini sparkline — rendered by ApexCharts (see extra_scripts block) #}
         {% if sp_profits | length >= 2 %}
-        {% set sp_w = 120 %} {% set sp_h = 32 %}
-        {% set sp_min = sp_profits | min %} {% set sp_max = sp_profits | max %}
-        {% set sp_range = (sp_max - sp_min) if (sp_max > sp_min) else 1 %}
-        {% set ns = namespace(pts='') %}
-        {% for p in sp_profits %}
-        {% set x = (loop.index0 / ((sp_profits | length) - 1) * sp_w) | round(1) %}
-        {% set y = (sp_h - ((p - sp_min) / sp_range * sp_h * 0.85 + sp_h * 0.08)) | round(1) %}
-        {% if loop.first %}{% set ns.pts = x|string ~ ',' ~ y|string %}
-        {% else %}{% set ns.pts = ns.pts ~ ' ' ~ x|string ~ ',' ~ y|string %}{% endif %}
-        {% endfor %}
-        <svg width="{{ sp_w }}" height="{{ sp_h }}" viewBox="0 0 {{ sp_w }} {{ sp_h }}"
-            class="{% if total_profit >= 0 %}text-success{% else %}text-error{% endif %} opacity-50 -mx-1">
-            <polyline points="{{ ns.pts }}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" />
-        </svg>
+        <div id="profit-sparkline" class="-mx-1 -mb-1"></div>
         {% endif %}
     </div>
 
     {# — Capital — #}
     <div class="stat">
         <div class="flex items-start justify-between mb-3">
-            <span class="text-xs font-semibold uppercase tracking-widest opacity-50">{{ _('capital') }}</span>
+            <span class="text-xs font-semibold uppercase tracking-widest opacity-50">{{ _('investment') }}</span>
             <span class="p-1.5 rounded-lg bg-primary/10 text-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -140,7 +126,7 @@
                         <div class="absolute inset-0 bg-gradient-to-b from-transparent from-0% via-transparent via-85% to-black/50 to-100% pointer-events-none z-10"></div>
                         <div class="absolute top-2.5 left-2.5 z-20">
                             {% set st = f.status|lower|replace(' ','-') %}
-                            <span class="badge badge-s {% if st == 'sold' %}badge-success{% elif st == 'for-sale' %}badge-info{% elif st == 'in-progress' %}badge-warning{% else %}badge-ghost{% endif %}">{{ f.status }}</span>
+                            <span class="badge badge-s {% if st == 'sold' %}badge-success{% elif st == 'for-sale' %}badge-info{% elif st == 'in-progress' %}badge-warning{% else %}badge-ghost{% endif %}">{{ _(f.status|lower) }}</span>
                         </div>
                     </div>
 
@@ -246,7 +232,7 @@
                 </div>
                 <div class="stat">
                     <div class="text-sm font-bold tabular-nums">{{ currency_symbol }}{{ '{:,.0f}'.format(collection_total_purchase) }}</div>
-                    <div class="text-xs opacity-40 uppercase tracking-wide">{{ _('buy') }}</div>
+                    <div class="text-xs opacity-40 uppercase tracking-wide">{{ _('investment') }}</div>
                 </div>
                 <div class="stat">
                     <div class="text-sm font-bold tabular-nums {% if collection_total_service > 0 %}text-error/70{% endif %}">{{ currency_symbol }}{{ '{:,.0f}'.format(collection_total_service) }}</div>
@@ -448,6 +434,59 @@
     </div>
 
 </div>
+
+{% if sp_profits | length >= 2 %}
+<script src="{{ url_for('static', filename='js/apexcharts.min.js') }}"></script>
+<script>
+(function () {
+    var profits = {{ sp_profits | tojson }};
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var zeroLineColor = isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.25)';
+    var dataMin = Math.min.apply(null, profits);
+    var dataMax = Math.max.apply(null, profits);
+
+    // Two series (green ≥ 0, red < 0) with interpolated zero-crossing points
+    // so the two lines meet exactly at zero without gaps.
+    var posData = [], negData = [];
+    for (var i = 0; i < profits.length; i++) {
+        var v = profits[i];
+        if (i > 0) {
+            var prev = profits[i - 1];
+            if ((prev >= 0 && v < 0) || (prev < 0 && v >= 0)) {
+                var xc = (i - 1) + prev / (prev - v);
+                posData.push({ x: xc, y: 0 });
+                negData.push({ x: xc, y: 0 });
+            }
+        }
+        posData.push({ x: i, y: v >= 0 ? v : null });
+        negData.push({ x: i, y: v < 0 ? v : null });
+    }
+
+    new ApexCharts(document.getElementById('profit-sparkline'), {
+        series: [
+            { name: '', data: posData },
+            { name: '', data: negData }
+        ],
+        chart: {
+            type: 'area',
+            height: 40,
+            sparkline: { enabled: true },
+            animations: { enabled: false },
+            background: 'transparent',
+        },
+        stroke: { curve: 'straight', width: 2 },
+        fill: { type: 'solid', opacity: 0.18 },
+        colors: ['#22c55e', '#ef4444'],
+        yaxis: { min: Math.min(dataMin, 0), max: Math.max(dataMax, 0) },
+        annotations: {
+            yaxis: [{ y: 0, borderColor: zeroLineColor, borderWidth: 1, strokeDashArray: 4 }]
+        },
+        legend: { show: false },
+        tooltip: { enabled: false },
+    }).render();
+}());
+</script>
+{% endif %}
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {

@@ -1,7 +1,7 @@
 ﻿{% extends 'base.html' %}
 {% block page_title %}{{ _('collection') }}{% endblock %}
 {% block page_actions %}
-<button class="btn btn-primary btn-sm !capitalize" onclick="toggleAddCollForm()">+ {{ _('add watch') }}</button>
+<button class="btn btn-primary btn-sm !uppercase" onclick="toggleAddCollForm()">+ {{ _('add watch') }}</button>
 {% endblock %}
 {% block content %}
 
@@ -92,9 +92,9 @@
                 </div>
             </div>
 
-            <div class="mt-6 flex justify-end gap-2 !uppercase">
-                <button class="btn btn-ghost" onclick="toggleAddCollForm()">{{ _('cancel') }}</button>
-                <button class="btn btn-primary" onclick="ajaxAddCollection()">{{ _('add') }}</button>
+            <div class="mt-6 flex justify-end gap-2">
+                <button class="btn btn-ghost !uppercase" onclick="toggleAddCollForm()">{{ _('cancel') }}</button>
+                <button class="btn btn-primary !uppercase" onclick="ajaxAddCollection()">{{ _('add') }}</button>
             </div>
         </div>
     </div>

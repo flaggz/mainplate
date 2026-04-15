@@ -132,7 +132,7 @@
                         {% set st = f.status|lower|replace(' ','-') %}
                         <span
                             class="badge {% if st == 'sold' %}badge-success{% elif st == 'for-sale' %}badge-info{% elif st == 'in-progress' %}badge-warning{% else %}badge-ghost{% endif %} badge-sm">{{
-                            _(f.status) }}</span>
+                            _(f.status|lower) }}</span>
                     </td>
                     <td class="text-right">{{ currency_symbol }}{{ '{:,.2f}'.format(f.paid) }}</td>
                     <td class="text-right">{% if f.log_cost > 0 %}<span class="text-error">{{ currency_symbol }}{{
