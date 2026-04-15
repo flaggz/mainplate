@@ -140,7 +140,10 @@ mainplate/
 ├── Dockerfile
 ├── docker-compose.yml
 ├── lang/
-│   ├── en.json              # default language
+│   ├── en.json              # default language: English
+│   ├── es.json              # Spanish translation
+│   ├── fr.json              # Franch translation
+│   ├── de.json              # German translation
 │   └── it.json              # Italian translations
 ├── templates/
 │   ├── base.html
@@ -170,7 +173,7 @@ mainplate/
 
 ## Adding a Language
 
-1. Copy `lang/en.json` to `lang/xx.json` (e.g. `de.json`)
+1. Copy `lang/en.json` to `lang/xx.json` (e.g. `jp.json`)
 2. Translate the values (leave the keys as-is)
 3. Restart the container — the new language will appear in Settings
 
