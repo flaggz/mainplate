@@ -155,29 +155,6 @@ endblock %}
             <div class="font-bold p-3 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 text-sm flex items-center justify-between">
                 <span class="uppercase">{{ _('timegrapher') }}</span>
             </div>
-            <div id="tg-summary" class="p-4 {% if not tg_latest %}hidden{% endif %}">
-                <div class="flex flex-wrap items-start gap-3">
-                    <div class="flex flex-col items-center justify-center px-4 py-2 rounded-xl bg-base-200/70 border border-base-300/60 min-w-[72px]">
-                        <span class="text-[9px] uppercase tracking-widest opacity-40 font-semibold leading-none mb-1">Δ</span>
-                        <span id="tg-delta-val" class="text-2xl font-bold font-mono leading-none {{ tg_latest_delta_class }}">{% if tg_latest_delta is not none %}{{ '{:.1f}'.format(tg_latest_delta) }}{% else %}—{% endif %}</span>
-                        <span class="text-[9px] opacity-40 mt-0.5">s/d</span>
-                    </div>
-                    {% for pos, key in [('DU','du'),('DD','dd'),('3U','p3'),('6U','p6'),('9U','p9'),('12U','p12')] %}
-                    <div class="flex flex-col gap-px px-3 py-1.5 rounded-xl bg-base-200/70 border border-base-300/60 min-w-[52px] text-center">
-                        <span class="text-[9px] uppercase tracking-widest opacity-40 font-semibold leading-none">{{ pos }}</span>
-                        <span id="tg-{{ key }}-val" class="text-sm font-bold font-mono leading-tight mt-0.5">{% if tg_latest and tg_latest[key] is not none %}{{ '{:+.1f}'.format(tg_latest[key]) }}{% else %}—{% endif %}</span>
-                    </div>
-                    {% endfor %}
-                    <div id="tg-amp-chip" class="flex flex-col gap-px px-3 py-1.5 rounded-xl bg-base-200/40 border border-base-300/40 min-w-[52px] text-center {% if not tg_latest or tg_latest['amplitude'] is none %}hidden{% endif %}">
-                        <span class="text-[9px] uppercase tracking-widest opacity-40 font-semibold leading-none">Amp</span>
-                        <span id="tg-amp-val" class="text-sm font-bold font-mono leading-tight mt-0.5">{% if tg_latest and tg_latest['amplitude'] is not none %}{{ '{:.0f}'.format(tg_latest['amplitude']) }}°{% else %}—{% endif %}</span>
-                    </div>
-                    <div id="tg-be-chip" class="flex flex-col gap-px px-3 py-1.5 rounded-xl bg-base-200/40 border border-base-300/40 min-w-[52px] text-center {% if not tg_latest or tg_latest['beat_error'] is none %}hidden{% endif %}">
-                        <span class="text-[9px] uppercase tracking-widest opacity-40 font-semibold leading-none">BE</span>
-                        <span id="tg-be-val" class="text-sm font-bold font-mono leading-tight mt-0.5">{% if tg_latest and tg_latest['beat_error'] is not none %}{{ '{:.2f}'.format(tg_latest['beat_error']) }}ms{% else %}—{% endif %}</span>
-                    </div>
-                </div>
-            </div>
             <div class="overflow-x-auto">
                 <table class="table text-sm" id="tg-table">
                     <thead>
@@ -285,7 +262,7 @@ endblock %}
 
     {% if flip.notes %}
     <div
-        class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-8 w-fit min-w-[50%]">
+        class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-8">
         <div class="card-body p-0">
             <div
                 class="font-bold p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 uppercase">

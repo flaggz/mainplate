@@ -375,9 +375,9 @@ function addFlipLog(flipId) {
             const tr = document.createElement('tr'); tr.id = `log-row-${data.id}`; tr.className = 'data-row';
             tr.innerHTML = `<td>${data.fmt_log_date || data.log_date}</td><td>${data.description}</td><td>${catBadge}</td>
             <td class="num">${costCell}</td><td>${invCell}</td>
-            <td><div class="flex gap-3 justify-end text-sm">
-                <button class="link link-primary link-hover" onclick="toggleLogEdit('flip',${data.id})">Edit</button>
-                <button class="link link-error link-hover" onclick="deleteFlipLog(${data.id},${flipId})">Del</button>
+            <td><div class="flex gap-3 justify-end">
+                <button class="btn btn-primary btn-outline btn-sm gap-1 !uppercase" onclick="toggleLogEdit('flip',${data.id})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>${window.I18N.edit}</button>
+                <button class="btn btn-error btn-outline btn-sm gap-1 !uppercase" onclick="deleteFlipLogConfirm(${data.id},${flipId},this)"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>${window.I18N.delete}</button>
             </div></td>`;
             const er = document.createElement('tr'); er.id = `log-edit-${data.id}`; er.className = 'edit-row hidden';
             er.innerHTML = `<td colspan="6" class="p-4"><form class="flex flex-col lg:flex-row gap-4 items-center w-full" onsubmit="submitLogEdit(event,'flip',${data.id},${flipId})">
@@ -844,38 +844,6 @@ function _applyTgWarnings(tr, d) {
     }
 }
 
-function _updateTgSummary(latest, delta, deltaClass) {
-    const summary = document.getElementById('tg-summary');
-    if (!summary) return;
-    if (!latest) { summary.classList.add('hidden'); return; }
-    summary.classList.remove('hidden');
-    const dv = document.getElementById('tg-delta-val');
-    if (dv) {
-        dv.textContent = delta !== null && delta !== undefined ? parseFloat(delta).toFixed(1) : '—';
-        dv.className = `text-2xl font-bold font-mono leading-none ${deltaClass || ''}`;
-    }
-    for (const key of ['du','dd','p3','p6','p9','p12']) {
-        const el = document.getElementById(`tg-${key}-val`);
-        if (el) el.textContent = _tgFmt(latest[key]);
-    }
-    const ampChip = document.getElementById('tg-amp-chip');
-    const ampVal = document.getElementById('tg-amp-val');
-    if (ampChip && ampVal) {
-        if (latest.amplitude !== null && latest.amplitude !== undefined) {
-            ampVal.textContent = _tgFmtPlain(latest.amplitude, 0, '°');
-            ampChip.classList.remove('hidden');
-        } else { ampChip.classList.add('hidden'); }
-    }
-    const beChip = document.getElementById('tg-be-chip');
-    const beVal = document.getElementById('tg-be-val');
-    if (beChip && beVal) {
-        if (latest.beat_error !== null && latest.beat_error !== undefined) {
-            beVal.textContent = _tgFmtPlain(latest.beat_error, 1, 'ms');
-            beChip.classList.remove('hidden');
-        } else { beChip.classList.add('hidden'); }
-    }
-}
-
 function toggleTgEdit(id) {
     const er = document.getElementById(`tg-edit-${id}`);
     if (!er) return;
@@ -922,8 +890,8 @@ function addTgReading(flipId) {
             <td class="text-right">${_tgFmtPlain(data.beat_error, 1, '')}</td>
             <td class="text-right">${deltaCell}</td>
             <td><div class="flex gap-2 justify-end">
-                <button class="link link-primary link-hover" onclick="toggleTgEdit(${data.id})">Edit</button>
-                <button class="link link-error link-hover" onclick="deleteTgConfirm(${data.id},${flipId},this)">Del</button>
+                <button class="btn btn-primary btn-outline btn-sm gap-1 uppercase" onclick="toggleTgEdit(${data.id})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>${window.I18N.edit}</button>
+                <button class="btn btn-error btn-outline btn-sm gap-1 uppercase" onclick="deleteTgConfirm(${data.id},${flipId},this)"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>${window.I18N.delete}</button>
             </div></td>`;
         const er = document.createElement('tr');
         er.id = `tg-edit-${data.id}`; er.className = 'edit-row hidden bg-base-200';
@@ -957,7 +925,6 @@ function addTgReading(flipId) {
         for (const key of ['du','dd','p3','p6','p9','p12']) { const el = document.getElementById(`tg-${key}`); if (el) el.value = ''; }
         const ampEl = document.getElementById('tg-amp'); if (ampEl) ampEl.value = '';
         const beEl = document.getElementById('tg-be'); if (beEl) beEl.value = '';
-        _updateTgSummary(data, data.delta, data.delta_class);
         showFlash(window.I18N.entry_added);
     }).catch(() => showFlash(window.I18N.error, 'info'));
 }
@@ -1001,7 +968,6 @@ function submitTgEdit(event, tid, flipId) {
             animateFlash(vr);
         }
         document.getElementById(`tg-edit-${tid}`)?.classList.add('hidden');
-        if (data.latest) _updateTgSummary(data.latest, data.latest_delta, data.latest_delta_class);
         showFlash(window.I18N.updated);
     }).catch(() => showFlash(window.I18N.error, 'info'));
 }
@@ -1013,7 +979,7 @@ function deleteTgConfirm(tid, flipId, btn) {
         animateOut(row, () => {
             fetch(`/api/timegrapher/${tid}`, { method: 'DELETE' })
             .then(r => r.json())
-            .then(data => {
+            .then(() => {
                 row.remove(); if (edit) edit.remove();
                 const tbody = document.getElementById('tg-tbody');
                 if (tbody && !tbody.querySelector('.data-row')) {
@@ -1022,7 +988,6 @@ function deleteTgConfirm(tid, flipId, btn) {
                     empty.innerHTML = '<td colspan="11" class="text-center opacity-40 py-6">No data</td>';
                     tbody.insertBefore(empty, tbody.firstChild);
                 }
-                _updateTgSummary(data.latest, data.latest_delta, data.latest_delta_class);
                 showFlash(window.I18N.entry_deleted, 'info');
             }).catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash(window.I18N.error, 'info'); });
         });
