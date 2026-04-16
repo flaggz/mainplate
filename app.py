@@ -150,7 +150,7 @@ def inject_globals():
         categories_all=get_all_categories(),
         date_format=s.get('date_format','DD-MM-YYYY'),
         hourly_rate_global=float(s.get('hourly_rate','0') or 0),
-        currency_symbol=s.get('currency_symbol','{{ currency_symbol }}'),
+        currency_symbol=s.get('currency_symbol','$'),
         _=_
     )
 

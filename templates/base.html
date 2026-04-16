@@ -111,7 +111,7 @@
             </div>
         </div>
 
-        <div class="bg-base-100 p-4 md:p-6 rounded-box shadow-sm">
+        <div class="bg-base-80 p-4 md:p-6 rounded-box shadow-sm">
             {% block content %}{% endblock %}
         </div>
     </main>
@@ -155,7 +155,6 @@
         window.DATE_FORMAT = {{ (date_format | default ('DD-MM-YYYY')) | tojson }};
         window.CURRENCY = {{ (currency_symbol | default ('€')) | tojson }};
         window.I18N = {
-            confirm_delete: "{{ _('are you sure you want to delete this item?') }}",
             saved_successfully: "{{ _('item saved successfully') }}",
             error_saving: "{{ _('error saving') }}",
             updated: "{{ _('updated') }}",
@@ -178,13 +177,24 @@
             photos_added: "{{ _('photos added!') }}",
             upload_error: "{{ _('upload error') }}",
             confirm_delete_photo: "{{ _('delete this photo?') }}",
+            confirm_delete: "{{ _('delete') }}",
+            yes: "{{ _('yes') }}",
+            no: "{{ _('no') }}",
             add: "{{ _('add') }}",
             statuses: {
                 "Acquired":    "{{ _('acquired') }}",
                 "In Progress": "{{ _('in progress') }}",
                 "For Sale":    "{{ _('for sale') }}",
                 "Sold":        "{{ _('sold') }}"
-            }
+            },
+            tg_warn_du_dd:        "{{ _('tg warn du dd') }}",
+            tg_warn_amp_critical: "{{ _('tg warn amplitude critical') }}",
+            tg_warn_amp_low:      "{{ _('tg warn amplitude low') }}",
+            tg_warn_amp_high:     "{{ _('tg warn amplitude high') }}",
+            tg_warn_be_high:      "{{ _('tg warn beat error high') }}",
+            tg_warn_be_medium:    "{{ _('tg warn beat error medium') }}",
+            tg_warn_p3_p9:        "{{ _('tg warn p3 p9') }}",
+            tg_warn_p6_p12:       "{{ _('tg warn p6 p12') }}"
         };
 
         // Update theme toggle UI logic

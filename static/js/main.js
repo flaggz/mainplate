@@ -120,7 +120,7 @@ function initSortable(table) {
                 }
 
                 if (th.classList.contains('num')) {
-                    const stripped = s => s.replace(/[^\d,.-]/g, '').replace(/\.(?=.*\.)/g, '').replace(',', '.');
+                    const stripped = s => s.replace(/[^\d.-]/g, '').replace(/\.(?=.*\.)/g, '');
                     const an = parseFloat(stripped(av)) || 0;
                     const bn = parseFloat(stripped(bv)) || 0;
                     return (an - bn) * state.dir;
@@ -196,15 +196,17 @@ function submitEdit(event, type, id) {
         .catch(() => showFlash(window.I18N.error_saving, 'info'));
 }
 
-function ajaxDelete(type, id) {
-    const url = type === 'part' ? `/api/parts/${id}` : `/api/equipment/${id}`;
-    const row = document.getElementById(`${type}-row-${id}`);
-    const edit = document.getElementById(`${type}-edit-${id}`);
-    animateOut(row, () => {
-        fetch(url, { method: 'DELETE' })
-            .then(r => r.json())
-            .then(() => { row.remove(); if (edit) edit.remove(); showFlash(window.I18N.entry_deleted, 'info'); refreshTotal(type); })
-            .catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash(window.I18N.error, 'info'); });
+function ajaxDelete(type, id, btn) {
+    inlineConfirm(btn, '', () => {
+        const url = type === 'part' ? `/api/parts/${id}` : `/api/equipment/${id}`;
+        const row = document.getElementById(`${type}-row-${id}`);
+        const edit = document.getElementById(`${type}-edit-${id}`);
+        animateOut(row, () => {
+            fetch(url, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(() => { row.remove(); if (edit) edit.remove(); showFlash(window.I18N.entry_deleted, 'info'); refreshTotal(type); })
+                .catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash(window.I18N.error, 'info'); });
+        });
     });
 }
 
@@ -661,6 +663,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Init sortable on all tables
     document.querySelectorAll('table').forEach(t => initSortable(t));
 
+    // Apply timegrapher diagnostic warnings to existing rows
+    document.querySelectorAll('#tg-tbody .data-row').forEach(tr => {
+        _applyTgWarnings(tr, _tgReadData(tr));
+    });
+
     // Enter keys for add rows
     const binds = [
         ['new-part-name', ajaxAddPart],
@@ -721,22 +728,29 @@ function applyCategoryColors() {
 }
 
 // ── Inline confirmation (tooltip style) ───────────────────
+let _activeConfirmDismiss = null;
+
 function inlineConfirm(btn, msg, onConfirm) {
-    // Remove any existing confirm popover
-    document.querySelectorAll('.confirm-popover').forEach(p => p.remove());
+    // Dismiss any existing confirm popover (restores the hidden button)
+    if (_activeConfirmDismiss) { _activeConfirmDismiss(); _activeConfirmDismiss = null; }
+    btn.style.display = 'none';
     const pop = document.createElement('span');
-    pop.className = 'confirm-popover';
-    pop.innerHTML = `${msg} <button class="confirm-yes">Sì</button><button class="confirm-no">No</button>`;
+    pop.className = 'confirm-popover inline-flex items-center gap-2';
+    const yesLabel = (window.I18N && window.I18N.yes) ? window.I18N.yes : 'yes';
+    const noLabel  = (window.I18N && window.I18N.no)  ? window.I18N.no  : 'no';
+    pop.innerHTML = `${msg} <button class="confirm-yes btn btn-success btn-outline btn-sm gap-1 uppercase">${yesLabel}</button><button class="confirm-no btn btn-error btn-outline btn-sm gap-1 uppercase">${noLabel}</button>`;
     btn.parentNode.insertBefore(pop, btn.nextSibling);
-    pop.querySelector('.confirm-yes').onclick = () => { pop.remove(); onConfirm(); };
-    pop.querySelector('.confirm-no').onclick = () => pop.remove();
+    const dismiss = () => { pop.remove(); btn.style.display = ''; _activeConfirmDismiss = null; };
+    pop.querySelector('.confirm-yes').onclick = () => { dismiss(); onConfirm(); };
+    pop.querySelector('.confirm-no').onclick = () => dismiss();
+    _activeConfirmDismiss = dismiss;
     // Auto-dismiss after 5s
-    setTimeout(() => pop.remove(), 5000);
+    setTimeout(() => { if (pop.isConnected) dismiss(); }, 5000);
 }
 
 // ── Delete flip (ajax, inline confirm) ─────────────────────
 function deleteFlipConfirm(fid, btn) {
-    inlineConfirm(btn, 'Eliminare?', () => {
+    inlineConfirm(btn, "", () => {
         const row = document.getElementById(`flip-row-${fid}`);
         animateOut(row, () => {
             fetch(`/api/flips/${fid}`, { method: 'DELETE' })
@@ -749,7 +763,7 @@ function deleteFlipConfirm(fid, btn) {
 
 // Called from flip_detail page
 function deleteFlip(fid, btn) {
-    inlineConfirm(btn, 'Eliminare questo flip?', () => {
+    inlineConfirm(btn, window.I18N.confirm_delete, () => {
         fetch(`/api/flips/${fid}`, { method: 'DELETE' })
             .then(r => r.json())
             .then(() => { window.location = '/flips'; })
@@ -759,12 +773,76 @@ function deleteFlip(fid, btn) {
 
 // ── Delete flip log (inline confirm) ──────────────────────
 function deleteFlipLogConfirm(lid, flipId, btn) {
-    inlineConfirm(btn, 'Eliminare?', () => deleteFlipLog(lid, flipId));
+    inlineConfirm(btn, '', () => deleteFlipLog(lid, flipId));
 }
 
 // ── Timegrapher ────────────────────────────────────────────
 function _tgFmt(v) { return v !== null && v !== undefined ? (v >= 0 ? '+' : '') + parseFloat(v).toFixed(1) : '—'; }
 function _tgFmtPlain(v, digits, suffix) { return v !== null && v !== undefined ? parseFloat(v).toFixed(digits) + (suffix || '') : '—'; }
+
+function _tgReadData(tr) {
+    const D = tr.dataset;
+    const f = s => s !== '' && s !== undefined ? parseFloat(s) : null;
+    return { du: f(D.du), dd: f(D.dd), p3: f(D.p3), p6: f(D.p6),
+             p9: f(D.p9), p12: f(D.p12), amplitude: f(D.amplitude),
+             beat_error: f(D.beatError) };
+}
+
+function _tgWarnings(d) {
+    const w = {du:[],dd:[],p3:[],p6:[],p9:[],p12:[],amplitude:[],beat_error:[]};
+    const v = x => x !== null && x !== undefined;
+    const I = window.I18N;
+    if (v(d.du) && v(d.dd) && Math.abs(d.du - d.dd) > 1) {
+        const diff = Math.abs(d.du - d.dd).toFixed(1);
+        const m = I.tg_warn_du_dd.replace('{0}', diff);
+        w.du.push({level:'warning', msg:m}); w.dd.push({level:'warning', msg:m});
+    }
+    if (v(d.amplitude)) {
+        if (d.amplitude < 180)
+            w.amplitude.push({level:'error', msg:I.tg_warn_amp_critical});
+        else if (d.amplitude < 220)
+            w.amplitude.push({level:'warning', msg:I.tg_warn_amp_low});
+        else if (d.amplitude > 320)
+            w.amplitude.push({level:'warning', msg:I.tg_warn_amp_high});
+    }
+    if (v(d.beat_error)) {
+        const be = Math.abs(d.beat_error).toFixed(1);
+        if (Math.abs(d.beat_error) > 1.0)
+            w.beat_error.push({level:'error',   msg:I.tg_warn_be_high.replace('{0}', be)});
+        else if (Math.abs(d.beat_error) > 0.5)
+            w.beat_error.push({level:'warning', msg:I.tg_warn_be_medium.replace('{0}', be)});
+    }
+    if (v(d.p3) && v(d.p9) && Math.abs(d.p3 - d.p9) > 15) {
+        const diff = Math.abs(d.p3 - d.p9).toFixed(1);
+        const m = I.tg_warn_p3_p9.replace('{0}', diff);
+        w.p3.push({level:'warning', msg:m}); w.p9.push({level:'warning', msg:m});
+    }
+    if (v(d.p6) && v(d.p12) && Math.abs(d.p6 - d.p12) > 15) {
+        const diff = Math.abs(d.p6 - d.p12).toFixed(1);
+        const m = I.tg_warn_p6_p12.replace('{0}', diff);
+        w.p6.push({level:'warning', msg:m}); w.p12.push({level:'warning', msg:m});
+    }
+    return w;
+}
+
+function _applyTgWarnings(tr, d) {
+    const w = _tgWarnings(d);
+    const map = {du:1, dd:2, p3:3, p6:4, p9:5, p12:6, amplitude:7, beat_error:8};
+    for (const [key, idx] of Object.entries(map)) {
+        const td = tr.cells[idx];
+        if (!td) continue;
+        td.querySelectorAll('.tg-warn').forEach(el => el.remove());
+        const warns = w[key];
+        if (!warns || warns.length === 0) continue;
+        const level = warns.some(x => x.level === 'error') ? 'error' : 'warning';
+        const tip = warns.map(x => x.msg).join(' | ');
+        const icon = document.createElement('span');
+        icon.className = `tg-warn tooltip tooltip-top ${level === 'error' ? 'text-error' : 'text-warning'} ml-1 cursor-help text-xs`;
+        icon.setAttribute('data-tip', tip);
+        icon.textContent = '⚠';
+        td.appendChild(icon);
+    }
+}
 
 function _updateTgSummary(latest, delta, deltaClass) {
     const summary = document.getElementById('tg-summary');
@@ -868,6 +946,12 @@ function addTgReading(flipId) {
             </div></form></td>`;
         tbody.insertBefore(tr, tbody.firstChild);
         tbody.insertBefore(er, tr.nextSibling);
+        Object.assign(tr.dataset, {
+            du: data.du ?? '', dd: data.dd ?? '', p3: data.p3 ?? '',
+            p6: data.p6 ?? '', p9: data.p9 ?? '', p12: data.p12 ?? '',
+            amplitude: data.amplitude ?? '', beatError: data.beat_error ?? ''
+        });
+        _applyTgWarnings(tr, data);
         animateIn(tr);
         // Reset tfoot inputs
         for (const key of ['du','dd','p3','p6','p9','p12']) { const el = document.getElementById(`tg-${key}`); if (el) el.value = ''; }
@@ -908,6 +992,12 @@ function submitTgEdit(event, tid, flipId) {
             vr.cells[7].textContent = _tgFmtPlain(data.amplitude, 0, '°');
             vr.cells[8].textContent = _tgFmtPlain(data.beat_error, 2, '');
             vr.cells[9].innerHTML = deltaCell;
+            Object.assign(vr.dataset, {
+                du: data.du ?? '', dd: data.dd ?? '', p3: data.p3 ?? '',
+                p6: data.p6 ?? '', p9: data.p9 ?? '', p12: data.p12 ?? '',
+                amplitude: data.amplitude ?? '', beatError: data.beat_error ?? ''
+            });
+            _applyTgWarnings(vr, data);
             animateFlash(vr);
         }
         document.getElementById(`tg-edit-${tid}`)?.classList.add('hidden');
@@ -917,7 +1007,7 @@ function submitTgEdit(event, tid, flipId) {
 }
 
 function deleteTgConfirm(tid, flipId, btn) {
-    inlineConfirm(btn, 'Eliminare?', () => {
+    inlineConfirm(btn, '', () => {
         const row = document.getElementById(`tg-row-${tid}`);
         const edit = document.getElementById(`tg-edit-${tid}`);
         animateOut(row, () => {
@@ -929,7 +1019,7 @@ function deleteTgConfirm(tid, flipId, btn) {
                 if (tbody && !tbody.querySelector('.data-row')) {
                     const empty = document.createElement('tr');
                     empty.id = 'tg-empty-row';
-                    empty.innerHTML = '<td colspan="11" class="text-center opacity-40 py-6">Nessuna lettura</td>';
+                    empty.innerHTML = '<td colspan="11" class="text-center opacity-40 py-6">No data</td>';
                     tbody.insertBefore(empty, tbody.firstChild);
                 }
                 _updateTgSummary(data.latest, data.latest_delta, data.latest_delta_class);
@@ -941,7 +1031,7 @@ function deleteTgConfirm(tid, flipId, btn) {
 
 // ── Delete collection watch (ajax, inline confirm) ─────────
 function deleteCollConfirm(wid, btn) {
-    inlineConfirm(btn, 'Eliminare?', () => {
+    inlineConfirm(btn, '', () => {
         const row = document.getElementById(`coll-row-${wid}`);
         animateOut(row, () => {
             fetch(`/api/collection/${wid}`, { method: 'DELETE' })
@@ -955,7 +1045,7 @@ function deleteCollConfirm(wid, btn) {
 // ── Delete category (inline confirm, skip save if unchanged) ─
 function deleteCat(id) {
     const row = document.getElementById(`cat-row-${id}`);
-    inlineConfirm(row.querySelector('.action-link.danger'), 'Eliminare?', () => {
+    inlineConfirm(row.querySelector('.action-link.danger'), '', () => {
         animateOut(row, () => {
             fetch(`/api/categories/${id}`, { method: 'DELETE' })
                 .then(r => r.json())
@@ -1055,7 +1145,7 @@ function ajaxAddFlip() {
             <td class="num">${fmtNum(f.hours)}h</td>
             <td onclick="event.stopPropagation()"><div class="row-actions">
                 <a href="/flips/${f.id}/edit" class="action-link">Edit</a>
-                <button class="action-link danger" onclick="deleteFlipConfirm(${f.id},this)">Del</button>
+                <button class="action-link danger" onclick="deleteFlipConfirm(${f.id},this)">${window.I18N.delete}</button>
             </div></td>`;
             tbody.insertBefore(tr, tbody.firstChild);
             animateIn(tr);

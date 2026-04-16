@@ -32,7 +32,6 @@
   "labor": "Arbeitskosten",
   "total cost": "Gesamtkosten",
   "profit / roi": "Gewinn / ROI",
-  "are you sure you want to delete this item?": "Möchten Sie diesen Eintrag wirklich löschen?",
   "item saved successfully": "Eintrag erfolgreich gespeichert",
   "error": "Fehler",
   "preferences": "Einstellungen",
@@ -131,7 +130,18 @@
   "export ZIP": "ZIP exportieren",
   "import ZIP": "ZIP importieren",
   "expenses": "Ausgaben",
+  "timegrapher": "Timegrapher",
   "amplitude": "Amplitude",
   "beat error": "Beat Error",
-  "no timegrapher readings.": "Keine Timegrapher-Messungen."
+  "no timegrapher readings.": "Keine Timegrapher-Messungen.",
+  "yes": "ja",
+  "no": "nein",
+  "tg warn du dd": "DU/DD-Diff. {0} s/d: Unruhezapfen prüfen",
+  "tg warn amplitude critical": "Kritische Amplitude (unter 180°): Uhrwerk dringend überholen",
+  "tg warn amplitude low": "Niedrige Amplitude: Schmierung, Zugfeder und Gangreserve prüfen",
+  "tg warn amplitude high": "Hohe Amplitude (über 320°): Überschlagsrisiko, Hemmung prüfen",
+  "tg warn beat error high": "Fehlergang {0} ms: Anker einstellen — Uhrwerk kann in Lage stehen bleiben",
+  "tg warn beat error medium": "Fehlergang {0} ms: Anker einstellen",
+  "tg warn p3 p9": "3U/9U-Diff. {0} s/d: mögliche Unwucht der Unruh (Poise)",
+  "tg warn p6 p12": "6U/12U-Diff. {0} s/d: Anker oder Spirale prüfen"
 }

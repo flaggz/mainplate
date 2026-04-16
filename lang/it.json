@@ -32,7 +32,6 @@
   "labor": "manodopera",
   "total cost": "costo tot.",
   "profit / roi": "profitto / roi",
-  "are you sure you want to delete this item?": "sei sicuro di eliminare questo elemento?",
   "item saved successfully": "elemento salvato con successo",
   "error": "errore",
   "preferences": "preferenze",
@@ -131,7 +130,18 @@
   "export ZIP": "esporta ZIP",
   "import ZIP": "importa ZIP",
   "expenses": "spese",
+  "timegrapher": "timegrapher",
   "amplitude": "ampiezza",
   "beat error": "beat error",
-  "no timegrapher readings.": "nessuna lettura timegrapher."
+  "no timegrapher readings.": "nessuna lettura timegrapher.",
+  "yes": "sì",
+  "no": "no",
+  "tg warn du dd": "Diff. DU/DD {0} s/d: verificare i perni del bilanciere",
+  "tg warn amplitude critical": "Ampiezza critica (sotto 180°): revisionare il movimento urgentemente",
+  "tg warn amplitude low": "Ampiezza bassa: verificare lubrificazione, molla motrice e riserva di carica",
+  "tg warn amplitude high": "Ampiezza elevata (oltre 320°): rischio overbanking, verificare lo scappamento",
+  "tg warn beat error high": "Beat error {0} ms: regolare il leveraggio — il movimento può fermarsi in posizione",
+  "tg warn beat error medium": "Beat error {0} ms: regolare il leveraggio",
+  "tg warn p3 p9": "Diff. 3U/9U {0} s/d: possibile squilibrio del bilanciere (poise)",
+  "tg warn p6 p12": "Diff. 6U/12U {0} s/d: verificare leveraggio o spirale"
 }

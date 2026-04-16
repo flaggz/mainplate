@@ -200,7 +200,15 @@ endblock %}
                         <tr id="tg-empty-row"><td colspan="11" class="text-center opacity-40 py-6">{{ _('no timegrapher readings.') }}</td></tr>
                         {% endif %}
                         {% for r in tg_readings %}
-                        <tr id="tg-row-{{ r.id }}" class="data-row hover">
+                        <tr id="tg-row-{{ r.id }}" class="data-row hover"
+                            data-du="{{ r.du if r.du is not none else '' }}"
+                            data-dd="{{ r.dd if r.dd is not none else '' }}"
+                            data-p3="{{ r.p3 if r.p3 is not none else '' }}"
+                            data-p6="{{ r.p6 if r.p6 is not none else '' }}"
+                            data-p9="{{ r.p9 if r.p9 is not none else '' }}"
+                            data-p12="{{ r.p12 if r.p12 is not none else '' }}"
+                            data-amplitude="{{ r.amplitude if r.amplitude is not none else '' }}"
+                            data-beat-error="{{ r.beat_error if r.beat_error is not none else '' }}">
                             <td class="whitespace-nowrap">{{ r.reading_date | fmtdate(date_format) }}</td>
                             <td class="text-right font-mono">{% if r.du is not none %}{{ '{:+.1f}'.format(r.du) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
                             <td class="text-right font-mono">{% if r.dd is not none %}{{ '{:+.1f}'.format(r.dd) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
@@ -213,12 +221,12 @@ endblock %}
                             <td class="text-right font-bold font-mono {{ r.delta_class }}">{% if r.delta is not none %}{{ '{:.1f}'.format(r.delta) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
                             <td>
                                 <div class="flex gap-2 justify-end">
-                                    <button class="btn btn-primary btn-outline btn-sm gap-1 !uppercase" onclick="toggleTgEdit({{ r.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <button class="btn btn-primary btn-outline btn-sm gap-1 uppercase" onclick="toggleTgEdit({{ r.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="M9 2c0 7 3 9 3 15"></path>
                                         <path d="M15 2c0 7-3 9-3 15"></path>
                                         <line x1="8" y1="7" x2="16" y2="7"></line>
                                     </svg>{{ _('edit') }}</button>
-                                    <button class="btn btn-error btn-outline btn-sm gap-1 !uppercase" onclick="deleteTgConfirm({{ r.id }}, {{ flip.id }}, this)"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <button class="btn btn-error btn-outline btn-sm gap-1 uppercase" onclick="deleteTgConfirm({{ r.id }}, {{ flip.id }}, this)"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <circle cx="10" cy="12" r="8"></circle>
                                         <path d="M18 12h4M20 10v4"></path>
                                         <line x1="7" y1="9" x2="13" y2="15"></line>

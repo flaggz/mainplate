@@ -106,16 +106,26 @@
         <div class="font-bold p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 rounded-box uppercase">{{ _('in collection') }} ({{ active_count }})
         </div>
         <div class="overflow-x-auto">
-            <table class="table" id="coll-active-table">
+            <table class="table table-fixed w-full min-w-[64rem]" id="coll-active-table">
+                <colgroup>
+                    <col class="w-12">
+                    <col class="w-64">
+                    <col class="w-24">
+                    <col class="w-24">
+                    <col class="w-24">
+                    <col class="w-24">
+                    <col class="w-40">
+                    <col class="w-44">
+                </colgroup>
                 <thead>
                     <tr class="opacity-60">
                         <th class="w-12"></th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="0">{{ _('watch') }}</th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="1">{{ _('acquired') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="2">{{ _('purchase price') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="3">{{ _('services') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="4">{{ _('total') }}</th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="5">{{ _('last log') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="1">{{ _('watch') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="2">{{ _('acquired') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="3">{{ _('purchase price') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="4">{{ _('services') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="5">{{ _('total') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="6">{{ _('last log') }}</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -145,11 +155,11 @@
                         <td>
                             {% if w.logs %}
                             <div class="text-sm">{{ w.logs[0].log_date | fmtdate(date_format) }}</div>
-                            <div class="text-xs opacity-70 truncate max-w-[150px]">{{ w.logs[0].description }}</div>
+                            <div class="text-xs opacity-70 truncate max-w-36">{{ w.logs[0].description }}</div>
                             {% else %}<span class="opacity-50">—</span>{% endif %}
                         </td>
                         <td onclick="event.preventDefault(); event.stopPropagation();">
-                            <div class="flex gap-3 text-sm">
+                            <div class="flex gap-3 text-sm justify-end">
                                 <button class="btn btn-primary btn-outline btn-sm gap-1 uppercase" onclick="openCollInlineEdit({{ w.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>{{ _('edit') }}</button>
                                 <button class="btn btn-error btn-outline btn-sm gap-1 uppercase" onclick="deleteCollConfirm({{ w.id }}, this)"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>{{ _('delete') }}</button>
                             </div>
@@ -197,7 +207,7 @@
                                         <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('sale price') }} ({{ currency_symbol }})</span></label>
                                         <input id="ci-sold-price" type="number" step="0.01" min="0" class="input input-bordered input-sm w-28">
                                     </div>
-                                    <div class="form-control flex-1 min-w-[180px]">
+                                    <div class="form-control flex-1 min-w-44">
                                         <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('notes') }}</span></label>
                                         <input id="ci-notes" type="text" class="input input-bordered input-sm w-full">
                                     </div>
@@ -220,14 +230,26 @@
     <div class="card-body p-0">
         <div class="font-bold p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 uppercase">{{ _('wishlist') }}</div>
         <div class="overflow-x-auto">
-            <table class="table">
+            <table class="table table-fixed w-full min-w-[64rem]">
+                <colgroup>
+                    <col class="w-12">
+                    <col class="w-64">
+                    <col class="w-24">
+                    <col class="w-24">
+                    <col class="w-24">
+                    <col class="w-24">
+                    <col class="w-40">
+                    <col class="w-44">
+                </colgroup>
                 <thead>
-                    <tr class="uppercase">
+                    <tr class="uppercase opacity-60">
                         <th class="w-12"></th>
                         <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('watch') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="2">{{
-                            _('price') }}</th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="3">{{ _('notes') }}</th>
+                        <th></th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{ _('price') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="4">{{ _('notes') }}</th>
+                        <th></th>
+                        <th></th>
                         <th></th>
                     </tr>
                 </thead>
@@ -244,11 +266,14 @@
                             <div class="font-semibold">{{ w.brand }} {{ w.model }}</div>
                             <div class="text-xs opacity-70">{{ w.reference or '' }}</div>
                         </td>
+                        <td></td>
                         <td class="text-right">{% if w.purchase_price > 0 %}{{ currency_symbol }}{{ '{:,.2f}'.format(w.purchase_price) }}{%
                             else %}<span class="opacity-50">—</span>{% endif %}</td>
-                        <td class="text-sm opacity-80 max-w-sm">
+                        <td class="text-sm opacity-80">
                             <div class="truncate">{{ w.notes }}</div>
                         </td>
+                        <td></td>
+                        <td></td>
                         <td onclick="event.preventDefault(); event.stopPropagation();">
                             <div class="flex gap-3 text-sm justify-end">
                                 <button class="btn btn-primary btn-outline btn-sm gap-1 uppercase" onclick="openWishlistInlineEdit({{ w.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>{{ _('edit') }}</button>
@@ -258,12 +283,12 @@
                     </tr>
                     {% else %}
                     <tr id="coll-wishlist-empty">
-                        <td colspan="5" class="text-center py-6 opacity-50">{{ _('no watches in wishlist.') }}</td>
+                        <td colspan="8" class="text-center py-6 opacity-50">{{ _('no watches in wishlist.') }}</td>
                     </tr>
                     {% endfor %}
                     <!-- Shared inline edit row — moved by JS after the target row -->
                     <tr id="wishlist-edit-tr" class="hidden">
-                        <td colspan="5" class="p-0">
+                        <td colspan="8" class="p-0">
                             <div class="edit-inner bg-base-200/70 border-y border-base-300/50 px-4 py-3">
                                 <div class="flex flex-wrap gap-3 items-end">
                                     <div class="form-control">
@@ -286,7 +311,7 @@
                                         <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('price') }} ({{ currency_symbol }})</span></label>
                                         <input id="wl-edit-price" type="number" step="0.01" min="0" class="input input-bordered input-sm w-28">
                                     </div>
-                                    <div class="form-control flex-1 min-w-[160px]">
+                                    <div class="form-control flex-1 min-w-40">
                                         <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('notes') }}</span></label>
                                         <input id="wl-edit-notes" type="text" class="input input-bordered input-sm w-full">
                                     </div>
@@ -310,15 +335,26 @@
     <div class="card-body p-0">
         <div class="font-bold p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 uppercase">{{ _('sold') }} ({{ sold_count_coll }})</div>
         <div class="overflow-x-auto">
-            <table class="table" id="coll-sold-table">
+            <table class="table table-fixed w-full min-w-[64rem]" id="coll-sold-table">
+                <colgroup>
+                    <col class="w-12">
+                    <col class="w-64">
+                    <col class="w-24">
+                    <col class="w-24">
+                    <col class="w-24">
+                    <col class="w-24">
+                    <col class="w-40">
+                    <col class="w-44">
+                </colgroup>
                 <thead>
-                    <tr class="uppercase">
+                    <tr class="uppercase opacity-60">
                         <th class="w-12"></th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('watch') }}</th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('sold on') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="2">{{ _('total cost') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{ _('sold') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="4">{{ _('profit') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('watch') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="2">{{ _('sold on') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{ _('total cost') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="4">{{ _('sold') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="5">{{ _('profit') }}</th>
+                        <th></th>
                         <th></th>
                     </tr>
                 </thead>
@@ -343,6 +379,7 @@
                         <td class="text-right"><span
                                 class="{{ 'text-success' if (w.gain or 0) >= 0 else 'text-error' }}">{{ currency_symbol }}{{
                                 '{:,.2f}'.format(w.gain or 0) }}</span></td>
+                        <td></td>
                         <td onclick="event.preventDefault(); event.stopPropagation();">
                             <div class="flex gap-3 text-sm justify-end">
                                 <button class="btn btn-primary btn-outline btn-sm gap-1 uppercase" onclick="openCollInlineEdit({{ w.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>{{ _('edit') }}</button>
@@ -358,6 +395,7 @@
 </div>
 {% endif %}
 <style>
+
 @keyframes editSlideDown {
     from { opacity: 0; transform: translateY(-8px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -565,15 +603,15 @@
                 if (tr.cells[1]) tr.cells[1].innerHTML =
                     `<div class="font-semibold">${w.brand} ${w.model}</div>` +
                     `<div class="text-xs opacity-70">${w.reference || ''}</div>`;
-                if (tr.cells[2]) {
-                    tr.cells[2].className = 'text-right';
-                    tr.cells[2].innerHTML = w.purchase_price > 0
+                if (tr.cells[3]) {
+                    tr.cells[3].className = 'text-right';
+                    tr.cells[3].innerHTML = w.purchase_price > 0
                         ? `${window.CURRENCY}${fmtNum(w.purchase_price)}`
                         : '<span class="opacity-50">—</span>';
                 }
-                if (tr.cells[3]) {
-                    tr.cells[3].className = 'text-sm opacity-80 max-w-sm';
-                    tr.cells[3].innerHTML = `<div class="truncate">${w.notes || ''}</div>`;
+                if (tr.cells[4]) {
+                    tr.cells[4].className = 'text-sm opacity-80';
+                    tr.cells[4].innerHTML = `<div class="truncate">${w.notes || ''}</div>`;
                 }
             }
             showFlash(`"${w.brand} ${w.model}" ` + (window.I18N.updated || 'aggiornato'));

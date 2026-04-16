@@ -32,7 +32,6 @@
   "labor": "main-d'œuvre",
   "total cost": "coût total",
   "profit / roi": "bénéfice / roi",
-  "are you sure you want to delete this item?": "êtes-vous sûr de vouloir supprimer cet élément ?",
   "item saved successfully": "élément enregistré avec succès",
   "error": "erreur",
   "preferences": "préférences",
@@ -131,7 +130,18 @@
   "export ZIP": "exporter ZIP",
   "import ZIP": "importer ZIP",
   "expenses": "dépenses",
+  "timegrapher": "timegrapher",
   "amplitude": "amplitude",
   "beat error": "beat error",
-  "no timegrapher readings.": "aucune lecture timegrapher."
+  "no timegrapher readings.": "aucune lecture timegrapher.",
+  "yes": "oui",
+  "no": "non",
+  "tg warn du dd": "Diff. DU/DD {0} s/j: vérifier les pivots du balancier",
+  "tg warn amplitude critical": "Amplitude critique (sous 180°): réviser d'urgence le mouvement",
+  "tg warn amplitude low": "Amplitude basse: vérifier lubrification, ressort moteur et réserve de marche",
+  "tg warn amplitude high": "Amplitude élevée (au-dessus de 320°): risque de surmenage, vérifier l'échappement",
+  "tg warn beat error high": "Erreur de battement {0} ms: régler le levier — le mouvement peut s'arrêter en position",
+  "tg warn beat error medium": "Erreur de battement {0} ms: régler le levier",
+  "tg warn p3 p9": "Diff. 3H/9H {0} s/j: possible balourd du balancier (poise)",
+  "tg warn p6 p12": "Diff. 6H/12H {0} s/j: vérifier levier ou spiral"
 }
