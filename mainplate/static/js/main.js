@@ -120,7 +120,7 @@ function initSortable(table) {
                 }
 
                 if (th.classList.contains('num')) {
-                    const stripped = s => s.replace(/[^\d,.-]/g, '').replace(/\.(?=.*\.)/g, '').replace(',', '.');
+                    const stripped = s => s.replace(/[^\d.-]/g, '').replace(/\.(?=.*\.)/g, '');
                     const an = parseFloat(stripped(av)) || 0;
                     const bn = parseFloat(stripped(bv)) || 0;
                     return (an - bn) * state.dir;
@@ -196,15 +196,17 @@ function submitEdit(event, type, id) {
         .catch(() => showFlash(window.I18N.error_saving, 'info'));
 }
 
-function ajaxDelete(type, id) {
-    const url = type === 'part' ? `/api/parts/${id}` : `/api/equipment/${id}`;
-    const row = document.getElementById(`${type}-row-${id}`);
-    const edit = document.getElementById(`${type}-edit-${id}`);
-    animateOut(row, () => {
-        fetch(url, { method: 'DELETE' })
-            .then(r => r.json())
-            .then(() => { row.remove(); if (edit) edit.remove(); showFlash(window.I18N.entry_deleted, 'info'); refreshTotal(type); })
-            .catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash(window.I18N.error, 'info'); });
+function ajaxDelete(type, id, btn) {
+    inlineConfirm(btn, '', () => {
+        const url = type === 'part' ? `/api/parts/${id}` : `/api/equipment/${id}`;
+        const row = document.getElementById(`${type}-row-${id}`);
+        const edit = document.getElementById(`${type}-edit-${id}`);
+        animateOut(row, () => {
+            fetch(url, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(() => { row.remove(); if (edit) edit.remove(); showFlash(window.I18N.entry_deleted, 'info'); refreshTotal(type); })
+                .catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash(window.I18N.error, 'info'); });
+        });
     });
 }
 
@@ -661,6 +663,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Init sortable on all tables
     document.querySelectorAll('table').forEach(t => initSortable(t));
 
+    // Apply timegrapher diagnostic warnings to existing rows
+    document.querySelectorAll('#tg-tbody .data-row').forEach(tr => {
+        _applyTgWarnings(tr, _tgReadData(tr));
+    });
+
     // Enter keys for add rows
     const binds = [
         ['new-part-name', ajaxAddPart],
@@ -721,22 +728,29 @@ function applyCategoryColors() {
 }
 
 // ── Inline confirmation (tooltip style) ───────────────────
+let _activeConfirmDismiss = null;
+
 function inlineConfirm(btn, msg, onConfirm) {
-    // Remove any existing confirm popover
-    document.querySelectorAll('.confirm-popover').forEach(p => p.remove());
+    // Dismiss any existing confirm popover (restores the hidden button)
+    if (_activeConfirmDismiss) { _activeConfirmDismiss(); _activeConfirmDismiss = null; }
+    btn.style.display = 'none';
     const pop = document.createElement('span');
-    pop.className = 'confirm-popover';
-    pop.innerHTML = `${msg} <button class="confirm-yes">Sì</button><button class="confirm-no">No</button>`;
+    pop.className = 'confirm-popover inline-flex items-center gap-2';
+    const yesLabel = (window.I18N && window.I18N.yes) ? window.I18N.yes : 'yes';
+    const noLabel  = (window.I18N && window.I18N.no)  ? window.I18N.no  : 'no';
+    pop.innerHTML = `${msg} <button class="confirm-yes btn btn-success btn-outline btn-sm gap-1 uppercase">${yesLabel}</button><button class="confirm-no btn btn-error btn-outline btn-sm gap-1 uppercase">${noLabel}</button>`;
     btn.parentNode.insertBefore(pop, btn.nextSibling);
-    pop.querySelector('.confirm-yes').onclick = () => { pop.remove(); onConfirm(); };
-    pop.querySelector('.confirm-no').onclick = () => pop.remove();
+    const dismiss = () => { pop.remove(); btn.style.display = ''; _activeConfirmDismiss = null; };
+    pop.querySelector('.confirm-yes').onclick = () => { dismiss(); onConfirm(); };
+    pop.querySelector('.confirm-no').onclick = () => dismiss();
+    _activeConfirmDismiss = dismiss;
     // Auto-dismiss after 5s
-    setTimeout(() => pop.remove(), 5000);
+    setTimeout(() => { if (pop.isConnected) dismiss(); }, 5000);
 }
 
 // ── Delete flip (ajax, inline confirm) ─────────────────────
 function deleteFlipConfirm(fid, btn) {
-    inlineConfirm(btn, 'Eliminare?', () => {
+    inlineConfirm(btn, "", () => {
         const row = document.getElementById(`flip-row-${fid}`);
         animateOut(row, () => {
             fetch(`/api/flips/${fid}`, { method: 'DELETE' })
@@ -749,7 +763,7 @@ function deleteFlipConfirm(fid, btn) {
 
 // Called from flip_detail page
 function deleteFlip(fid, btn) {
-    inlineConfirm(btn, 'Eliminare questo flip?', () => {
+    inlineConfirm(btn, window.I18N.confirm_delete, () => {
         fetch(`/api/flips/${fid}`, { method: 'DELETE' })
             .then(r => r.json())
             .then(() => { window.location = '/flips'; })
@@ -759,12 +773,265 @@ function deleteFlip(fid, btn) {
 
 // ── Delete flip log (inline confirm) ──────────────────────
 function deleteFlipLogConfirm(lid, flipId, btn) {
-    inlineConfirm(btn, 'Eliminare?', () => deleteFlipLog(lid, flipId));
+    inlineConfirm(btn, '', () => deleteFlipLog(lid, flipId));
+}
+
+// ── Timegrapher ────────────────────────────────────────────
+function _tgFmt(v) { return v !== null && v !== undefined ? (v >= 0 ? '+' : '') + parseFloat(v).toFixed(1) : '—'; }
+function _tgFmtPlain(v, digits, suffix) { return v !== null && v !== undefined ? parseFloat(v).toFixed(digits) + (suffix || '') : '—'; }
+
+function _tgReadData(tr) {
+    const D = tr.dataset;
+    const f = s => s !== '' && s !== undefined ? parseFloat(s) : null;
+    return { du: f(D.du), dd: f(D.dd), p3: f(D.p3), p6: f(D.p6),
+             p9: f(D.p9), p12: f(D.p12), amplitude: f(D.amplitude),
+             beat_error: f(D.beatError) };
+}
+
+function _tgWarnings(d) {
+    const w = {du:[],dd:[],p3:[],p6:[],p9:[],p12:[],amplitude:[],beat_error:[]};
+    const v = x => x !== null && x !== undefined;
+    const I = window.I18N;
+    if (v(d.du) && v(d.dd) && Math.abs(d.du - d.dd) > 1) {
+        const diff = Math.abs(d.du - d.dd).toFixed(1);
+        const m = I.tg_warn_du_dd.replace('{0}', diff);
+        w.du.push({level:'warning', msg:m}); w.dd.push({level:'warning', msg:m});
+    }
+    if (v(d.amplitude)) {
+        if (d.amplitude < 180)
+            w.amplitude.push({level:'error', msg:I.tg_warn_amp_critical});
+        else if (d.amplitude < 220)
+            w.amplitude.push({level:'warning', msg:I.tg_warn_amp_low});
+        else if (d.amplitude > 320)
+            w.amplitude.push({level:'warning', msg:I.tg_warn_amp_high});
+    }
+    if (v(d.beat_error)) {
+        const be = Math.abs(d.beat_error).toFixed(1);
+        if (Math.abs(d.beat_error) > 1.0)
+            w.beat_error.push({level:'error',   msg:I.tg_warn_be_high.replace('{0}', be)});
+        else if (Math.abs(d.beat_error) > 0.5)
+            w.beat_error.push({level:'warning', msg:I.tg_warn_be_medium.replace('{0}', be)});
+    }
+    if (v(d.p3) && v(d.p9) && Math.abs(d.p3 - d.p9) > 15) {
+        const diff = Math.abs(d.p3 - d.p9).toFixed(1);
+        const m = I.tg_warn_p3_p9.replace('{0}', diff);
+        w.p3.push({level:'warning', msg:m}); w.p9.push({level:'warning', msg:m});
+    }
+    if (v(d.p6) && v(d.p12) && Math.abs(d.p6 - d.p12) > 15) {
+        const diff = Math.abs(d.p6 - d.p12).toFixed(1);
+        const m = I.tg_warn_p6_p12.replace('{0}', diff);
+        w.p6.push({level:'warning', msg:m}); w.p12.push({level:'warning', msg:m});
+    }
+    return w;
+}
+
+function _applyTgWarnings(tr, d) {
+    const w = _tgWarnings(d);
+    const map = {du:1, dd:2, p3:3, p6:4, p9:5, p12:6, amplitude:7, beat_error:8};
+    for (const [key, idx] of Object.entries(map)) {
+        const td = tr.cells[idx];
+        if (!td) continue;
+        td.querySelectorAll('.tg-warn').forEach(el => el.remove());
+        const warns = w[key];
+        if (!warns || warns.length === 0) continue;
+        const level = warns.some(x => x.level === 'error') ? 'error' : 'warning';
+        const tip = warns.map(x => x.msg).join(' | ');
+        const icon = document.createElement('span');
+        icon.className = `tg-warn tooltip tooltip-top ${level === 'error' ? 'text-error' : 'text-warning'} ml-1 cursor-help text-xs`;
+        icon.setAttribute('data-tip', tip);
+        icon.textContent = '⚠';
+        td.appendChild(icon);
+    }
+}
+
+function _updateTgSummary(latest, delta, deltaClass) {
+    const summary = document.getElementById('tg-summary');
+    if (!summary) return;
+    if (!latest) { summary.classList.add('hidden'); return; }
+    summary.classList.remove('hidden');
+    const dv = document.getElementById('tg-delta-val');
+    if (dv) {
+        dv.textContent = delta !== null && delta !== undefined ? parseFloat(delta).toFixed(1) : '—';
+        dv.className = `text-2xl font-bold font-mono leading-none ${deltaClass || ''}`;
+    }
+    for (const key of ['du','dd','p3','p6','p9','p12']) {
+        const el = document.getElementById(`tg-${key}-val`);
+        if (el) el.textContent = _tgFmt(latest[key]);
+    }
+    const ampChip = document.getElementById('tg-amp-chip');
+    const ampVal = document.getElementById('tg-amp-val');
+    if (ampChip && ampVal) {
+        if (latest.amplitude !== null && latest.amplitude !== undefined) {
+            ampVal.textContent = _tgFmtPlain(latest.amplitude, 0, '°');
+            ampChip.classList.remove('hidden');
+        } else { ampChip.classList.add('hidden'); }
+    }
+    const beChip = document.getElementById('tg-be-chip');
+    const beVal = document.getElementById('tg-be-val');
+    if (beChip && beVal) {
+        if (latest.beat_error !== null && latest.beat_error !== undefined) {
+            beVal.textContent = _tgFmtPlain(latest.beat_error, 1, 'ms');
+            beChip.classList.remove('hidden');
+        } else { beChip.classList.add('hidden'); }
+    }
+}
+
+function toggleTgEdit(id) {
+    const er = document.getElementById(`tg-edit-${id}`);
+    if (!er) return;
+    const isHidden = er.classList.contains('hidden');
+    document.querySelectorAll('[id^="tg-edit-"]').forEach(r => r.classList.add('hidden'));
+    if (isHidden) { er.classList.remove('hidden'); animateIn(er); er.querySelector('input')?.focus(); }
+}
+
+function addTgReading(flipId) {
+    const date = document.getElementById('tg-date')?.value;
+    const payload = { reading_date: date };
+    for (const key of ['du','dd','p3','p6','p9','p12']) {
+        const v = document.getElementById(`tg-${key}`)?.value;
+        payload[key] = v !== '' ? parseFloat(v) : null;
+    }
+    const amp = document.getElementById('tg-amp')?.value;
+    const be = document.getElementById('tg-be')?.value;
+    payload.amplitude = amp !== '' ? parseFloat(amp) : null;
+    payload.beat_error = be !== '' ? parseFloat(be) : null;
+
+    fetch(`/api/flips/${flipId}/timegrapher`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        const emptyRow = document.getElementById('tg-empty-row');
+        if (emptyRow) emptyRow.remove();
+        const tbody = document.getElementById('tg-tbody');
+        const dc = data.delta_class || '';
+        const deltaCell = data.delta !== null && data.delta !== undefined
+            ? `<span class="font-bold font-mono ${dc}">${parseFloat(data.delta).toFixed(1)}</span>` : '<span class="opacity-40">—</span>';
+        const tr = document.createElement('tr');
+        tr.id = `tg-row-${data.id}`; tr.className = 'data-row hover';
+        tr.innerHTML = `
+            <td class="whitespace-nowrap">${data.fmt_reading_date || data.reading_date}</td>
+            <td class="text-right font-mono">${_tgFmt(data.du)}</td>
+            <td class="text-right font-mono">${_tgFmt(data.dd)}</td>
+            <td class="text-right font-mono">${_tgFmt(data.p3)}</td>
+            <td class="text-right font-mono">${_tgFmt(data.p6)}</td>
+            <td class="text-right font-mono">${_tgFmt(data.p9)}</td>
+            <td class="text-right font-mono">${_tgFmt(data.p12)}</td>
+            <td class="text-right">${_tgFmtPlain(data.amplitude, 0, '°')}</td>
+            <td class="text-right">${_tgFmtPlain(data.beat_error, 1, '')}</td>
+            <td class="text-right">${deltaCell}</td>
+            <td><div class="flex gap-2 justify-end">
+                <button class="link link-primary link-hover" onclick="toggleTgEdit(${data.id})">Edit</button>
+                <button class="link link-error link-hover" onclick="deleteTgConfirm(${data.id},${flipId},this)">Del</button>
+            </div></td>`;
+        const er = document.createElement('tr');
+        er.id = `tg-edit-${data.id}`; er.className = 'edit-row hidden bg-base-200';
+        const positions = [['DU','du'],['DD','dd'],['3U','p3'],['6U','p6'],['9U','p9'],['12U','p12']];
+        const posInputs = positions.map(([pos, key]) =>
+            `<div class="flex flex-col gap-0.5"><span class="text-[9px] uppercase opacity-40">${pos}</span>
+            <input type="number" step="0.1" name="${key}" value="${data[key] ?? ''}" placeholder="—" class="input input-bordered input-sm w-16 text-right font-mono"></div>`
+        ).join('');
+        er.innerHTML = `<td colspan="11" class="p-3"><form class="flex flex-wrap gap-2 items-end" onsubmit="submitTgEdit(event,${data.id},${flipId})">
+            <div class="flex flex-col gap-0.5"><span class="text-[9px] uppercase opacity-40">Date</span>
+            <input type="date" name="reading_date" value="${data.reading_date}" class="input input-bordered input-sm w-36"></div>
+            ${posInputs}
+            <div class="flex flex-col gap-0.5"><span class="text-[9px] uppercase opacity-40">Amp °</span>
+            <input type="number" step="1" name="amplitude" value="${data.amplitude ?? ''}" placeholder="—" class="input input-bordered input-sm w-16 text-right"></div>
+            <div class="flex flex-col gap-0.5"><span class="text-[9px] uppercase opacity-40">BE ms</span>
+            <input type="number" step="0.1" name="beat_error" value="${data.beat_error ?? ''}" placeholder="—" class="input input-bordered input-sm w-16 text-right"></div>
+            <div class="flex gap-2 pt-3.5">
+                <button type="submit" class="btn btn-primary btn-sm">Salva</button>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleTgEdit(${data.id})">Annulla</button>
+            </div></form></td>`;
+        tbody.insertBefore(tr, tbody.firstChild);
+        tbody.insertBefore(er, tr.nextSibling);
+        Object.assign(tr.dataset, {
+            du: data.du ?? '', dd: data.dd ?? '', p3: data.p3 ?? '',
+            p6: data.p6 ?? '', p9: data.p9 ?? '', p12: data.p12 ?? '',
+            amplitude: data.amplitude ?? '', beatError: data.beat_error ?? ''
+        });
+        _applyTgWarnings(tr, data);
+        animateIn(tr);
+        // Reset tfoot inputs
+        for (const key of ['du','dd','p3','p6','p9','p12']) { const el = document.getElementById(`tg-${key}`); if (el) el.value = ''; }
+        const ampEl = document.getElementById('tg-amp'); if (ampEl) ampEl.value = '';
+        const beEl = document.getElementById('tg-be'); if (beEl) beEl.value = '';
+        _updateTgSummary(data, data.delta, data.delta_class);
+        showFlash(window.I18N.entry_added);
+    }).catch(() => showFlash(window.I18N.error, 'info'));
+}
+
+function submitTgEdit(event, tid, flipId) {
+    event.preventDefault();
+    const fd = new FormData(event.target);
+    const payload = {};
+    for (const [k, v] of fd.entries()) {
+        if (['du','dd','p3','p6','p9','p12','amplitude','beat_error'].includes(k))
+            payload[k] = v !== '' ? parseFloat(v) : null;
+        else payload[k] = v;
+    }
+    fetch(`/api/timegrapher/${tid}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        const vr = document.getElementById(`tg-row-${tid}`);
+        if (vr) {
+            const dc = data.delta_class || '';
+            const deltaCell = data.delta !== null && data.delta !== undefined
+                ? `<span class="font-bold font-mono ${dc}">${parseFloat(data.delta).toFixed(1)}</span>` : '<span class="opacity-40">—</span>';
+            vr.cells[0].textContent = data.fmt_reading_date || data.reading_date;
+            vr.cells[1].innerHTML = _tgFmt(data.du);
+            vr.cells[2].innerHTML = _tgFmt(data.dd);
+            vr.cells[3].innerHTML = _tgFmt(data.p3);
+            vr.cells[4].innerHTML = _tgFmt(data.p6);
+            vr.cells[5].innerHTML = _tgFmt(data.p9);
+            vr.cells[6].innerHTML = _tgFmt(data.p12);
+            vr.cells[7].textContent = _tgFmtPlain(data.amplitude, 0, '°');
+            vr.cells[8].textContent = _tgFmtPlain(data.beat_error, 2, '');
+            vr.cells[9].innerHTML = deltaCell;
+            Object.assign(vr.dataset, {
+                du: data.du ?? '', dd: data.dd ?? '', p3: data.p3 ?? '',
+                p6: data.p6 ?? '', p9: data.p9 ?? '', p12: data.p12 ?? '',
+                amplitude: data.amplitude ?? '', beatError: data.beat_error ?? ''
+            });
+            _applyTgWarnings(vr, data);
+            animateFlash(vr);
+        }
+        document.getElementById(`tg-edit-${tid}`)?.classList.add('hidden');
+        if (data.latest) _updateTgSummary(data.latest, data.latest_delta, data.latest_delta_class);
+        showFlash(window.I18N.updated);
+    }).catch(() => showFlash(window.I18N.error, 'info'));
+}
+
+function deleteTgConfirm(tid, flipId, btn) {
+    inlineConfirm(btn, '', () => {
+        const row = document.getElementById(`tg-row-${tid}`);
+        const edit = document.getElementById(`tg-edit-${tid}`);
+        animateOut(row, () => {
+            fetch(`/api/timegrapher/${tid}`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(data => {
+                row.remove(); if (edit) edit.remove();
+                const tbody = document.getElementById('tg-tbody');
+                if (tbody && !tbody.querySelector('.data-row')) {
+                    const empty = document.createElement('tr');
+                    empty.id = 'tg-empty-row';
+                    empty.innerHTML = '<td colspan="11" class="text-center opacity-40 py-6">No data</td>';
+                    tbody.insertBefore(empty, tbody.firstChild);
+                }
+                _updateTgSummary(data.latest, data.latest_delta, data.latest_delta_class);
+                showFlash(window.I18N.entry_deleted, 'info');
+            }).catch(() => { row.style.opacity = '1'; row.style.transform = ''; showFlash(window.I18N.error, 'info'); });
+        });
+    });
 }
 
 // ── Delete collection watch (ajax, inline confirm) ─────────
 function deleteCollConfirm(wid, btn) {
-    inlineConfirm(btn, 'Eliminare?', () => {
+    inlineConfirm(btn, '', () => {
         const row = document.getElementById(`coll-row-${wid}`);
         animateOut(row, () => {
             fetch(`/api/collection/${wid}`, { method: 'DELETE' })
@@ -778,7 +1045,7 @@ function deleteCollConfirm(wid, btn) {
 // ── Delete category (inline confirm, skip save if unchanged) ─
 function deleteCat(id) {
     const row = document.getElementById(`cat-row-${id}`);
-    inlineConfirm(row.querySelector('.action-link.danger'), 'Eliminare?', () => {
+    inlineConfirm(row.querySelector('.action-link.danger'), '', () => {
         animateOut(row, () => {
             fetch(`/api/categories/${id}`, { method: 'DELETE' })
                 .then(r => r.json())
@@ -878,7 +1145,7 @@ function ajaxAddFlip() {
             <td class="num">${fmtNum(f.hours)}h</td>
             <td onclick="event.stopPropagation()"><div class="row-actions">
                 <a href="/flips/${f.id}/edit" class="action-link">Edit</a>
-                <button class="action-link danger" onclick="deleteFlipConfirm(${f.id},this)">Del</button>
+                <button class="action-link danger" onclick="deleteFlipConfirm(${f.id},this)">${window.I18N.delete}</button>
             </div></td>`;
             tbody.insertBefore(tr, tbody.firstChild);
             animateIn(tr);

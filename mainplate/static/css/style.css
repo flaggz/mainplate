@@ -21,6 +21,6 @@ th.sort-desc::after { content: " \25BC"; font-size: 0.7em; opacity: 0.6; margin-
 [data-theme="dark"] .pattern {
   background-color: #191E25;
   background-image:
-    repeating-radial-gradient(circle at 0 0, transparent 0, #191E25 10px),
+    repeating-radial-gradient(circle at 0 0, transparent 0, #1e242c 10px),
     repeating-linear-gradient(#1D232A55, #1D232A);
 }

@@ -72,6 +72,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS collection_log (id INTEGER PRIMARY KEY AUTOINCREMENT, watch_id INTEGER NOT NULL REFERENCES collection(id) ON DELETE CASCADE, log_date TEXT NOT NULL, description TEXT NOT NULL, cost REAL DEFAULT 0, category TEXT DEFAULT '');
     CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
     CREATE TABLE IF NOT EXISTS images (id INTEGER PRIMARY KEY AUTOINCREMENT, entity_type TEXT NOT NULL, entity_id INTEGER NOT NULL, filename TEXT NOT NULL, sort_order INTEGER DEFAULT 0);
+    CREATE TABLE IF NOT EXISTS flip_timegrapher (id INTEGER PRIMARY KEY AUTOINCREMENT, flip_id INTEGER NOT NULL REFERENCES flips(id) ON DELETE CASCADE, reading_date TEXT NOT NULL, du REAL, dd REAL, p3 REAL, p6 REAL, p9 REAL, p12 REAL, amplitude REAL, beat_error REAL);
     ''')
     conn.commit()
 
@@ -96,6 +97,19 @@ def get_images(entity_type, entity_id):
     rows = q('SELECT * FROM images WHERE entity_type=? AND entity_id=? ORDER BY sort_order, id',
              (entity_type, entity_id))
     return [dict(r) | {'url': f'/uploads/{r["filename"]}'} for r in rows]
+
+def timegrapher_delta(row):
+    """Return max-min spread across the 6 positional rates, or None if insufficient data."""
+    if not row: return None
+    rates = [row[k] for k in ('du','dd','p3','p6','p9','p12') if row[k] is not None]
+    return (max(rates) - min(rates)) if len(rates) >= 2 else None
+
+def delta_class(delta):
+    """Return a Tailwind text colour class for a timegrapher delta value."""
+    if delta is None: return ''
+    if delta < 10: return 'text-success'
+    if delta < 20: return 'text-warning'
+    return 'text-error'
 
 def _save_image(file_storage):
     """Process uploaded file with Pillow, save as JPEG, return filename."""
@@ -136,7 +150,7 @@ def inject_globals():
         categories_all=get_all_categories(),
         date_format=s.get('date_format','DD-MM-YYYY'),
         hourly_rate_global=float(s.get('hourly_rate','0') or 0),
-        currency_symbol=s.get('currency_symbol','{{ currency_symbol }}'),
+        currency_symbol=s.get('currency_symbol','$'),
         _=_
     )
 
@@ -282,11 +296,17 @@ def flip_detail(fid):
     labor=flip['hours']*hr; tc=flip['paid']+lc+labor
     profit=(flip['sold']-tc) if flip['status']=='Sold' else None
     roi=(profit/tc*100) if (profit is not None and tc) else None
+    tg_readings=q('SELECT * FROM flip_timegrapher WHERE flip_id=? ORDER BY reading_date DESC,id DESC',(fid,))
+    tg_latest=tg_readings[0] if tg_readings else None
+    tg_latest_delta=timegrapher_delta(tg_latest)
+    tg_rows=[dict(r)|{'delta':timegrapher_delta(r),'delta_class':delta_class(timegrapher_delta(r))} for r in tg_readings]
     return render_template('flip_detail.html',flip=flip,log=log,
         log_cost=lc,labor_cost=labor,total_cost=tc,profit=profit,roi=roi,
         hourly_rate=hr,today=today(),categories=get_all_categories(),
         date_format=s.get('date_format','DD-MM-YYYY'),active='flips',
-        images=get_images('flip',fid))
+        images=get_images('flip',fid),
+        tg_readings=tg_rows,tg_latest=tg_latest,
+        tg_latest_delta=tg_latest_delta,tg_latest_delta_class=delta_class(tg_latest_delta))
 
 
 
@@ -401,6 +421,63 @@ def api_delete_flip_log(lid):
     lc=q('SELECT COALESCE(SUM(cost),0) as s FROM flip_log WHERE flip_id=?',(e['flip_id'],),one=True)['s']
     flip=q('SELECT paid FROM flips WHERE id=?',(e['flip_id'],),one=True)
     return jsonify(ok=True,log_cost=lc,total_cost=flip['paid']+lc)
+
+# Timegrapher API
+def _tg_float(val):
+    try: return float(val) if val not in (None,'','null') else None
+    except: return None
+
+@app.route('/api/flips/<int:fid>/timegrapher', methods=['POST'])
+def api_add_timegrapher(fid):
+    d=request.json
+    tid=run('INSERT INTO flip_timegrapher (flip_id,reading_date,du,dd,p3,p6,p9,p12,amplitude,beat_error) VALUES (?,?,?,?,?,?,?,?,?,?)',
+        (fid, d.get('reading_date', today()),
+         _tg_float(d.get('du')), _tg_float(d.get('dd')),
+         _tg_float(d.get('p3')), _tg_float(d.get('p6')),
+         _tg_float(d.get('p9')), _tg_float(d.get('p12')),
+         _tg_float(d.get('amplitude')), _tg_float(d.get('beat_error'))))
+    r=q('SELECT * FROM flip_timegrapher WHERE id=?',(tid,),one=True)
+    delta=timegrapher_delta(r); dc=delta_class(delta)
+    df=get_settings().get('date_format','DD-MM-YYYY')
+    return jsonify(id=tid, reading_date=r['reading_date'],
+        fmt_reading_date=fmt_date(r['reading_date'],df),
+        du=r['du'],dd=r['dd'],p3=r['p3'],p6=r['p6'],p9=r['p9'],p12=r['p12'],
+        amplitude=r['amplitude'],beat_error=r['beat_error'],
+        delta=delta, delta_class=dc)
+
+@app.route('/api/timegrapher/<int:tid>', methods=['POST'])
+def api_edit_timegrapher(tid):
+    d=request.json
+    run('UPDATE flip_timegrapher SET reading_date=?,du=?,dd=?,p3=?,p6=?,p9=?,p12=?,amplitude=?,beat_error=? WHERE id=?',
+        (d.get('reading_date', today()),
+         _tg_float(d.get('du')), _tg_float(d.get('dd')),
+         _tg_float(d.get('p3')), _tg_float(d.get('p6')),
+         _tg_float(d.get('p9')), _tg_float(d.get('p12')),
+         _tg_float(d.get('amplitude')), _tg_float(d.get('beat_error')), tid))
+    r=q('SELECT * FROM flip_timegrapher WHERE id=?',(tid,),one=True)
+    delta=timegrapher_delta(r); dc=delta_class(delta)
+    df=get_settings().get('date_format','DD-MM-YYYY')
+    latest=q('SELECT * FROM flip_timegrapher WHERE flip_id=? ORDER BY reading_date DESC,id DESC',(r['flip_id'],),one=True)
+    ld=timegrapher_delta(latest); ldc=delta_class(ld)
+    return jsonify(ok=True, reading_date=r['reading_date'],
+        fmt_reading_date=fmt_date(r['reading_date'],df),
+        du=r['du'],dd=r['dd'],p3=r['p3'],p6=r['p6'],p9=r['p9'],p12=r['p12'],
+        amplitude=r['amplitude'],beat_error=r['beat_error'],
+        delta=delta, delta_class=dc,
+        latest=dict(latest) if latest else None, latest_delta=ld, latest_delta_class=ldc)
+
+@app.route('/api/timegrapher/<int:tid>', methods=['DELETE'])
+def api_delete_timegrapher(tid):
+    r=q('SELECT * FROM flip_timegrapher WHERE id=?',(tid,),one=True)
+    if not r: return jsonify(ok=False), 404
+    fid=r['flip_id']
+    run('DELETE FROM flip_timegrapher WHERE id=?',(tid,))
+    latest=q('SELECT * FROM flip_timegrapher WHERE flip_id=? ORDER BY reading_date DESC,id DESC',(fid,),one=True)
+    ld=timegrapher_delta(latest); ldc=delta_class(ld)
+    df=get_settings().get('date_format','DD-MM-YYYY')
+    return jsonify(ok=True, latest=dict(latest) if latest else None,
+        latest_delta=ld, latest_delta_class=ldc,
+        fmt_reading_date=fmt_date(latest['reading_date'],df) if latest else None)
 
 # ══════════════════════════════════════════════════════════
 # COLLECTION
@@ -710,7 +787,7 @@ def settings():
 def api_export():
     """Export all data as a ZIP: data.json + images/ directory."""
     conn = get_db()
-    tables = ['flips','flip_log','categories','parts','equipment',
+    tables = ['flips','flip_log','flip_timegrapher','categories','parts','equipment',
               'collection','collection_log','settings','images']
     data = {t: [dict(r) for r in conn.execute(f'SELECT * FROM {t}').fetchall()]
             for t in tables}
@@ -745,11 +822,11 @@ def api_import():
             data = json.loads(raw)
 
         conn = get_db(); c = conn.cursor()
-        for t in ['flip_log','collection_log','images','flips','categories',
+        for t in ['flip_timegrapher','flip_log','collection_log','images','flips','categories',
                   'parts','equipment','collection','settings']:
             if t in data: c.execute(f'DELETE FROM {t}')
         for t in ['flips','collection','categories','parts','equipment',
-                  'settings','flip_log','collection_log','images']:
+                  'settings','flip_log','flip_timegrapher','collection_log','images']:
             if t not in data or not data[t]: continue
             cols = list(data[t][0].keys()); ph = ','.join('?' * len(cols))
             for row in data[t]:
