@@ -1,7 +1,27 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, Response, send_from_directory
-import sqlite3, os, json, datetime, uuid, zipfile, io
+import sqlite3, os, json, datetime, uuid, zipfile, io, re, urllib.parse
 from PIL import Image
 import werkzeug.serving
+try:
+    from bs4 import BeautifulSoup as _BS
+    _LOOKUP_AVAILABLE = True
+except ImportError:
+    _LOOKUP_AVAILABLE = False
+
+def _lookup_get(url, timeout=12):
+    """GET with Cloudflare bypass: curl_cffi (Chrome TLS) → requests fallback."""
+    try:
+        from curl_cffi.requests import get as _curl_get
+        return _curl_get(url, impersonate='chrome120', timeout=timeout)
+    except ImportError:
+        pass
+    try:
+        import requests as _req
+        return _req.get(url, timeout=timeout, headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+        })
+    except ImportError:
+        raise RuntimeError('no http client available')
 
 werkzeug.serving.WSGIRequestHandler.address_string = lambda self: self.client_address[0]
 
@@ -136,6 +156,33 @@ def _save_image(file_storage):
     filename = uuid.uuid4().hex + '.jpg'
     img.save(os.path.join(IMAGE_DIR, filename), 'JPEG', quality=IMAGE_QUALITY, optimize=True)
     return filename
+
+def _save_image_from_url(url):
+    """Download image from URL, process with Pillow, save as JPEG, return filename or None."""
+    if not url:
+        return None
+    try:
+        resp = _lookup_get(url, timeout=8)
+        resp.raise_for_status()
+        img = Image.open(io.BytesIO(resp.content))
+        if img.mode == 'P' and 'transparency' in img.info:
+            img = img.convert('RGBA')
+        if img.mode in ('RGBA', 'LA', 'PA'):
+            background = Image.new('RGB', img.size, (0, 0, 0))
+            mask = img.split()[-1] if img.mode != 'PA' else img.convert('RGBA').split()[-1]
+            background.paste(img.convert('RGB'), mask=mask)
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+        w, h = img.size
+        if max(w, h) > IMAGE_MAX_PX:
+            factor = IMAGE_MAX_PX / max(w, h)
+            img = img.resize((int(w * factor), int(h * factor)), Image.LANCZOS)
+        filename = uuid.uuid4().hex + '.jpg'
+        img.save(os.path.join(IMAGE_DIR, filename), 'JPEG', quality=IMAGE_QUALITY, optimize=True)
+        return filename
+    except Exception:
+        return None
 
 @app.context_processor
 def inject_globals():
@@ -274,7 +321,7 @@ def add_flip():
             (f['brand'],f['model'],f.get('reference',''),f.get('year') or None,
              f.get('status','Acquired'),float(f.get('paid',0) or 0),
              float(f.get('sold',0) or 0),float(f.get('hours',0) or 0),f.get('notes','')))
-        flash(_('Flip aggiunto!'), 'success'); return redirect(url_for('flip_detail',fid=fid))
+        flash(_('flip added!'), 'success'); return redirect(url_for('flip_detail',fid=fid))
     return render_template('flip_form.html',flip=None,active='flips')
 
 @app.route('/flips/<int:fid>', methods=['GET','POST'])
@@ -285,7 +332,7 @@ def flip_detail(fid):
             (f['brand'],f['model'],f.get('reference',''),f.get('year') or None,
              f.get('status','Acquired'),float(f.get('paid',0) or 0),
              float(f.get('sold',0) or 0),float(f.get('hours',0) or 0),f.get('notes',''),fid))
-        flash(_('Flip aggiornato!'), 'success')
+        flash(_('flip updated!'), 'success')
         return redirect(url_for('flip_detail',fid=fid))
     
     flip=q('SELECT * FROM flips WHERE id=?',(fid,),one=True)
@@ -312,7 +359,7 @@ def flip_detail(fid):
 
 @app.route('/flips/<int:fid>/delete',methods=['POST'])
 def delete_flip(fid):
-    run('DELETE FROM flips WHERE id=?',(fid,)); flash(_('Flip eliminato.'), 'info')
+    run('DELETE FROM flips WHERE id=?',(fid,)); flash(_('flip deleted'), 'info')
     return redirect(url_for('flips'))
 
 # ── Ajax add/delete routes ──────────────────────────────────
@@ -323,6 +370,10 @@ def api_add_flip():
         (d['brand'],d['model'],d.get('reference',''),d.get('year') or None,
          d.get('status','Acquired'),float(d.get('paid',0) or 0),
          float(d.get('sold',0) or 0),float(d.get('hours',0) or 0),d.get('notes','')))
+    image_url=d.get('image_url','')
+    if image_url:
+        fname=_save_image_from_url(image_url)
+        if fname: run('INSERT INTO images (entity_type,entity_id,filename,sort_order) VALUES (?,?,?,?)',('flip',fid,fname,1))
     f=q('SELECT * FROM flips WHERE id=?',(fid,),one=True)
     labor=f['hours']*hr
     return jsonify(id=fid,brand=f['brand'],model=f['model'],
@@ -341,6 +392,10 @@ def api_add_collection():
         (d['brand'],d['model'],d.get('reference',''),d.get('year') or None,
          d.get('acquired',''),float(d.get('purchase_price',0) or 0),
          d.get('sold_date',''),float(d.get('sold_price',0) or 0),d.get('notes',''),int(d.get('is_wishlist',0))))
+    image_url=d.get('image_url','')
+    if image_url:
+        fname=_save_image_from_url(image_url)
+        if fname: run('INSERT INTO images (entity_type,entity_id,filename,sort_order) VALUES (?,?,?,?)',('collection',wid,fname,1))
     w=q('SELECT * FROM collection WHERE id=?',(wid,),one=True)
     wd=dict(w)
     for k,v in [('purchase_price',0),('sold_price',0),('sold_date','')]: wd.setdefault(k,v)
@@ -490,7 +545,7 @@ def collection():
             (f['brand'], f['model'], f.get('reference',''), f.get('year') or None,
              f.get('acquired',''), float(f.get('purchase_price',0) or 0),
              float(f.get('sold_price',0) or 0), f.get('sold_date',''), f.get('notes',''), int(f.get('is_wishlist', 0))))
-        flash(_('Orologio aggiunto!'), 'success')
+        flash(_('watch added!'), 'success')
         return redirect(url_for('collection'))
 
     active_watches = [dict(w) for w in q("""
@@ -543,7 +598,7 @@ def add_collection():
              f.get('acquired',''),float(f.get('purchase_price',0) or 0),
              float(f.get('sold_price',0) or 0),f.get('sold_date',''),f.get('notes',''),
              int(f.get('is_wishlist', 0))))
-        flash(_('Orologio aggiunto!'), 'success')
+        flash(_('watch added!'), 'success')
         return redirect(url_for('collection_detail',wid=wid))
     return render_template('collection_form.html',watch=None,active='collection')
 
@@ -572,14 +627,14 @@ def edit_collection(wid):
             (f['brand'],f['model'],f.get('reference',''),f.get('year') or None,
              f.get('acquired',''),float(f.get('purchase_price',0) or 0),
              float(f.get('sold_price',0) or 0),f.get('sold_date',''),f.get('notes',''),f.get('is_wishlist', 0),wid))
-        flash(_('Orologio aggiornato!'), 'success')
+        flash(_('watch updated!'), 'success')
         return redirect(url_for('collection_detail',wid=wid))
     return render_template('collection_form.html',watch=watch,active='collection')
 
 @app.route('/collection/<int:wid>/delete',methods=['POST'])
 def delete_collection(wid):
     run('DELETE FROM collection WHERE id=?',(wid,))
-    flash(_('Orologio eliminato dalla collezione.'), 'info')
+    flash(_('watch deleted'), 'info')
     return redirect(url_for('collection'))
 
 @app.route('/api/collection/<int:wid>/log',methods=['POST'])
@@ -634,6 +689,119 @@ def api_edit_category(cid):
 @app.route('/api/categories/<int:cid>',methods=['DELETE'])
 def api_delete_category(cid):
     run('DELETE FROM categories WHERE id=?',(cid,)); return jsonify(ok=True)
+
+# ══════════════════════════════════════════════════════════
+# WATCH LOOKUP (Chrono24)
+# ══════════════════════════════════════════════════════════
+def _parse_chrono24_page(soup):
+    """Extract watch data from Chrono24 JSON-LD (AggregateOffer + ItemList + BreadcrumbList)."""
+    brand = ''
+    low_price = ''
+    offer_items = []  # individual listings with reference numbers
+    list_items = []   # model sub-variants (fallback)
+
+    def _extract_img(raw):
+        if isinstance(raw, list) and raw:
+            raw = raw[0]
+        if isinstance(raw, dict):
+            return raw.get('contentUrl', '') or raw.get('url', '')
+        return str(raw or '')
+
+    for script in soup.find_all('script', type='application/ld+json'):
+        try:
+            data = json.loads(script.string or '{}')
+            nodes = []
+            for d in (data if isinstance(data, list) else [data]):
+                nodes.extend(d.get('@graph', [d]) if isinstance(d, dict) else [])
+
+            for node in nodes:
+                t = node.get('@type', '')
+
+                if t == 'BreadcrumbList':
+                    crumbs = sorted(node.get('itemListElement', []), key=lambda x: x.get('position', 99))
+                    for c in crumbs:
+                        item = c.get('item', {})
+                        name = item.get('name', '') if isinstance(item, dict) else ''
+                        if c.get('position', 0) == 2:
+                            brand = re.sub(r'\s+watches?$', '', name, flags=re.I).strip()
+
+                elif t == 'AggregateOffer':
+                    low_price = str(node.get('lowPrice', '') or '')
+                    for offer in node.get('offers', [])[:10]:
+                        oname = offer.get('name', '').strip()
+                        if not oname:
+                            continue
+                        oprice = str(offer.get('price', '') or '')
+                        oimg = _extract_img(offer.get('image', ''))
+                        # Reference: numeric+alpha code that's not a measurement
+                        ref_m = re.search(r'\b([A-Z]{0,3}\d{4,6}[A-Z]{0,4}(?:[/-]\d+)?)\b(?!\s*mm|\s*kt)', oname, re.I)
+                        ref = ref_m.group(1).upper() if ref_m else ''
+                        year_m = re.search(r'\b(19\d{2}|20\d{2})\b', oname)
+                        year = year_m.group(1) if year_m else ''
+                        # Model: text between brand and reference, up to 4 words
+                        after_brand = oname[len(brand):].strip() if brand and oname.lower().startswith(brand.lower()) else oname
+                        if ref:
+                            before_ref = after_brand[:after_brand.upper().find(ref)].strip()
+                            model = ' '.join(before_ref.split()[:4]).rstrip(' -,')
+                        else:
+                            model = ' '.join(after_brand.split()[:4])
+                        offer_items.append({'brand': brand or oname.split()[0],
+                                            'model': model, 'reference': ref, 'year': year,
+                                            'price': oprice or low_price, 'image_url': oimg})
+
+                elif t == 'ItemList':
+                    for li in node.get('itemListElement', [])[:10]:
+                        lname = li.get('name', '').strip()
+                        if not lname:
+                            continue
+                        limg = _extract_img(li.get('image', ''))
+                        if limg and not limg.startswith('http'):
+                            limg = 'https://www.chrono24.com' + limg
+                        list_items.append({'brand': brand, 'model': lname,
+                                           'reference': '', 'year': '', 'price': low_price,
+                                           'image_url': limg})
+        except Exception:
+            pass
+
+    # Individual listings (with references) preferred over generic model variants
+    results = offer_items or list_items
+
+    for r in results:
+        if not r['brand']: r['brand'] = brand
+        if not r['price']: r['price'] = low_price
+
+    og_tag = soup.find('meta', property='og:image')
+    og_img = og_tag.get('content', '') if og_tag else ''
+    if not results:
+        title_tag = soup.find('title')
+        text = (title_tag.get_text(strip=True) if title_tag else '').split('|')[0].strip()
+        parts = text.split(None, 1)
+        if parts:
+            results.append({'brand': parts[0], 'model': parts[1] if len(parts) > 1 else '',
+                            'reference': '', 'year': '', 'price': low_price, 'image_url': og_img})
+
+    if results and not any(r.get('image_url') for r in results) and og_img:
+        results[0]['image_url'] = og_img
+
+    return results[:10]
+
+@app.route('/api/watch-lookup')
+def api_watch_lookup():
+    q_str = request.args.get('q', '').strip()
+    if not q_str or len(q_str) < 3:
+        return jsonify(results=[], error=None)
+    if not _LOOKUP_AVAILABLE:
+        return jsonify(results=[], error='deps_missing')
+    try:
+        search_url = 'https://www.chrono24.com/search/index.htm?dosearch=true&lang=en&query=' + urllib.parse.quote(q_str)
+        resp = _lookup_get(search_url)
+        if resp.status_code != 200:
+            return jsonify(results=[], error=f'http_{resp.status_code}')
+        soup = _BS(resp.text, 'html.parser')
+        results = _parse_chrono24_page(soup)
+        return jsonify(results=results, error=None if results else 'no_results')
+    except Exception as e:
+        return jsonify(results=[], error=f'{type(e).__name__}: {e}')
 
 # ══════════════════════════════════════════════════════════
 # IMAGES
@@ -777,7 +945,7 @@ def settings():
             v = request.form.get(k, '')
             if v != '':
                 run('INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?', (k, v, v))
-        flash(_('Settings saved successfully'), 'success')
+        flash(_('settings saved successfully'), 'success')
         return redirect(url_for('settings'))
     
     langs = [f[:-5] for f in os.listdir(LANG_DIR) if f.endswith('.json')] if os.path.exists(LANG_DIR) else ['en']

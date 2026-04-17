@@ -32,6 +32,20 @@
 <div id="add-flip-form-wrap" class="hidden mb-6">
     <div class="card bg-base-100 shadow-md border border-base-200">
         <div class="card-body p-6">
+            <!-- Chrono24 Lookup -->
+            <div class="mb-4">
+                <label class="label pb-1"><span class="label-text uppercase text-xs opacity-70">🔍 {{ _('search on chrono24') }}</span></label>
+                <div class="relative">
+                    <input type="text" id="nf-lookup-input"
+                        placeholder="{{ _('type brand, model or reference…') }}"
+                        oninput="watchLookupSearch(this.value,'nf')"
+                        autocomplete="off"
+                        class="input input-bordered w-full">
+                    <div id="nf-lookup-results" class="hidden absolute z-50 w-full bg-base-100 border border-base-300 rounded-box shadow-xl mt-1 max-h-72 overflow-y-auto"></div>
+                    <input type="hidden" id="nf-lookup-img">
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="form-control">
                     <label class="label"><span class="label-text uppercase">{{ _('brand') }} *</span></label>

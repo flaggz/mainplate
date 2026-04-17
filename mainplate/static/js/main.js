@@ -1054,6 +1054,92 @@ function saveCatRow(id) {
     }, 400);
 }
 
+// ── Chrono24 Watch Lookup ──────────────────────────────────
+let _lookupTimer = null;
+const _lookupCache = {};
+
+function watchLookupSearch(query, prefix) {
+    clearTimeout(_lookupTimer);
+    const resultsEl = document.getElementById(prefix + '-lookup-results');
+    if (!resultsEl) return;
+    if (!query || query.trim().length < 3) {
+        resultsEl.classList.add('hidden');
+        resultsEl.innerHTML = '';
+        return;
+    }
+    resultsEl.classList.remove('hidden');
+    resultsEl.innerHTML = `<div class="p-3 text-sm opacity-60">${window.I18N.lookup_searching || 'searching…'}</div>`;
+    _lookupTimer = setTimeout(() => {
+        fetch('/api/watch-lookup?q=' + encodeURIComponent(query.trim()))
+            .then(r => r.json())
+            .then(data => {
+                if (!resultsEl) return;
+                if (data.error && (!data.results || !data.results.length)) {
+                    const msg = data.error === 'deps_missing'
+                        ? 'Dipendenze mancanti — rebuild Docker con --build'
+                        : (window.I18N.lookup_unavailable || 'lookup unavailable') + (data.error !== 'lookup_unavailable' ? ` (${data.error})` : '');
+                    resultsEl.innerHTML = `<div class="p-3 text-sm opacity-60">${msg}</div>`;
+                    return;
+                }
+                if (!data.results || !data.results.length) {
+                    resultsEl.innerHTML = `<div class="p-3 text-sm opacity-60">${window.I18N.lookup_no_results || 'no results'}</div>`;
+                    return;
+                }
+                _lookupCache[prefix] = data.results;
+                resultsEl.innerHTML = data.results.map((r, i) => {
+                    const thumb = r.image_url
+                        ? `<img src="${r.image_url}" class="w-10 h-10 object-cover rounded shrink-0" onerror="this.style.display='none'">`
+                        : `<div class="w-10 h-10 bg-base-200 rounded shrink-0"></div>`;
+                    const price = r.price ? `<span class="text-xs opacity-60 ml-2">${window.CURRENCY || '€'}${r.price}</span>` : '';
+                    const sub = [r.reference, r.year].filter(Boolean).join(' · ');
+                    return `<button type="button"
+                        class="flex items-center gap-3 w-full text-left px-3 py-2 hover:bg-base-200 transition-colors"
+                        onclick="fillFromLookup(${i}, '${prefix}')">
+                        ${thumb}
+                        <div class="min-w-0 flex-1">
+                            <div class="font-semibold text-sm truncate">${r.brand} ${r.model}${price}</div>
+                            ${sub ? `<div class="text-xs opacity-60 truncate">${sub}</div>` : ''}
+                        </div>
+                    </button>`;
+                }).join('<div class="border-t border-base-200"></div>');
+            })
+            .catch(() => {
+                if (resultsEl) resultsEl.innerHTML = `<div class="p-3 text-sm opacity-60">${window.I18N.lookup_unavailable || 'lookup unavailable'}</div>`;
+            });
+    }, 500);
+}
+
+function fillFromLookup(idx, prefix) {
+    const r = (_lookupCache[prefix] || [])[idx];
+    if (!r) return;
+    const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined && val !== '') el.value = val; };
+    set(prefix + '-brand', r.brand);
+    set(prefix + '-model', r.model);
+    set(prefix + '-ref', r.reference);
+    set(prefix + '-year', r.year);
+    if (r.price) {
+        const priceId = prefix === 'nc' ? 'nc-price' : 'nf-paid';
+        set(priceId, r.price.replace(/[^\d.,]/g, '').replace(',', '.'));
+    }
+    const imgHidden = document.getElementById(prefix + '-lookup-img');
+    if (imgHidden) imgHidden.value = r.image_url || '';
+    const inputEl = document.getElementById(prefix + '-lookup-input');
+    if (inputEl) inputEl.value = [r.brand, r.model].filter(Boolean).join(' ');
+    const resultsEl = document.getElementById(prefix + '-lookup-results');
+    if (resultsEl) { resultsEl.classList.add('hidden'); resultsEl.innerHTML = ''; }
+    document.getElementById(prefix + '-brand')?.focus();
+}
+
+document.addEventListener('click', (e) => {
+    ['nc', 'nf'].forEach(p => {
+        const wrap = document.getElementById(p + '-lookup-input')?.closest('.relative');
+        const results = document.getElementById(p + '-lookup-results');
+        if (results && wrap && !wrap.contains(e.target)) {
+            results.classList.add('hidden');
+        }
+    });
+});
+
 // ── Inline add flip ────────────────────────────────────────
 function toggleAddFlipForm() {
     const wrap = document.getElementById('add-flip-form-wrap');
@@ -1067,6 +1153,9 @@ function toggleAddFlipForm() {
     } else {
         wrap.classList.add('hidden');
         document.getElementById('add-flip-btn').textContent = I18N_NEW_FLIP;
+        const li = document.getElementById('nf-lookup-input'); if (li) li.value = '';
+        const limg = document.getElementById('nf-lookup-img'); if (limg) limg.value = '';
+        const lr = document.getElementById('nf-lookup-results'); if (lr) { lr.classList.add('hidden'); lr.innerHTML = ''; }
     }
 }
 
@@ -1083,6 +1172,7 @@ function ajaxAddFlip() {
         sold: parseInputNum(document.getElementById('nf-sold')?.value),
         hours: parseInputNum(document.getElementById('nf-hours')?.value),
         notes: document.getElementById('nf-notes')?.value.trim() || '',
+        image_url: document.getElementById('nf-lookup-img')?.value || '',
     };
     fetch('/api/flips', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
         .then(r => r.json())
@@ -1115,7 +1205,7 @@ function ajaxAddFlip() {
             tbody.insertBefore(tr, tbody.firstChild);
             animateIn(tr);
             // Reset form
-            ['nf-brand', 'nf-model', 'nf-ref', 'nf-year', 'nf-notes'].forEach(id => {
+            ['nf-brand', 'nf-model', 'nf-ref', 'nf-year', 'nf-notes', 'nf-lookup-input', 'nf-lookup-img'].forEach(id => {
                 const el = document.getElementById(id); if (el) el.value = '';
             });
             ['nf-paid', 'nf-sold', 'nf-hours'].forEach(id => {
@@ -1134,12 +1224,13 @@ function toggleAddCollForm() {
     if (!wrap) return;
     if (wrap.classList.contains('hidden')) {
         window.currentEditCollId = null;
-        ['nc-brand', 'nc-model', 'nc-ref', 'nc-year', 'nc-acquired', 'nc-sold-date', 'nc-notes'].forEach(id => {
+        ['nc-brand', 'nc-model', 'nc-ref', 'nc-year', 'nc-acquired', 'nc-sold-date', 'nc-notes', 'nc-lookup-input', 'nc-lookup-img'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
         ['nc-price', 'nc-sold-price'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '0';
         });
+        const lr = document.getElementById('nc-lookup-results'); if (lr) { lr.classList.add('hidden'); lr.innerHTML = ''; }
         const wl = document.getElementById('nc-wishlist');
         if (wl) wl.checked = false;
         if (window.updateWishlistBtnUI) window.updateWishlistBtnUI();
@@ -1208,6 +1299,7 @@ function ajaxAddCollection() {
         sold_price: parseInputNum(document.getElementById('nc-sold-price')?.value),
         notes: document.getElementById('nc-notes')?.value.trim() || '',
         is_wishlist: document.getElementById('nc-wishlist')?.checked ? 1 : 0,
+        image_url: window.currentEditCollId ? '' : (document.getElementById('nc-lookup-img')?.value || ''),
     };
 
     let url = '/api/collection';

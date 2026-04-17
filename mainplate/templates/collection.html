@@ -38,6 +38,20 @@
                 <button class="btn btn-ghost btn-xs !uppercase" onclick="toggleAddCollForm()">✕ {{ _('cancel')}}</button>
             </div>
 
+            <!-- Chrono24 Lookup -->
+            <div class="mb-4">
+                <label class="label pb-1"><span class="label-text uppercase text-xs opacity-70">🔍 {{ _('search on chrono24') }}</span></label>
+                <div class="relative">
+                    <input type="text" id="nc-lookup-input"
+                        placeholder="{{ _('type brand, model or reference…') }}"
+                        oninput="watchLookupSearch(this.value,'nc')"
+                        autocomplete="off"
+                        class="input input-bordered w-full">
+                    <div id="nc-lookup-results" class="hidden absolute z-50 w-full bg-base-100 border border-base-300 rounded-box shadow-xl mt-1 max-h-72 overflow-y-auto"></div>
+                    <input type="hidden" id="nc-lookup-img">
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="form-control">
                     <label class="label"><span class="label-text uppercase">{{ _('brand') }} *</span></label>
