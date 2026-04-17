@@ -13,46 +13,53 @@
                 <thead>
                     <tr class="opacity-60">
                         <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="0">{{ _('part') }}</th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="1">{{ _('category') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="2">{{ _('qty')
-                            }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="3">{{
-                            _('value') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase hidden md:table-cell" data-col="1">{{ _('category') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase hidden md:table-cell" data-col="2">{{ _('qty') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase hidden md:table-cell" data-col="3">{{ _('value') }}</th>
                         <th class="text-right uppercase">{{ _('actions') }}</th>
                     </tr>
                 </thead>
                 <tbody id="parts-tbody">
                     {% for p in parts %}
                     <tr id="part-row-{{ p.id }}" class="data-row hover">
-                        <td>{{ p.name }}</td>
-                        <td data-sort="{{ p.category|lower if p.category else 'zzzz' }}">
-                            {% if p.category %}<span class="badge badge-outline badge-sm">{{ p.category }}</span>{% else
-                            %}<span class="opacity-50">—</span>{% endif %}
-                        </td>
-                        <td class="text-right">{{ p.quantity }}</td>
-                        <td class="text-right">{{ currency_symbol }}{{ '{:,.2f}'.format(p.value) }}</td>
                         <td>
-                            <div class="flex gap-3 justify-end text-sm">
-                                <button class="btn btn-primary btn-outline btn-sm gap-1 uppercase" onclick="toggleEditRow('part',{{ p.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>{{ _('edit') }}</button>
-                                <button class="btn btn-error btn-outline btn-sm gap-1 uppercase" onclick="ajaxDelete('part',{{ p.id }},this)"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>{{ _('delete') }}</button>
+                            {{ p.name }}
+                            {# Mobile summary #}
+                            <div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs opacity-60">
+                                {% if p.category %}<span class="badge badge-xs badge-outline">{{ p.category }}</span>{% endif %}
+                                <span>× {{ p.quantity }}</span>
+                                <span class="tabular-nums font-semibold">{{ currency_symbol }}{{ '{:,.2f}'.format(p.value) }}</span>
+                            </div>
+                        </td>
+                        <td class="hidden md:table-cell" data-sort="{{ p.category|lower if p.category else 'zzzz' }}">
+                            {% if p.category %}<span class="badge badge-outline badge-sm">{{ p.category }}</span>{% else %}<span class="opacity-50">—</span>{% endif %}
+                        </td>
+                        <td class="text-right hidden md:table-cell">{{ p.quantity }}</td>
+                        <td class="text-right hidden md:table-cell">{{ currency_symbol }}{{ '{:,.2f}'.format(p.value) }}</td>
+                        <td>
+                            <div class="flex gap-1 md:gap-3 justify-end text-sm">
+                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="toggleEditRow('part',{{ p.id }})">
+                                    <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>
+                                    <span class="hidden sm:inline">{{ _('edit') }}</span>
+                                </button>
+                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="ajaxDelete('part',{{ p.id }},this)">
+                                    <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>
+                                    <span class="hidden sm:inline">{{ _('delete') }}</span>
+                                </button>
                             </div>
                         </td>
                     </tr>
                     <tr id="part-edit-{{ p.id }}" class="edit-row hidden bg-base-200">
-                        <td colspan="5" class="p-4">
-                            <form class="flex flex-col md:flex-row gap-4 items-center w-full"
+                        <td colspan="5" class="p-3">
+                            <form class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:gap-3"
                                 onsubmit="submitEdit(event,'part',{{ p.id }})">
-                                <input type="text" name="name" value="{{ p.name }}"
-                                    class="input input-bordered input-sm flex-1" required>
-                                {{ cat_select('category', p.category, extra_class='select-sm', cats=categories) }}
-                                <input type="number" name="quantity" value="{{ p.quantity }}" min="1"
-                                    class="input input-bordered input-sm w-20">
-                                <input type="number" step="0.01" name="value" value="{{ p.value }}" min="0"
-                                    class="input input-bordered input-sm w-24">
-                                <div class="flex gap-2">
-                                    <button type="submit" class="btn btn-primary btn-sm">{{ _('save') }}</button>
-                                    <button type="button" class="btn btn-ghost btn-sm"
-                                        onclick="toggleEditRow('part',{{ p.id }})">{{ _('cancel') }}</button>
+                                <input type="text" name="name" value="{{ p.name }}" class="input input-bordered input-sm col-span-2 md:flex-1" required>
+                                <div class="col-span-2 md:col-auto">{{ cat_select('category', p.category, extra_class='select-sm w-full', cats=categories) }}</div>
+                                <input type="number" name="quantity" value="{{ p.quantity }}" min="1" class="input input-bordered input-sm text-right md:w-20">
+                                <input type="number" step="0.01" name="value" value="{{ p.value }}" min="0" class="input input-bordered input-sm text-right md:w-24">
+                                <div class="col-span-2 flex gap-2 md:col-auto">
+                                    <button type="submit" class="btn btn-primary btn-sm flex-1 md:flex-none">{{ _('save') }}</button>
+                                    <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEditRow('part',{{ p.id }})">{{ _('cancel') }}</button>
                                 </div>
                             </form>
                         </td>
@@ -61,17 +68,15 @@
                 </tbody>
                 <tfoot class="bg-gradient-to-r from-base-200/60 to-base-100/30">
                     <tr class="add-row">
-                        <td class="p-2"><input type="text" id="new-part-name"
-                                class="input input-bordered input-sm w-full capitalize" placeholder="{{ _('part name…') }}"></td>
-                        <td class="p-2">{{ cat_select('', '', id='new-part-cat', extra_class='select-sm w-full',
-                            cats=categories) }}</td>
-                        <td class="p-2 text-right"><input type="number" id="new-part-qty"
-                                class="input input-bordered input-sm w-20 text-right" value="1" min="1"></td>
-                        <td class="p-2 text-right"><input type="number" id="new-part-val"
-                                class="input input-bordered input-sm w-24 text-right" step="0.01" value="0" min="0">
+                        <td colspan="5" class="p-2">
+                            <div class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:gap-2">
+                                <input type="text" id="new-part-name" class="input input-bordered input-sm col-span-2 md:flex-1 capitalize" placeholder="{{ _('part name…') }}">
+                                <div class="col-span-2 md:col-auto">{{ cat_select('', '', id='new-part-cat', extra_class='select-sm w-full md:w-40', cats=categories) }}</div>
+                                <input type="number" id="new-part-qty" class="input input-bordered input-sm text-right md:w-20" value="1" min="1">
+                                <input type="number" id="new-part-val" class="input input-bordered input-sm text-right md:w-24" step="0.01" value="0" min="0">
+                                <button class="col-span-2 md:col-auto btn btn-primary btn-sm" onclick="ajaxAddPart()">+ {{ _('add') }}</button>
+                            </div>
                         </td>
-                        <td class="p-2 text-right"><button class="btn btn-primary btn-sm" onclick="ajaxAddPart()">+
-                                {{ _('add') }}</button></td>
                     </tr>
                 </tfoot>
             </table>
@@ -92,22 +97,27 @@
                 <thead>
                     <tr class="opacity-60">
                         <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="0">{{ _('part') }}</th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="1">{{ _('category') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="2">{{ _('qty') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase" data-col="3">{{ _('total cost') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase hidden md:table-cell" data-col="1">{{ _('category') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase hidden md:table-cell" data-col="2">{{ _('qty') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase hidden md:table-cell" data-col="3">{{ _('total cost') }}</th>
                         <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="4">{{ _('flip') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for p in log_parts %}
                     <tr class="hover">
-                        <td>{{ p.name }}</td>
-                        <td>{% if p.category %}<span class="badge badge-outline badge-sm">{{ p.category }}</span>{% else
-                            %}<span class="opacity-50">—</span>{% endif %}</td>
-                        <td class="text-right">{{ p.qty }}</td>
-                        <td class="text-right">{{ currency_symbol }}{{ '{:,.2f}'.format(p.total_cost) }}</td>
-                        <td><a href="{{ url_for('flip_detail', fid=p.flip_id) }}" class="link link-primary">{{ p.brand
-                                }} {{ p.model }}</a></td>
+                        <td>
+                            {{ p.name }}
+                            <div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs opacity-60">
+                                {% if p.category %}<span class="badge badge-xs badge-outline">{{ p.category }}</span>{% endif %}
+                                <span>× {{ p.qty }}</span>
+                                <span class="tabular-nums font-semibold">{{ currency_symbol }}{{ '{:,.2f}'.format(p.total_cost) }}</span>
+                            </div>
+                        </td>
+                        <td class="hidden md:table-cell">{% if p.category %}<span class="badge badge-outline badge-sm">{{ p.category }}</span>{% else %}<span class="opacity-50">—</span>{% endif %}</td>
+                        <td class="text-right hidden md:table-cell">{{ p.qty }}</td>
+                        <td class="text-right hidden md:table-cell">{{ currency_symbol }}{{ '{:,.2f}'.format(p.total_cost) }}</td>
+                        <td><a href="{{ url_for('flip_detail', fid=p.flip_id) }}" class="link link-primary">{{ p.brand }} {{ p.model }}</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>

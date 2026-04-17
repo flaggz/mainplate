@@ -160,14 +160,14 @@ endblock %}
                     <thead>
                         <tr class="uppercase opacity-60 text-xs">
                             <th>{{ _('date') }}</th>
-                            <th class="text-right font-mono">DU</th>
-                            <th class="text-right font-mono">DD</th>
-                            <th class="text-right font-mono">3U</th>
-                            <th class="text-right font-mono">6U</th>
-                            <th class="text-right font-mono">9U</th>
-                            <th class="text-right font-mono">12U</th>
-                            <th class="text-right">{{ _('amplitude') }}</th>
-                            <th class="text-right">{{ _('beat error') }}</th>
+                            <th class="text-right font-mono hidden md:table-cell">DU</th>
+                            <th class="text-right font-mono hidden md:table-cell">DD</th>
+                            <th class="text-right font-mono hidden md:table-cell">3U</th>
+                            <th class="text-right font-mono hidden md:table-cell">6U</th>
+                            <th class="text-right font-mono hidden md:table-cell">9U</th>
+                            <th class="text-right font-mono hidden md:table-cell">12U</th>
+                            <th class="text-right hidden md:table-cell">{{ _('amplitude') }}</th>
+                            <th class="text-right hidden md:table-cell">{{ _('beat error') }}</th>
                             <th class="text-right font-bold">Δ</th>
                             <th class="text-right">{{ _('actions') }}</th>
                         </tr>
@@ -186,15 +186,23 @@ endblock %}
                             data-p12="{{ r.p12 if r.p12 is not none else '' }}"
                             data-amplitude="{{ r.amplitude if r.amplitude is not none else '' }}"
                             data-beat-error="{{ r.beat_error if r.beat_error is not none else '' }}">
-                            <td class="whitespace-nowrap">{{ r.reading_date | fmtdate(date_format) }}</td>
-                            <td class="text-right font-mono">{% if r.du is not none %}{{ '{:+.1f}'.format(r.du) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
-                            <td class="text-right font-mono">{% if r.dd is not none %}{{ '{:+.1f}'.format(r.dd) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
-                            <td class="text-right font-mono">{% if r.p3 is not none %}{{ '{:+.1f}'.format(r.p3) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
-                            <td class="text-right font-mono">{% if r.p6 is not none %}{{ '{:+.1f}'.format(r.p6) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
-                            <td class="text-right font-mono">{% if r.p9 is not none %}{{ '{:+.1f}'.format(r.p9) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
-                            <td class="text-right font-mono">{% if r.p12 is not none %}{{ '{:+.1f}'.format(r.p12) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
-                            <td class="text-right">{% if r.amplitude is not none %}{{ '{:.0f}'.format(r.amplitude) }}°{% else %}<span class="opacity-40">—</span>{% endif %}</td>
-                            <td class="text-right">{% if r.beat_error is not none %}{{ '{:.1f}'.format(r.beat_error) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
+                            <td class="whitespace-nowrap">
+                                {{ r.reading_date | fmtdate(date_format) }}
+                                {# Mobile summary #}
+                                <div class="md:hidden font-mono text-xs opacity-60 mt-0.5 flex flex-wrap gap-x-2">
+                                    {% for lbl, val in [('DU', r.du), ('DD', r.dd), ('3U', r.p3), ('6U', r.p6), ('9U', r.p9), ('12U', r.p12)] %}{% if val is not none %}<span>{{ lbl }}:{{ '{:+.1f}'.format(val) }}</span>{% endif %}{% endfor %}
+                                    {% if r.amplitude is not none %}<span>{{ '{:.0f}'.format(r.amplitude) }}°</span>{% endif %}
+                                    {% if r.beat_error is not none %}<span>BE:{{ '{:.1f}'.format(r.beat_error) }}</span>{% endif %}
+                                </div>
+                            </td>
+                            <td class="text-right font-mono hidden md:table-cell">{% if r.du is not none %}{{ '{:+.1f}'.format(r.du) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
+                            <td class="text-right font-mono hidden md:table-cell">{% if r.dd is not none %}{{ '{:+.1f}'.format(r.dd) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
+                            <td class="text-right font-mono hidden md:table-cell">{% if r.p3 is not none %}{{ '{:+.1f}'.format(r.p3) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
+                            <td class="text-right font-mono hidden md:table-cell">{% if r.p6 is not none %}{{ '{:+.1f}'.format(r.p6) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
+                            <td class="text-right font-mono hidden md:table-cell">{% if r.p9 is not none %}{{ '{:+.1f}'.format(r.p9) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
+                            <td class="text-right font-mono hidden md:table-cell">{% if r.p12 is not none %}{{ '{:+.1f}'.format(r.p12) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
+                            <td class="text-right hidden md:table-cell">{% if r.amplitude is not none %}{{ '{:.0f}'.format(r.amplitude) }}°{% else %}<span class="opacity-40">—</span>{% endif %}</td>
+                            <td class="text-right hidden md:table-cell">{% if r.beat_error is not none %}{{ '{:.1f}'.format(r.beat_error) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
                             <td class="text-right font-bold font-mono {{ r.delta_class }}">{% if r.delta is not none %}{{ '{:.1f}'.format(r.delta) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
                             <td>
                                 <div class="flex gap-2 justify-end">
@@ -244,14 +252,21 @@ endblock %}
                     </tbody>
                     <tfoot class="bg-gradient-to-r from-base-200/60 to-base-100/30">
                         <tr>
-                            <td class="p-2"><input type="date" id="tg-date" class="input input-bordered input-sm w-full" value="{{ today }}"></td>
-                            {% for pos, key in [('DU','du'),('DD','dd'),('3U','p3'),('6U','p6'),('9U','p9'),('12U','p12')] %}
-                            <td class="p-2"><input type="number" step="0.1" id="tg-{{ key }}" placeholder="{{ pos }}" class="input input-bordered input-sm w-full text-right font-mono"></td>
-                            {% endfor %}
-                            <td class="p-2"><input type="number" step="1" id="tg-amp" placeholder="°" class="input input-bordered input-sm w-full text-right"></td>
-                            <td class="p-2"><input type="number" step="0.1" id="tg-be" placeholder="ms" class="input input-bordered input-sm w-full text-right"></td>
-                            <td></td>
-                            <td class="p-2 text-right uppercase"><button class="btn btn-primary btn-sm !uppercase" onclick="addTgReading({{ flip.id }})">+ {{ _('add') }}</button></td>
+                            <td colspan="11" class="p-2">
+                                <div class="flex flex-col gap-2 md:flex-row md:items-center md:gap-1">
+                                    <input type="date" id="tg-date" class="input input-bordered input-sm md:w-36" value="{{ today }}">
+                                    <div class="grid grid-cols-3 gap-1 md:contents">
+                                        {% for pos, key in [('DU','du'),('DD','dd'),('3U','p3'),('6U','p6'),('9U','p9'),('12U','p12')] %}
+                                        <input type="number" step="0.1" id="tg-{{ key }}" placeholder="{{ pos }}" class="input input-bordered input-sm w-full md:w-14 text-right font-mono">
+                                        {% endfor %}
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-1 md:contents">
+                                        <input type="number" step="1" id="tg-amp" placeholder="Amp°" class="input input-bordered input-sm w-full md:w-16 text-right">
+                                        <input type="number" step="0.1" id="tg-be" placeholder="BE ms" class="input input-bordered input-sm w-full md:w-16 text-right">
+                                    </div>
+                                    <button class="btn btn-primary btn-sm !uppercase" onclick="addTgReading({{ flip.id }})">+ {{ _('add') }}</button>
+                                </div>
+                            </td>
                         </tr>
                     </tfoot>
                 </table>
@@ -355,74 +370,62 @@ endblock %}
             <table class="table" id="log-table">
                 <thead>
                     <tr class="uppercase opacity-60">
-                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('date') }}</th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('description') }}
-                        </th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="2">{{ _('category') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{
-                            _('cost') }}</th>
-                        <th class="text-center">{{ _('inv.') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="0">{{ _('date') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('description') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="2">{{ _('category') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="3">{{ _('cost') }}</th>
+                        <th class="text-center hidden md:table-cell">{{ _('inv.') }}</th>
                         <th class="text-right">{{ _('actions') }}</th>
                     </tr>
                 </thead>
                 <tbody id="log-tbody">
                     {% for e in log %}
                     <tr id="log-row-{{ e.id }}" class="data-row hover">
-                        <td class="whitespace-nowrap">{{ e.log_date | fmtdate(date_format) }}</td>
-                        <td>{{ e.description }}</td>
+                        <td class="whitespace-nowrap hidden md:table-cell">{{ e.log_date | fmtdate(date_format) }}</td>
                         <td>
-                            {% if e.category %}<span class="badge badge-outline badge-sm" data-cat="{{ e.category }}">{{
-                                e.category }}</span>
+                            {{ e.description }}
+                            {# Mobile summary #}
+                            <div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs opacity-60">
+                                <span class="opacity-80">{{ e.log_date | fmtdate(date_format) }}</span>
+                                {% if e.category %}<span class="badge badge-xs badge-outline" data-cat="{{ e.category }}">{{ e.category }}</span>{% endif %}
+                                {% if e.cost > 0 %}<span class="tabular-nums">{{ currency_symbol }}{{ '{:,.2f}'.format(e.cost) }}</span>{% endif %}
+                                {% if e.add_to_inventory %}<span class="text-success font-semibold">✓ {{ _('inv.') }}</span>{% endif %}
+                            </div>
+                        </td>
+                        <td class="hidden md:table-cell">
+                            {% if e.category %}<span class="badge badge-outline badge-sm" data-cat="{{ e.category }}">{{ e.category }}</span>
                             {% else %}<span class="opacity-50">—</span>{% endif %}
                         </td>
-                        <td class="text-right">{% if e.cost > 0 %}{{ currency_symbol }}{{ '{:,.2f}'.format(e.cost) }}{%
-                            else %}<span class="opacity-50">—</span>{% endif %}</td>
-                        <td class="text-center">{% if e.add_to_inventory %}<span
-                                class="text-success font-bold">✓</span>{% else %}<span class="opacity-50">—</span>{%
-                            endif %}</td>
+                        <td class="text-right hidden md:table-cell">{% if e.cost > 0 %}{{ currency_symbol }}{{ '{:,.2f}'.format(e.cost) }}{% else %}<span class="opacity-50">—</span>{% endif %}</td>
+                        <td class="text-center hidden md:table-cell">{% if e.add_to_inventory %}<span class="text-success font-bold">✓</span>{% else %}<span class="opacity-50">—</span>{% endif %}</td>
                         <td>
-                            <div class="flex gap-3 justify-end text-sm">
-                                <button class="btn btn-primary btn-outline btn-sm gap-1 !uppercase"
-                                    onclick="toggleLogEdit('flip',{{ e.id }})"><svg class="size-3.5 shrink-0"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <path d="M9 2c0 7 3 9 3 15" />
-                                        <path d="M15 2c0 7-3 9-3 15" />
-                                        <line x1="8" y1="7" x2="16" y2="7" />
-                                    </svg>{{ _('edit') }}</button>
-                                <button class="btn btn-error btn-outline btn-sm gap-1 !uppercase"
-                                    onclick="deleteFlipLogConfirm({{ e.id }},{{ flip.id }},this)"><svg
-                                        class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                        aria-hidden="true">
-                                        <circle cx="10" cy="12" r="8" />
-                                        <path d="M18 12h4M20 10v4" />
-                                        <line x1="7" y1="9" x2="13" y2="15" />
-                                        <line x1="13" y1="9" x2="7" y2="15" />
-                                    </svg>{{ _('delete') }}</button>
+                            <div class="flex gap-1 md:gap-3 justify-end text-sm">
+                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 !uppercase" onclick="toggleLogEdit('flip',{{ e.id }})">
+                                    <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>
+                                    <span class="hidden sm:inline">{{ _('edit') }}</span>
+                                </button>
+                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 !uppercase" onclick="deleteFlipLogConfirm({{ e.id }},{{ flip.id }},this)">
+                                    <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>
+                                    <span class="hidden sm:inline">{{ _('delete') }}</span>
+                                </button>
                             </div>
                         </td>
                     </tr>
                     <tr id="log-edit-{{ e.id }}" class="edit-row hidden bg-base-200">
-                        <td colspan="6" class="p-4">
-                            <form class="flex flex-col lg:flex-row gap-4 items-center w-full"
+                        <td colspan="6" class="p-3">
+                            <form class="grid grid-cols-2 gap-2 md:flex md:flex-row md:flex-wrap md:items-center md:gap-3"
                                 onsubmit="submitLogEdit(event,'flip',{{ e.id }},{{ flip.id }})">
-                                <input type="date" name="log_date" value="{{ e.log_date }}"
-                                    class="input input-bordered input-sm">
-                                <input type="text" name="description" value="{{ e.description }}" required
-                                    class="input input-bordered input-sm flex-1">
-                                {{ cat_select('category', e.category, extra_class='select-sm', cats=categories) }}
-                                <input type="number" step="0.01" name="cost" value="{{ e.cost }}" min="0"
-                                    class="input input-bordered input-sm w-24 text-right">
-                                <label class="cursor-pointer label gap-2">
-                                    <input type="checkbox" name="add_to_inventory" class="checkbox checkbox-sm" {% if
-                                        e.add_to_inventory %}checked{% endif %}>
-                                    <span class="label-text">Inv.</span>
+                                <input type="date" name="log_date" value="{{ e.log_date }}" class="input input-bordered input-sm col-span-2 md:col-auto">
+                                <input type="text" name="description" value="{{ e.description }}" required class="input input-bordered input-sm col-span-2 md:flex-1">
+                                <div class="col-span-2 md:col-auto">{{ cat_select('category', e.category, extra_class='select-sm w-full', cats=categories) }}</div>
+                                <input type="number" step="0.01" name="cost" value="{{ e.cost }}" min="0" class="input input-bordered input-sm text-right">
+                                <label class="cursor-pointer label gap-2 justify-start">
+                                    <input type="checkbox" name="add_to_inventory" class="checkbox checkbox-sm" {% if e.add_to_inventory %}checked{% endif %}>
+                                    <span class="label-text">{{ _('inv.') }}</span>
                                 </label>
-                                <div class="flex gap-2">
-                                    <button type="submit" class="btn btn-primary btn-sm">{{ _('save') }}</button>
-                                    <button type="button" class="btn btn-ghost btn-sm"
-                                        onclick="toggleLogEdit('flip',{{ e.id }})">{{ _('cancel') }}</button>
+                                <div class="col-span-2 flex gap-2 md:col-auto">
+                                    <button type="submit" class="btn btn-primary btn-sm flex-1 md:flex-none">{{ _('save') }}</button>
+                                    <button type="button" class="btn btn-ghost btn-sm" onclick="toggleLogEdit('flip',{{ e.id }})">{{ _('cancel') }}</button>
                                 </div>
                             </form>
                         </td>
@@ -431,21 +434,19 @@ endblock %}
                 </tbody>
                 <tfoot class="bg-gradient-to-r from-base-200/60 to-base-100/30">
                     <tr class="add-row">
-                        <td class="p-2 w-40"><input type="date" id="log-date"
-                                class="input input-bordered input-sm w-full" value="{{ today }}"></td>
-                        <td class="p-2"><input type="text" id="log-desc" class="input input-bordered input-sm w-full"
-                                placeholder="{{ _('e.g. Moebius 9010, shipping…') }}"></td>
-                        <td class="p-2 w-48">{{ cat_select('', '', id='log-cat', extra_class='select-sm w-full',
-                            cats=categories) }}</td>
-                        <td class="p-2 w-28"><input type="number" step="0.01" id="log-cost"
-                                class="input input-bordered input-sm w-full text-right" value="0" min="0"></td>
-                        <td class="p-2 text-center w-24">
-                            <label class="cursor-pointer label justify-center gap-2 m-0 p-0">
-                                <input type="checkbox" id="log-inv" class="checkbox checkbox-sm">
-                            </label>
+                        <td colspan="6" class="p-2">
+                            <div class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:gap-2">
+                                <input type="date" id="log-date" class="input input-bordered input-sm col-span-2 md:col-auto md:w-36" value="{{ today }}">
+                                <input type="text" id="log-desc" class="input input-bordered input-sm col-span-2 md:flex-1" placeholder="{{ _('e.g. Moebius 9010, shipping…') }}">
+                                <div class="col-span-2 md:col-auto">{{ cat_select('', '', id='log-cat', extra_class='select-sm w-full md:w-40', cats=categories) }}</div>
+                                <input type="number" step="0.01" id="log-cost" class="input input-bordered input-sm text-right md:w-24" value="0" min="0">
+                                <label class="cursor-pointer label gap-2 justify-start md:justify-center">
+                                    <input type="checkbox" id="log-inv" class="checkbox checkbox-sm">
+                                    <span class="label-text text-xs md:hidden">{{ _('inv.') }}</span>
+                                </label>
+                                <button class="col-span-2 md:col-auto btn btn-primary btn-sm !uppercase" onclick="addFlipLog({{ flip.id }})">+ {{ _('add') }}</button>
+                            </div>
                         </td>
-                        <td class="p-2 text-right"><button class="btn btn-primary btn-sm !uppercase"
-                                onclick="addFlipLog({{ flip.id }})">+ {{ _('add') }}</button></td>
                     </tr>
                 </tfoot>
             </table>

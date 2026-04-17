@@ -73,14 +73,14 @@
     </div>
 
     <!-- {{ _('Categories') }} -->
-    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] md:col-span-2 mt-4">
+    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mt-4">
         <div class="card-body p-0">
             <div class="p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200">
                 <h2 class="card-title text-base uppercase">{{ _('categories') }}</h2>
                 <p class="text-sm border-0 opacity-70 mt-1">{{ _('available in all dropdown menus. click on name or color to edit, press enter to save.') }}</p>
             </div>
             <div class="overflow-x-auto">
-                <table class="table" id="cat-table">
+                <table class="table w-full" id="cat-table">
                     <thead>
                         <tr class="opacity-60">
                             <th class="w-1/3 uppercase">{{ _('name') }}</th>
@@ -99,8 +99,8 @@
                                     onkeydown="catKeydown(event,{{ cat.id }})">
                             </td>
                             <td class="p-2">
-                                <div class="w-10 h-8 rounded overflow-hidden border border-base-300">
-                                    <input type="color" class="w-[150%] h-[150%] -m-2 cursor-pointer"
+                                <div class="w-10 h-8 rounded overflow-hidden border border-base-300 relative">
+                                    <input type="color" class="absolute h-full cursor-pointer"
                                         id="cat-color-{{ cat.id }}" value="{{ cat.color }}"
                                         oninput="updateCatPreview({{ cat.id }})" onchange="saveCatRow({{ cat.id }})">
                                 </div>
@@ -112,7 +112,7 @@
                                 </span>
                             </td>
                             <td class="p-2">
-                                <div class="flex justify-end"><button class="btn btn-error btn-outline btn-sm gap-1 uppercase" onclick="deleteCat({{ cat.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>{{ _('delete') }}</button></div>
+                                <div class="flex justify-end"><button class="btn btn-error btn-outline btn-sm" title="{{ _('delete') }}" onclick="deleteCat({{ cat.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg></button></div>
                             </td>
                         </tr>
                         {% else %}
@@ -124,25 +124,22 @@
                     </tbody>
                     <tfoot class="bg-gradient-to-r from-base-200/60 to-base-100/30">
                         <tr class="add-row">
-                            <td class="p-2">
-                                <input type="text" id="new-cat-name"
-                                    class="input input-sm input-bordered w-full uppercase"
-                                    placeholder="{{ _('ex. lubricants')}}"
-                                    onkeydown="if(event.key==='Enter'){event.preventDefault();addCat();}">
-                            </td>
-                            <td class="p-2">
-                                <div class="w-10 h-8 rounded overflow-hidden border border-base-300">
-                                    <input type="color" id="new-cat-color" value="#4a90d9"
-                                        class="w-[150%] h-[150%] -m-2 cursor-pointer" oninput="updateNewCatPreview()">
+                            <td colspan="4" class="p-2">
+                                <div class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:gap-2">
+                                    <input type="text" id="new-cat-name"
+                                        class="input input-sm input-bordered col-span-2 md:flex-1 uppercase"
+                                        placeholder="{{ _('ex. lubricants')}}"
+                                        onkeydown="if(event.key==='Enter'){event.preventDefault();addCat();}">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-10 h-8 rounded overflow-hidden border border-base-300 shrink-0 relative">
+                                            <input type="color" id="new-cat-color" value="#4a90d9"
+                                                class="absolute h-full cursor-pointer" oninput="updateNewCatPreview()">
+                                        </div>
+                                        <span id="new-cat-preview" class="badge badge-outline"
+                                            style="background-color:#4a90d920;color:#4a90d9;border-color:#4a90d940">{{ _('preview') }}</span>
+                                    </div>
+                                    <button class="btn btn-primary btn-sm uppercase" onclick="addCat()">+ {{ _('add') }}</button>
                                 </div>
-                            </td>
-                            <td class="p-2">
-                                <span id="new-cat-preview" class="badge badge-outline"
-                                    style="background-color:#4a90d920;color:#4a90d9;border-color:#4a90d940">{{
-                                    _('preview') }}</span>
-                            </td>
-                            <td class="p-2 text-right">
-                                <button class="btn btn-primary btn-sm uppercase" onclick="addCat()">+ {{ _('add') }}</button>
                             </td>
                         </tr>
                     </tfoot>

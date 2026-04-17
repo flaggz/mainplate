@@ -135,48 +135,55 @@
             <table class="table" id="clog-table">
                 <thead>
                     <tr class="uppercase opacity-60">
-                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('date')}}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="0">{{ _('date')}}</th>
                         <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('description')}}</th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="2">{{ _('category')}}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{
-                            _('cost')}}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="2">{{ _('category')}}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="3">{{ _('cost')}}</th>
                         <th class="text-right">{{ _('actions')}}</th>
                     </tr>
                 </thead>
                 <tbody id="clog-tbody">
                     {% for e in logs %}
                     <tr id="clog-row-{{ e.id }}" class="data-row hover">
-                        <td class="whitespace-nowrap">{{ e.log_date | fmtdate(date_format) }}</td>
-                        <td>{{ e.description }}</td>
+                        <td class="whitespace-nowrap hidden md:table-cell">{{ e.log_date | fmtdate(date_format) }}</td>
                         <td>
-                            {% if e.category %}<span class="badge badge-outline badge-sm" data-cat="{{ e.category }}">{{
-                                e.category }}</span>
+                            {{ e.description }}
+                            {# Mobile summary #}
+                            <div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs opacity-60">
+                                <span class="opacity-80">{{ e.log_date | fmtdate(date_format) }}</span>
+                                {% if e.category %}<span class="badge badge-xs badge-outline" data-cat="{{ e.category }}">{{ e.category }}</span>{% endif %}
+                                {% if e.cost > 0 %}<span class="tabular-nums">{{ currency_symbol }}{{ '{:,.2f}'.format(e.cost) }}</span>{% endif %}
+                            </div>
+                        </td>
+                        <td class="hidden md:table-cell">
+                            {% if e.category %}<span class="badge badge-outline badge-sm" data-cat="{{ e.category }}">{{ e.category }}</span>
                             {% else %}<span class="opacity-50">—</span>{% endif %}
                         </td>
-                        <td class="text-right">{% if e.cost > 0 %}{{ currency_symbol }}{{ '{:,.2f}'.format(e.cost) }}{% else %}<span
-                                class="opacity-50">—</span>{% endif %}</td>
+                        <td class="text-right hidden md:table-cell">{% if e.cost > 0 %}{{ currency_symbol }}{{ '{:,.2f}'.format(e.cost) }}{% else %}<span class="opacity-50">—</span>{% endif %}</td>
                         <td>
-                            <div class="flex gap-3 justify-end text-sm">
-                                <button class="btn btn-primary btn-outline btn-sm gap-1 uppercase" onclick="toggleLogEdit('coll',{{ e.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>{{ _('edit') }}</button>
-                                <button class="btn btn-error btn-outline btn-sm gap-1 uppercase" onclick="deleteCollLog({{ e.id }},{{ watch.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>{{ _('delete') }}</button>
+                            <div class="flex gap-1 md:gap-3 justify-end text-sm">
+                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="toggleLogEdit('coll',{{ e.id }})">
+                                    <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>
+                                    <span class="hidden sm:inline">{{ _('edit') }}</span>
+                                </button>
+                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="deleteCollLog({{ e.id }},{{ watch.id }})">
+                                    <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>
+                                    <span class="hidden sm:inline">{{ _('delete') }}</span>
+                                </button>
                             </div>
                         </td>
                     </tr>
                     <tr id="clog-edit-{{ e.id }}" class="edit-row hidden bg-base-200">
-                        <td colspan="5" class="p-4">
-                            <form class="flex flex-col lg:flex-row gap-4 items-center w-full"
+                        <td colspan="5" class="p-3">
+                            <form class="grid grid-cols-2 gap-2 md:flex md:flex-row md:flex-wrap md:items-center md:gap-3"
                                 onsubmit="submitLogEdit(event,'coll',{{ e.id }},{{ watch.id }})">
-                                <input type="date" name="log_date" value="{{ e.log_date }}"
-                                    class="input input-bordered input-sm">
-                                <input type="text" name="description" value="{{ e.description }}" required
-                                    class="input input-bordered input-sm flex-1">
-                                {{ cat_select('category', e.category, extra_class='select-sm', cats=categories) }}
-                                <input type="number" step="0.01" name="cost" value="{{ e.cost }}" min="0"
-                                    class="input input-bordered input-sm w-24 text-right">
-                                <div class="flex gap-2">
-                                    <button type="submit" class="btn btn-primary btn-sm">{{ _('save') }}</button>
-                                    <button type="button" class="btn btn-ghost btn-sm"
-                                        onclick="toggleLogEdit('coll',{{ e.id }})">{{ _('cancel') }}</button>
+                                <input type="date" name="log_date" value="{{ e.log_date }}" class="input input-bordered input-sm col-span-2 md:col-auto">
+                                <input type="text" name="description" value="{{ e.description }}" required class="input input-bordered input-sm col-span-2 md:flex-1">
+                                <div class="col-span-2 md:col-auto">{{ cat_select('category', e.category, extra_class='select-sm w-full', cats=categories) }}</div>
+                                <input type="number" step="0.01" name="cost" value="{{ e.cost }}" min="0" class="input input-bordered input-sm text-right">
+                                <div class="col-span-2 flex gap-2 md:col-auto">
+                                    <button type="submit" class="btn btn-primary btn-sm flex-1 md:flex-none">{{ _('save') }}</button>
+                                    <button type="button" class="btn btn-ghost btn-sm" onclick="toggleLogEdit('coll',{{ e.id }})">{{ _('cancel') }}</button>
                                 </div>
                             </form>
                         </td>
@@ -185,22 +192,21 @@
                 </tbody>
                 <tfoot class="bg-gradient-to-r from-base-200/60 to-base-100/30">
                     <tr class="add-row">
-                        <td class="p-2 w-40"><input type="date" id="clog-date"
-                                class="input input-bordered input-sm w-full" value="{{ today }}"></td>
-                        <td class="p-2"><input type="text" id="clog-desc" class="input input-bordered input-sm w-full"
-                                placeholder="{{ _('ex. complete service, crown replacement...') }}"></td>
-                        <td class="p-2 w-48">{{ cat_select('', '', id='clog-cat', extra_class='select-sm w-full',
-                            cats=categories) }}</td>
-                        <td class="p-2 w-28"><input type="number" step="0.01" id="clog-cost"
-                                class="input input-bordered input-sm w-full text-right" value="0" min="0"></td>
-                        <td class="p-2 text-right uppercase"><button class="btn btn-primary btn-sm"
-                                onclick="addCollLog({{ watch.id }})">+ {{ _('add') }}</button></td>
+                        <td colspan="5" class="p-2">
+                            <div class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:gap-2">
+                                <input type="date" id="clog-date" class="input input-bordered input-sm col-span-2 md:col-auto md:w-36" value="{{ today }}">
+                                <input type="text" id="clog-desc" class="input input-bordered input-sm col-span-2 md:flex-1" placeholder="{{ _('ex. complete service, crown replacement...') }}">
+                                <div class="col-span-2 md:col-auto">{{ cat_select('', '', id='clog-cat', extra_class='select-sm w-full md:w-40', cats=categories) }}</div>
+                                <input type="number" step="0.01" id="clog-cost" class="input input-bordered input-sm text-right md:w-24" value="0" min="0">
+                                <button class="col-span-2 md:col-auto btn btn-primary btn-sm !uppercase" onclick="addCollLog({{ watch.id }})">+ {{ _('add') }}</button>
+                            </div>
+                        </td>
                     </tr>
                 </tfoot>
             </table>
         </div>
         <div class="p-4 bg-gradient-to-r from-base-200/50 to-base-100/20 border-t border-base-200/60 text-right text-sm">
-            Totale costi: <strong id="clog-cost-total" class="text-primary">{{ currency_symbol }}{{ '{:,.2f}'.format(service_cost) }}</strong>
+            {{ _('total cost') }}: <strong id="clog-cost-total" class="text-primary">{{ currency_symbol }}{{ '{:,.2f}'.format(service_cost) }}</strong>
         </div>
     </div>
 </div>

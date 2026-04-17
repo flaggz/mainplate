@@ -110,21 +110,15 @@
                 <tr class="uppercase opacity-60">
                     <th class="w-12"></th>
                     <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('watch') }}</th>
-                    <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="2">{{ _('status') }}</th>
-                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="3">{{ _('paid') }}
-                    </th>
-                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="4">{{ _('log expenses') }}</th>
-                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="5">{{ _('labor')
-                        }}</th>
-                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="6">{{ _('total cost') }}</th>
-                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="7">{{ _('sold') }}
-                    </th>
-                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="8">{{ _('profit')
-                        }}</th>
-                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="9">{{ _('roi') }}
-                    </th>
-                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="10">{{ _('hours')
-                        }}</th>
+                    <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="2">{{ _('status') }}</th>
+                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="3">{{ _('paid') }}</th>
+                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="4">{{ _('log expenses') }}</th>
+                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="5">{{ _('labor') }}</th>
+                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="6">{{ _('total cost') }}</th>
+                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="7">{{ _('sold') }}</th>
+                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="8">{{ _('profit') }}</th>
+                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="9">{{ _('roi') }}</th>
+                    <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="10">{{ _('hours') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -139,41 +133,39 @@
                     </td>
                     <td>
                         <div class="font-semibold">{{ f.brand }} {{ f.model }}</div>
-                        <div class="text-xs opacity-70">{{ f.reference or '' }}{% if f.year %} · {{ f.year }}{% endif %}
+                        <div class="text-xs opacity-70">{{ f.reference or '' }}{% if f.year %} · {{ f.year }}{% endif %}</div>
+                        {# Mobile summary — hidden on desktop #}
+                        <div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
+                            {% set st = f.status|lower|replace(' ','-') %}
+                            <span class="badge badge-xs {% if st == 'sold' %}badge-success{% elif st == 'for-sale' %}badge-info{% elif st == 'in-progress' %}badge-warning{% else %}badge-ghost{% endif %}">{{ _(f.status|lower) }}</span>
+                            <span class="text-xs tabular-nums opacity-70">{{ currency_symbol }}{{ '{:,.0f}'.format(f.paid) }}</span>
+                            {% if f.profit is not none %}
+                            <span class="text-xs font-semibold tabular-nums {{ 'text-success' if f.profit >= 0 else 'text-error' }}">{{ '+' if f.profit >= 0 }}{{ currency_symbol }}{{ '{:,.0f}'.format(f.profit) }}{% if f.roi is not none %} ({{ '{:.1f}'.format(f.roi) }}%){% endif %}</span>
+                            {% endif %}
+                            {% if f.hours > 0 %}<span class="text-xs opacity-50">{{ '{:.1f}'.format(f.hours) }}h</span>{% endif %}
                         </div>
                     </td>
-                    <td>
+                    <td class="hidden md:table-cell">
                         {% set st = f.status|lower|replace(' ','-') %}
-                        <span
-                            class="badge {% if st == 'sold' %}badge-success{% elif st == 'for-sale' %}badge-info{% elif st == 'in-progress' %}badge-warning{% else %}badge-ghost{% endif %} badge-sm">{{
-                            _(f.status|lower) }}</span>
+                        <span class="badge {% if st == 'sold' %}badge-success{% elif st == 'for-sale' %}badge-info{% elif st == 'in-progress' %}badge-warning{% else %}badge-ghost{% endif %} badge-sm">{{ _(f.status|lower) }}</span>
                     </td>
-                    <td class="text-right">{{ currency_symbol }}{{ '{:,.2f}'.format(f.paid) }}</td>
-                    <td class="text-right">{% if f.log_cost > 0 %}<span class="text-error">{{ currency_symbol }}{{
-                            '{:,.2f}'.format(f.log_cost) }}</span>{% else %}<span class="opacity-50">—</span>{% endif %}
-                    </td>
-                    <td class="text-right">{% if f.labor_cost > 0 %}<span class="text-error">{{ currency_symbol }}{{
-                            '{:,.2f}'.format(f.labor_cost) }}</span>{% else %}<span class="opacity-50">—</span>{% endif
-                        %}</td>
-                    <td class="text-right">{{ currency_symbol }}{{ '{:,.2f}'.format(f.total_cost) }}</td>
-                    <td class="text-right">{% if f.sold > 0 %}{{ currency_symbol }}{{ '{:,.2f}'.format(f.sold) }}{% else %}<span
-                            class="opacity-50">—</span>{% endif %}</td>
-                    <td class="text-right">{% if f.profit is not none %}<span
-                            class="{{ 'text-success' if f.profit >= 0 else 'text-error' }}">{{ currency_symbol }}{{
-                            '{:,.2f}'.format(f.profit) }}</span>{% else %}<span class="opacity-50">—</span>{% endif %}
-                    </td>
-                    <td class="text-right">{% if f.roi is not none %}{{ '{:.1f}'.format(f.roi) }}%{% else %}<span
-                            class="opacity-50">—</span>{% endif %}</td>
-                    <td class="text-right">{{ '{:.1f}'.format(f.hours) }}h</td>
+                    <td class="text-right hidden md:table-cell">{{ currency_symbol }}{{ '{:,.2f}'.format(f.paid) }}</td>
+                    <td class="text-right hidden md:table-cell">{% if f.log_cost > 0 %}<span class="text-error">{{ currency_symbol }}{{ '{:,.2f}'.format(f.log_cost) }}</span>{% else %}<span class="opacity-50">—</span>{% endif %}</td>
+                    <td class="text-right hidden md:table-cell">{% if f.labor_cost > 0 %}<span class="text-error">{{ currency_symbol }}{{ '{:,.2f}'.format(f.labor_cost) }}</span>{% else %}<span class="opacity-50">—</span>{% endif %}</td>
+                    <td class="text-right hidden md:table-cell">{{ currency_symbol }}{{ '{:,.2f}'.format(f.total_cost) }}</td>
+                    <td class="text-right hidden md:table-cell">{% if f.sold > 0 %}{{ currency_symbol }}{{ '{:,.2f}'.format(f.sold) }}{% else %}<span class="opacity-50">—</span>{% endif %}</td>
+                    <td class="text-right hidden md:table-cell">{% if f.profit is not none %}<span class="{{ 'text-success' if f.profit >= 0 else 'text-error' }}">{{ currency_symbol }}{{ '{:,.2f}'.format(f.profit) }}</span>{% else %}<span class="opacity-50">—</span>{% endif %}</td>
+                    <td class="text-right hidden md:table-cell">{% if f.roi is not none %}{{ '{:.1f}'.format(f.roi) }}%{% else %}<span class="opacity-50">—</span>{% endif %}</td>
+                    <td class="text-right hidden md:table-cell">{{ '{:.1f}'.format(f.hours) }}h</td>
                     <td onclick="event.stopPropagation()">
-                        <div class="flex gap-2">
-                            <a href="{{ url_for('flip_detail', fid=f.id) }}?edit=1" class="btn btn-primary btn-outline btn-sm gap-1 uppercase">
-                                <svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>
-                                {{ _('edit') }}
+                        <div class="flex gap-1 md:gap-2">
+                            <a href="{{ url_for('flip_detail', fid=f.id) }}?edit=1" class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 uppercase">
+                                <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>
+                                <span class="hidden sm:inline">{{ _('edit') }}</span>
                             </a>
-                            <button class="btn btn-error btn-outline btn-sm gap-1 uppercase" onclick="deleteFlipConfirm({{ f.id }}, this)">
-                                <svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>
-                                {{ _('delete') }}
+                            <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="deleteFlipConfirm({{ f.id }}, this)">
+                                <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>
+                                <span class="hidden sm:inline">{{ _('delete') }}</span>
                             </button>
                         </div>
                     </td>
@@ -191,6 +183,7 @@
 <script>
 window.I18N_CANCEL   = {{ _('cancel') | tojson }};
 window.I18N_NEW_FLIP = {{ _('new flip') | tojson }};
+
 document.addEventListener('DOMContentLoaded', () => {
     loadThumbnails('flip', {{ flips | map(attribute='id') | list | tojson }});
 });

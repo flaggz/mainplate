@@ -180,8 +180,9 @@ function submitEdit(event, type, id) {
             const vr = document.getElementById(`${type}-row-${id}`);
             const er = document.getElementById(`${type}-edit-${id}`);
             if (type === 'part') {
-                vr.cells[0].textContent = data.name;
-                vr.cells[1].innerHTML = data.category ? `<span class="badge badge-outline badge-sm" data-cat="${data.category || ""}">${data.category}</span>` : '<span class="muted">—</span>';
+                const catBadgeSm = data.category ? `<span class="badge badge-xs badge-outline">${data.category}</span>` : '';
+                vr.cells[0].innerHTML = `${data.name}<div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs opacity-60">${catBadgeSm}<span>× ${data.quantity}</span><span class="tabular-nums font-semibold">€${fmtDec(data.value)}</span></div>`;
+                vr.cells[1].innerHTML = data.category ? `<span class="badge badge-outline badge-sm" data-cat="${data.category || ""}">${data.category}</span>` : '<span class="opacity-50">—</span>';
                 vr.cells[2].textContent = data.quantity;
                 vr.cells[3].textContent = `€${fmtDec(data.value)}`;
             } else {
@@ -241,23 +242,25 @@ function ajaxAddPart() {
         .then(data => {
             const tbody = document.getElementById('parts-tbody');
             const id = data.id;
-            const vr = document.createElement('tr'); vr.id = `part-row-${id}`; vr.className = 'data-row';
-            vr.innerHTML = `<td>${name}</td>
-            <td>${cat ? `<span class="badge badge-outline badge-sm" data-cat="${data.category || ""}">${cat}</span>` : '<span class="muted">—</span>'}</td>
-            <td class="num">${qty}</td><td class="num">€${fmtDec(val)}</td>
-            <td><div class="flex gap-3 justify-end text-sm">
-                <button class="link link-primary link-hover" onclick="toggleEditRow('part',${id})">Edit</button>
-                <button class="link link-error link-hover" onclick="ajaxDelete('part',${id})">Delete</button>
+            const catBadgeSm = cat ? `<span class="badge badge-xs badge-outline">${cat}</span>` : '';
+            const vr = document.createElement('tr'); vr.id = `part-row-${id}`; vr.className = 'data-row hover';
+            vr.innerHTML = `<td>${name}<div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs opacity-60">${catBadgeSm}<span>× ${qty}</span><span class="tabular-nums font-semibold">€${fmtDec(val)}</span></div></td>
+            <td class="hidden md:table-cell">${cat ? `<span class="badge badge-outline badge-sm" data-cat="${data.category || ""}">${cat}</span>` : '<span class="opacity-50">—</span>'}</td>
+            <td class="text-right hidden md:table-cell">${qty}</td>
+            <td class="text-right hidden md:table-cell">€${fmtDec(val)}</td>
+            <td><div class="flex gap-1 md:gap-3 justify-end text-sm">
+                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="toggleEditRow('part',${id})"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg><span class="hidden sm:inline">${window.I18N.edit}</span></button>
+                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="ajaxDelete('part',${id},this)"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg><span class="hidden sm:inline">${window.I18N.delete}</span></button>
             </div></td>`;
-            const er = document.createElement('tr'); er.id = `part-edit-${id}`; er.className = 'edit-row hidden';
-            er.innerHTML = `<td colspan="5" class="p-4"><form class="flex flex-col md:flex-row gap-4 items-center w-full" onsubmit="submitEdit(event,'part',${id})">
-                <input type="text" name="name" value="${name}" required class="input input-bordered input-sm flex-1">
-                <select name="category" data-current="${cat}" class="select select-bordered select-sm">${buildCatOptions(cat)}</select>
-                <input type="number" name="quantity" value="${qty}" min="1" class="input input-bordered input-sm w-20">
-                <input type="number" step="0.01" name="value" value="${val}" min="0" class="input input-bordered input-sm w-24">
-            <div class="flex gap-2">
-                <button type="submit" class="btn btn-primary btn-sm">Salva</button>
-                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEditRow('part',${id})">Annulla</button>
+            const er = document.createElement('tr'); er.id = `part-edit-${id}`; er.className = 'edit-row hidden bg-base-200';
+            er.innerHTML = `<td colspan="5" class="p-3"><form class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:gap-3" onsubmit="submitEdit(event,'part',${id})">
+                <input type="text" name="name" value="${name}" required class="input input-bordered input-sm col-span-2 md:flex-1">
+                <div class="col-span-2 md:col-auto"><select name="category" data-current="${cat}" class="select select-bordered select-sm w-full">${buildCatOptions(cat)}</select></div>
+                <input type="number" name="quantity" value="${qty}" min="1" class="input input-bordered input-sm text-right md:w-20">
+                <input type="number" step="0.01" name="value" value="${val}" min="0" class="input input-bordered input-sm text-right md:w-24">
+            <div class="col-span-2 flex gap-2 md:col-auto">
+                <button type="submit" class="btn btn-primary btn-sm flex-1 md:flex-none">${window.I18N.save || 'Salva'}</button>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEditRow('part',${id})">${window.I18N.cancel || 'Annulla'}</button>
             </div></form></td>`;
             tbody.appendChild(vr); tbody.appendChild(er);
             animateIn(vr);
@@ -282,22 +285,19 @@ function ajaxAddEquip() {
         .then(data => {
             const tbody = document.getElementById('equip-tbody');
             const id = data.id;
-            const vr = document.createElement('tr'); vr.id = `equip-row-${id}`; vr.className = 'data-row';
-            vr.innerHTML = `<td>${name}</td><td class="num">€${fmtDec(val)}</td>
-            <td><div class="flex justify-end gap-3 text-sm">
-                <button class="link link-primary link-hover" onclick="toggleEditRow('equip',${id})">Edit</button>
-                <button class="link link-error link-hover" onclick="ajaxDelete('equip',${id})">Delete</button>
+            const vr = document.createElement('tr'); vr.id = `equip-row-${id}`; vr.className = 'data-row hover';
+            vr.innerHTML = `<td>${name}</td><td class="text-right">${window.CURRENCY || '€'}${fmtDec(val)}</td>
+            <td><div class="flex justify-end gap-1 md:gap-3 text-sm">
+                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="toggleEditRow('equip',${id})"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg><span class="hidden sm:inline">${window.I18N.edit}</span></button>
+                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="ajaxDelete('equip',${id},this)"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg><span class="hidden sm:inline">${window.I18N.delete}</span></button>
             </div></td>`;
-            const er = document.createElement('tr'); er.id = `equip-edit-${id}`; er.className = 'edit-row hidden';
-            er.innerHTML = `<td colspan="3" class="p-4"><form class="flex flex-col sm:flex-row gap-4 items-center justify-between" onsubmit="submitEdit(event,'equip',${id})">
-                <div class="flex gap-4 flex-1 w-full sm:w-auto">
-                    <input type="text" name="name" value="${name}" required class="input input-bordered input-sm flex-1">
-                    <input type="number" step="0.01" name="value" value="${val}" min="0" class="input input-bordered input-sm w-32 text-right">
-                </div>
-            <div class="flex gap-2">
-                <button type="submit" class="btn btn-primary btn-sm">Salva</button>
-                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEditRow('equip',${id})">Annulla</button>
-            </div></form></td>`;
+            const er = document.createElement('tr'); er.id = `equip-edit-${id}`; er.className = 'edit-row hidden bg-base-200';
+            er.innerHTML = `<td colspan="3" class="p-3"><form class="flex flex-row gap-2 items-center" onsubmit="submitEdit(event,'equip',${id})">
+                <input type="text" name="name" value="${name}" class="input input-bordered input-sm flex-1" required>
+                <input type="number" step="0.01" name="value" value="${val}" min="0" class="input input-bordered input-sm w-28 text-right">
+                <button type="submit" class="btn btn-primary btn-sm">${window.I18N.save}</button>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEditRow('equip',${id})">${window.I18N.cancel}</button>
+            </form></td>`;
             tbody.appendChild(vr); tbody.appendChild(er);
             animateIn(vr);
             document.getElementById('new-equip-name').value = '';
@@ -335,12 +335,16 @@ function submitLogEdit(event, type, id, parentId) {
         .then(r => r.json())
         .then(d => {
             const vr = document.getElementById(`${prefix}-row-${id}`);
-            vr.cells[0].textContent = d.fmt_log_date || d.log_date;
-            vr.cells[1].textContent = d.description;
-            vr.cells[2].innerHTML = d.category ? `<span class="badge badge-outline badge-sm" data-cat="${data.category || ""}">${d.category}</span>` : '<span class="muted">—</span>';
-            vr.cells[3].innerHTML = parseFloat(d.cost) > 0 ? `€${fmtDec(d.cost)}` : '<span class="muted">—</span>';
+            const fmtDate = d.fmt_log_date || d.log_date;
+            const catBadgeSm = d.category ? `<span class="badge badge-xs badge-outline" data-cat="${d.category}">${d.category}</span>` : '';
+            const costMob = parseFloat(d.cost) > 0 ? `<span class="tabular-nums">€${fmtDec(d.cost)}</span>` : '';
+            const invMob = (type === 'flip' && d.add_to_inventory) ? `<span class="text-success font-semibold">✓ ${window.I18N.inv || 'Inv.'}</span>` : '';
+            vr.cells[0].textContent = fmtDate;
+            vr.cells[1].innerHTML = `${d.description}<div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs opacity-60"><span class="opacity-80">${fmtDate}</span>${catBadgeSm}${costMob}${invMob}</div>`;
+            vr.cells[2].innerHTML = d.category ? `<span class="badge badge-outline badge-sm" data-cat="${d.category || ""}">${d.category}</span>` : '<span class="opacity-50">—</span>';
+            vr.cells[3].innerHTML = parseFloat(d.cost) > 0 ? `€${fmtDec(d.cost)}` : '<span class="opacity-50">—</span>';
             if (type === 'flip' && vr.cells[4]) {
-                vr.cells[4].innerHTML = d.add_to_inventory ? '<span class="inv-check">✓</span>' : '<span class="muted">—</span>';
+                vr.cells[4].innerHTML = d.add_to_inventory ? '<span class="text-success font-bold">✓</span>' : '<span class="opacity-50">—</span>';
             }
             document.getElementById(`${prefix}-edit-${id}`).classList.add('hidden');
             animateFlash(vr);
@@ -369,27 +373,35 @@ function addFlipLog(flipId) {
         .then(r => r.json())
         .then(data => {
             const tbody = document.getElementById('log-tbody');
-            const catBadge = data.category ? `<span class="badge badge-outline badge-sm" data-cat="${data.category || ""}">${data.category}</span>` : '<span class="muted">—</span>';
-            const costCell = parseFloat(data.cost) > 0 ? `€${fmtDec(data.cost)}` : '<span class="muted">—</span>';
-            const invCell = inv ? '<span class="inv-check">✓</span>' : '<span class="muted">—</span>';
-            const tr = document.createElement('tr'); tr.id = `log-row-${data.id}`; tr.className = 'data-row';
-            tr.innerHTML = `<td>${data.fmt_log_date || data.log_date}</td><td>${data.description}</td><td>${catBadge}</td>
-            <td class="num">${costCell}</td><td>${invCell}</td>
-            <td><div class="flex gap-3 justify-end">
-                <button class="btn btn-primary btn-outline btn-sm gap-1 !uppercase" onclick="toggleLogEdit('flip',${data.id})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>${window.I18N.edit}</button>
-                <button class="btn btn-error btn-outline btn-sm gap-1 !uppercase" onclick="deleteFlipLogConfirm(${data.id},${flipId},this)"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>${window.I18N.delete}</button>
+            const fmtDate = data.fmt_log_date || data.log_date;
+            const catBadgeSm = data.category ? `<span class="badge badge-xs badge-outline" data-cat="${data.category}">${data.category}</span>` : '';
+            const catBadgeMd = data.category ? `<span class="badge badge-outline badge-sm" data-cat="${data.category}">${data.category}</span>` : '<span class="opacity-50">—</span>';
+            const costMob = parseFloat(data.cost) > 0 ? `<span class="tabular-nums">${window.CURRENCY || '€'}${fmtDec(data.cost)}</span>` : '';
+            const invMob = inv ? `<span class="text-success font-semibold">✓ ${window.I18N.inv || 'Inv.'}</span>` : '';
+            const costCell = parseFloat(data.cost) > 0 ? `${window.CURRENCY || '€'}${fmtDec(data.cost)}` : '<span class="opacity-50">—</span>';
+            const invCell = inv ? '<span class="text-success font-bold">✓</span>' : '<span class="opacity-50">—</span>';
+            const tr = document.createElement('tr'); tr.id = `log-row-${data.id}`; tr.className = 'data-row hover';
+            tr.innerHTML = `<td class="whitespace-nowrap hidden md:table-cell">${fmtDate}</td>
+            <td>${data.description}<div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs opacity-60"><span class="opacity-80">${fmtDate}</span>${catBadgeSm}${costMob}${invMob}</div></td>
+            <td class="hidden md:table-cell">${catBadgeMd}</td>
+            <td class="text-right hidden md:table-cell">${costCell}</td>
+            <td class="hidden md:table-cell">${invCell}</td>
+            <td><div class="flex gap-1 md:gap-3 justify-end text-sm">
+                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="toggleLogEdit('flip',${data.id})"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg><span class="hidden sm:inline">${window.I18N.edit}</span></button>
+                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="deleteFlipLogConfirm(${data.id},${flipId},this)"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg><span class="hidden sm:inline">${window.I18N.delete}</span></button>
             </div></td>`;
-            const er = document.createElement('tr'); er.id = `log-edit-${data.id}`; er.className = 'edit-row hidden';
-            er.innerHTML = `<td colspan="6" class="p-4"><form class="flex flex-col lg:flex-row gap-4 items-center w-full" onsubmit="submitLogEdit(event,'flip',${data.id},${flipId})">
-                <input type="date" name="log_date" value="${data.log_date}" class="input input-bordered input-sm">
-                <input type="text" name="description" value="${data.description}" required class="input input-bordered input-sm flex-1">
-                <select name="category" class="select select-bordered select-sm" data-current="${data.category}">${buildCatOptions(data.category)}</select>
-                <input type="number" step="0.01" name="cost" value="${data.cost}" min="0" class="input input-bordered input-sm w-24 text-right">
-                <label class="cursor-pointer label gap-2"><input type="checkbox" class="checkbox checkbox-sm" name="add_to_inventory"${inv ? ' checked' : ''}> <span class="label-text">Inv.</span></label>
-            <div class="flex gap-2">
-                <button type="submit" class="btn btn-primary btn-sm">Salva</button>
-                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleLogEdit('flip',${data.id})">Annulla</button>
-            </div></form></td>`;
+            const er = document.createElement('tr'); er.id = `log-edit-${data.id}`; er.className = 'edit-row hidden bg-base-200';
+            er.innerHTML = `<td colspan="6" class="p-3"><form class="grid grid-cols-2 gap-2 md:flex md:flex-row md:flex-wrap md:items-center md:gap-3" onsubmit="submitLogEdit(event,'flip',${data.id},${flipId})">
+                <input type="date" name="log_date" value="${data.log_date}" class="input input-bordered input-sm col-span-2 md:col-auto">
+                <input type="text" name="description" value="${data.description}" required class="input input-bordered input-sm col-span-2 md:flex-1">
+                <select name="category" class="select select-bordered select-sm col-span-2 md:col-auto" data-current="${data.category}">${buildCatOptions(data.category)}</select>
+                <input type="number" step="0.01" name="cost" value="${data.cost}" min="0" class="input input-bordered input-sm text-right">
+                <label class="cursor-pointer label gap-2"><input type="checkbox" class="checkbox checkbox-sm" name="add_to_inventory"${inv ? ' checked' : ''}> <span class="label-text">${window.I18N.inv || 'Inv.'}</span></label>
+                <div class="col-span-2 flex gap-2 md:col-auto">
+                    <button type="submit" class="btn btn-primary btn-sm flex-1 md:flex-none">${window.I18N.save}</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="toggleLogEdit('flip',${data.id})">${window.I18N.cancel}</button>
+                </div>
+            </form></td>`;
             tbody.insertBefore(tr, tbody.firstChild);
             tbody.insertBefore(er, tr.nextSibling);
             animateIn(tr);
@@ -429,25 +441,31 @@ function addCollLog(watchId) {
         .then(r => r.json())
         .then(data => {
             const tbody = document.getElementById('clog-tbody');
-            const catBadge = data.category ? `<span class="badge badge-outline badge-sm" data-cat="${data.category || ""}">${data.category}</span>` : '<span class="muted">—</span>';
-            const costCell = parseFloat(data.cost) > 0 ? `€${fmtDec(data.cost)}` : '<span class="muted">—</span>';
-            const tr = document.createElement('tr'); tr.id = `clog-row-${data.id}`; tr.className = 'data-row';
-            tr.innerHTML = `<td>${data.fmt_log_date || data.log_date}</td><td>${data.description}</td><td>${catBadge}</td>
-            <td class="num">${costCell}</td>
-            <td><div class="flex gap-3 justify-end text-sm">
-                <button class="link link-primary link-hover" onclick="toggleLogEdit('coll',${data.id})">Edit</button>
-                <button class="link link-error link-hover" onclick="deleteCollLog(${data.id},${watchId})">Del</button>
+            const cFmtDate = data.fmt_log_date || data.log_date;
+            const cCatBadgeSm = data.category ? `<span class="badge badge-xs badge-outline" data-cat="${data.category}">${data.category}</span>` : '';
+            const cCatBadgeMd = data.category ? `<span class="badge badge-outline badge-sm" data-cat="${data.category}">${data.category}</span>` : '<span class="opacity-50">—</span>';
+            const cCostMob = parseFloat(data.cost) > 0 ? `<span class="tabular-nums">${window.CURRENCY || '€'}${fmtDec(data.cost)}</span>` : '';
+            const cCostCell = parseFloat(data.cost) > 0 ? `${window.CURRENCY || '€'}${fmtDec(data.cost)}` : '<span class="opacity-50">—</span>';
+            const tr = document.createElement('tr'); tr.id = `clog-row-${data.id}`; tr.className = 'data-row hover';
+            tr.innerHTML = `<td class="whitespace-nowrap hidden md:table-cell">${cFmtDate}</td>
+            <td>${data.description}<div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs opacity-60"><span class="opacity-80">${cFmtDate}</span>${cCatBadgeSm}${cCostMob}</div></td>
+            <td class="hidden md:table-cell">${cCatBadgeMd}</td>
+            <td class="text-right hidden md:table-cell">${cCostCell}</td>
+            <td><div class="flex gap-1 md:gap-3 justify-end text-sm">
+                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="toggleLogEdit('coll',${data.id})"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg><span class="hidden sm:inline">${window.I18N.edit}</span></button>
+                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="deleteCollLog(${data.id},${watchId})"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg><span class="hidden sm:inline">${window.I18N.delete}</span></button>
             </div></td>`;
-            const er = document.createElement('tr'); er.id = `clog-edit-${data.id}`; er.className = 'edit-row hidden';
-            er.innerHTML = `<td colspan="5" class="p-4"><form class="flex flex-col lg:flex-row gap-4 items-center w-full" onsubmit="submitLogEdit(event,'coll',${data.id},${watchId})">
-                <input type="date" name="log_date" value="${data.log_date}" class="input input-bordered input-sm">
-                <input type="text" name="description" value="${data.description}" required class="input input-bordered input-sm flex-1">
-                <select name="category" class="select select-bordered select-sm" data-current="${data.category}">${buildCatOptions(data.category)}</select>
-                <input type="number" step="0.01" name="cost" value="${data.cost}" min="0" class="input input-bordered input-sm w-24 text-right">
-            <div class="flex gap-2">
-                <button type="submit" class="btn btn-primary btn-sm">Salva</button>
-                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleLogEdit('coll',${data.id})">Annulla</button>
-            </div></form></td>`;
+            const er = document.createElement('tr'); er.id = `clog-edit-${data.id}`; er.className = 'edit-row hidden bg-base-200';
+            er.innerHTML = `<td colspan="5" class="p-3"><form class="grid grid-cols-2 gap-2 md:flex md:flex-row md:flex-wrap md:items-center md:gap-3" onsubmit="submitLogEdit(event,'coll',${data.id},${watchId})">
+                <input type="date" name="log_date" value="${data.log_date}" class="input input-bordered input-sm col-span-2 md:col-auto">
+                <input type="text" name="description" value="${data.description}" required class="input input-bordered input-sm col-span-2 md:flex-1">
+                <select name="category" class="select select-bordered select-sm col-span-2 md:col-auto" data-current="${data.category}">${buildCatOptions(data.category)}</select>
+                <input type="number" step="0.01" name="cost" value="${data.cost}" min="0" class="input input-bordered input-sm text-right">
+                <div class="col-span-2 flex gap-2 md:col-auto">
+                    <button type="submit" class="btn btn-primary btn-sm flex-1 md:flex-none">${window.I18N.save}</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="toggleLogEdit('coll',${data.id})">${window.I18N.cancel}</button>
+                </div>
+            </form></td>`;
             tbody.insertBefore(tr, tbody.firstChild);
             tbody.insertBefore(er, tr.nextSibling);
             animateIn(tr);

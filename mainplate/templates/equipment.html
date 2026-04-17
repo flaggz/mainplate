@@ -23,27 +23,25 @@
                         <td>{{ e.name }}</td>
                         <td class="text-right">{{ currency_symbol }}{{ '{:,.2f}'.format(e.value) }}</td>
                         <td>
-                            <div class="flex justify-end gap-3 text-sm">
-                                <button class="btn btn-primary btn-outline btn-sm gap-1 uppercase" onclick="toggleEditRow('equip',{{ e.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>{{ _('edit') }}</button>
-                                <button class="btn btn-error btn-outline btn-sm gap-1 uppercase" onclick="ajaxDelete('equip',{{ e.id }},this)"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>{{ _('delete') }}</button>
+                            <div class="flex justify-end gap-1 md:gap-3 text-sm">
+                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="toggleEditRow('equip',{{ e.id }})">
+                                    <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>
+                                    <span class="hidden sm:inline">{{ _('edit') }}</span>
+                                </button>
+                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="ajaxDelete('equip',{{ e.id }},this)">
+                                    <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>
+                                    <span class="hidden sm:inline">{{ _('delete') }}</span>
+                                </button>
                             </div>
                         </td>
                     </tr>
                     <tr id="equip-edit-{{ e.id }}" class="edit-row hidden bg-base-200">
-                        <td colspan="3" class="p-4">
-                            <form class="flex flex-col sm:flex-row gap-4 items-center justify-between"
-                                onsubmit="submitEdit(event,'equip',{{ e.id }})">
-                                <div class="flex gap-4 flex-1 w-full sm:w-auto">
-                                    <input type="text" name="name" value="{{ e.name }}"
-                                        class="input input-bordered input-sm flex-1" required>
-                                    <input type="number" step="0.01" name="value" value="{{ e.value }}" min="0"
-                                        class="input input-bordered input-sm w-32 text-right">
-                                </div>
-                                <div class="flex gap-2">
-                                    <button type="submit" class="btn btn-primary btn-sm">{{ _('save') }}</button>
-                                    <button type="button" class="btn btn-ghost btn-sm"
-                                        onclick="toggleEditRow('equip',{{ e.id }})">{{ _('cancel') }}</button>
-                                </div>
+                        <td colspan="3" class="p-3">
+                            <form class="flex flex-row gap-2 items-center" onsubmit="submitEdit(event,'equip',{{ e.id }})">
+                                <input type="text" name="name" value="{{ e.name }}" class="input input-bordered input-sm flex-1" required>
+                                <input type="number" step="0.01" name="value" value="{{ e.value }}" min="0" class="input input-bordered input-sm w-28 text-right">
+                                <button type="submit" class="btn btn-primary btn-sm">{{ _('save') }}</button>
+                                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEditRow('equip',{{ e.id }})">{{ _('cancel') }}</button>
                             </form>
                         </td>
                     </tr>
@@ -52,18 +50,17 @@
                 <tfoot class="bg-gradient-to-r from-base-200/60 to-base-100/30">
                     <tr class="total-row">
                         <td class="text-right font-bold py-4 uppercase">{{ _('total') }}</td>
-                        <td class="text-right font-bold text-primary" id="equip-total-cell">{{ currency_symbol }}{{ '{:,.2f}'.format(total)
-                            }}</td>
+                        <td class="text-right font-bold text-primary" id="equip-total-cell">{{ currency_symbol }}{{ '{:,.2f}'.format(total) }}</td>
                         <td></td>
                     </tr>
                     <tr class="add-row">
-                        <td class="p-2"><input type="text" id="new-equip-name"
-                                class="input input-bordered input-sm w-full" placeholder="{{ _('tool name…') }}"></td>
-                        <td class="p-2 text-right"><input type="number" id="new-equip-val"
-                                class="input input-bordered input-sm w-32 text-right" step="0.01" value="0" min="0">
+                        <td colspan="3" class="p-2">
+                            <div class="flex flex-row gap-2 items-center">
+                                <input type="text" id="new-equip-name" class="input input-bordered input-sm flex-1" placeholder="{{ _('tool name…') }}">
+                                <input type="number" id="new-equip-val" class="input input-bordered input-sm w-28 text-right" step="0.01" value="0" min="0">
+                                <button class="btn btn-primary btn-sm" onclick="ajaxAddEquip()">+ {{ _('add') }}</button>
+                            </div>
                         </td>
-                        <td class="p-2 flex justify-end"><button class="btn btn-primary btn-sm"
-                                onclick="ajaxAddEquip()">+ {{ _('add') }}</button></td>
                     </tr>
                 </tfoot>
             </table>
