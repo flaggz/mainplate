@@ -1,8 +1,8 @@
 
+## Mainplate — Watch Flip & Collection Tracker
 
-![Mainplate Logo](/app/static/img/logo_mainplate.png "Mainplate Logo") # Mainplate — Watch Flip & Collection Tracker
-
-A self-hosted web app to track watch flips (buy/sell), personal collection, parts inventory, and equipment — all in one place.
+<img src="/app/static/img/logo_mainplate.png" width="100">
+A self-hosted web app for watch enthusiasts and watchmakers to track personal collection, flips, parts inventory, and equipment — all in one place.
 
 Built with Flask + SQLite, runs entirely in Docker with no external dependencies.
 
