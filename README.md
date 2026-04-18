@@ -1,4 +1,3 @@
-
 ## Mainplate — Watch Flip & Collection Tracker
 
 <img src="/app/static/img/logo_mainplate.png" width="100">
@@ -20,7 +19,10 @@ Built with Flask + SQLite, runs entirely in Docker with no external dependencies
 |:----------:|:---------:|
 | ![Dashboard](/screens/dashboard.jpg "Dashboard") | ![Dashboard Dark](/screens/dashboard_dark.jpg "Dashboard Dark mode") |
 | ![Flips](/screens/flips.jpg "Flips") | ![Flips Dark](/screens/flips_dark.jpg "Flips Dark mode") |
+| ![Flips](/screens/flips_add.jpg "Add Flips") | ![Flips Dark](/screens/flips_add_dark.jpg "Add Flips Dark mode") |
+| ![Flips](/screens/flips_detail.jpg "Flips Detail") | ![Flips Dark](/screens/flips_detail_dark.jpg "Flips Detail Dark mode") |
 | ![Collection](/screens/collection.jpg "Collection") | ![Collection Dark](/screens/collection_dark.jpg "Collection Dark Mode") |
+| ![Collection](/screens/collection_add.jpg "Add Collection") | ![Collection Dark](/screens/collection_add_dark.jpg "Add Collection Dark Mode") |
 | ![Equipment](/screens/equipment.jpg "Equipment") | ![Equipment Dark](/screens/equipment_dark.jpg "Equipment Dark Mode") |
 | ![Inventory](/screens/inventory.jpg "Inventory") | ![Inventory Dark](/screens/inventory_dark.jpg "Inventory Dark Mode") |
 | ![Settings](/screens/settings.jpg "Settings") | ![Settings Dark](/screens/settings_dark.jpg "Settings Dark Mode") |
