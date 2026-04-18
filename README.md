@@ -20,11 +20,7 @@ Built with Flask + SQLite, runs entirely in Docker with no external dependencies
 |:----------:|:---------:|
 | ![Dashboard](/screens/dashboard.jpg "Dashboard") | ![Dashboard Dark](/screens/dashboard_dark.jpg "Dashboard Dark mode") |
 | ![Flips](/screens/flips.jpg "Flips") | ![Flips Dark](/screens/flips_dark.jpg "Flips Dark mode") |
-| ![Add Flip](/screens/flips_add.jpg "Add Flip") | ![Add Flip Dark](/screens/flips_add_dark.jpg "Add Flip Dark mode") |
-| ![Flip Detail](/screens/flips_detail.jpg "Flip Detail") | ![Flip Detail Dark](/screens/flips_detail_dark.jpg "Flip Detail Dark Mode") |
 | ![Collection](/screens/collection.jpg "Collection") | ![Collection Dark](/screens/collection_dark.jpg "Collection Dark Mode") |
-| ![Add to Collection](/screens/collection_add.jpg "Add to Collection") | ![Add to Collection Dark](/screens/collection_add_dark.jpg "Add to Collection Dark Mode") |
-| ![Collection Detail](/screens/collection_detail.jpg "Collection detail") | ![Collection Detail Dark](/screens/collection_detail_dark.jpg "Collection detail Dark Mode") |
 | ![Equipment](/screens/equipment.jpg "Equipment") | ![Equipment Dark](/screens/equipment_dark.jpg "Equipment Dark Mode") |
 | ![Inventory](/screens/inventory.jpg "Inventory") | ![Inventory Dark](/screens/inventory_dark.jpg "Inventory Dark Mode") |
 | ![Settings](/screens/settings.jpg "Settings") | ![Settings Dark](/screens/settings_dark.jpg "Settings Dark Mode") |
