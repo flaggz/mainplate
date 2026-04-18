@@ -5,3 +5,4 @@ __pycache__/
 data/
 *.db
 .DS_Store
+tailwind-compiler.js
