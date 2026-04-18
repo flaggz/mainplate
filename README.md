@@ -1,4 +1,6 @@
-# Mainplate — Watch Flip & Collection Tracker
+
+
+![Mainplate Logo](/app/static/img/logo_mainplate.png "Mainplate Logo") # Mainplate — Watch Flip & Collection Tracker
 
 A self-hosted web app to track watch flips (buy/sell), personal collection, parts inventory, and equipment — all in one place.
 
@@ -18,7 +20,11 @@ Built with Flask + SQLite, runs entirely in Docker with no external dependencies
 |:----------:|:---------:|
 | ![Dashboard](/screens/dashboard.jpg "Dashboard") | ![Dashboard Dark](/screens/dashboard_dark.jpg "Dashboard Dark mode") |
 | ![Flips](/screens/flips.jpg "Flips") | ![Flips Dark](/screens/flips_dark.jpg "Flips Dark mode") |
+| ![Add Flip](/screens/flips_add.jpg "Add Flip") | ![Add Flip Dark](/screens/flips_add_dark.jpg "Add Flip Dark mode") |
+| ![Flip Detail](/screens/flips_detail.jpg "Flip Detail") | ![Flip Detail Dark](/screens/flips_detail_dark.jpg "Flip Detail Dark Mode") |
 | ![Collection](/screens/collection.jpg "Collection") | ![Collection Dark](/screens/collection_dark.jpg "Collection Dark Mode") |
+| ![Add to Collection](/screens/collection_add.jpg "Add to Collection") | ![Add to Collection Dark](/screens/collection_add_dark.jpg "Add to Collection Dark Mode") |
+| ![Collection Detail](/screens/collection_detail.jpg "Collection detail") | ![Collection Detail Dark](/screens/collection_detail_dark.jpg "Collection detail Dark Mode") |
 | ![Equipment](/screens/equipment.jpg "Equipment") | ![Equipment Dark](/screens/equipment_dark.jpg "Equipment Dark Mode") |
 | ![Inventory](/screens/inventory.jpg "Inventory") | ![Inventory Dark](/screens/inventory_dark.jpg "Inventory Dark Mode") |
 | ![Settings](/screens/settings.jpg "Settings") | ![Settings Dark](/screens/settings_dark.jpg "Settings Dark Mode") |
@@ -45,7 +51,22 @@ Every flip and every collection watch supports **multiple photos**. Images are p
 Each flip has a detailed log with **date + description + optional cost + category**. Log entries contribute to the net profit calculation and can optionally add parts to inventory automatically.
 
 ### Timegrapher
-Each flip has a **timegrapher readings log** to record the movement's timing across the six standard positions (DU, DD, 3U, 6U, 9U, 12U), plus overall amplitude and beat error. The **delta** (max − min spread across positions) is computed automatically and colour-coded: green below 10 s/d, yellow 10–20 s/d, red above 20 s/d. Multiple readings are stored per flip — useful to compare before/after a service — with the latest reading shown as a summary at the top.
+Each flip has a **timegrapher readings log** to record the movement's timing across the six standard positions (DU, DD, 3U, 6U, 9U, 12U), plus overall amplitude and beat error. Multiple readings are stored per flip — useful to compare before/after a service — with the latest reading shown as a summary at the top.
+
+The **delta** (max − min spread across all positions) is computed automatically and colour-coded: green below 10 s/d, yellow 10–20 s/d, red above 20 s/d.
+
+Each cell also carries **per-field diagnostic warnings** that highlight anomalies directly in the table:
+
+| Field | Condition | Level |
+|---|---|---|
+| DU / DD | diff > 1 s/d | warning — check balance staff pivots |
+| Amplitude | < 180° | error — service the movement urgently |
+| Amplitude | 180–220° | warning — check lubrication and power reserve |
+| Amplitude | > 320° | warning — overbanking risk, check escapement |
+| Beat error | > 1.0 ms | error — movement may stop in position |
+| Beat error | 0.5–1.0 ms | warning — adjust the lever |
+| 3U / 9U | diff > 15 s/d | warning — possible balance wheel poise issue |
+| 6U / 12U | diff > 15 s/d | warning — check lever or hairspring |
 
 ### Collection Log
 Each watch in the collection has a service diary (revisions, part replacements, etc.) with optional cost and category per entry.
@@ -58,6 +79,9 @@ Watches in the collection can be marked as sold with a sale date and sale price.
 
 ### Categories
 Log entry categories are managed from Settings with a **name + color** per category. The same category list is shared across flip logs, collection logs, and inventory, ensuring consistency throughout the app.
+
+### Watch Lookup
+When adding a new flip or collection watch, a **Chrono24 search** field appears at the top of the form. Type a brand, model, or reference number and select a result to auto-fill brand, model, reference, year, and market price. If a photo is available, it is downloaded and attached automatically. The feature degrades gracefully if Chrono24 is unreachable.
 
 ### Inline Editing
 Flips and collection watches can be edited directly **inline in the list table** without navigating to a separate page, keeping the workflow fast.
@@ -76,7 +100,7 @@ UI language is switchable from Settings. Translations live in `lang/en.json` and
 
 ```bash
 git clone https://github.com/flaggz/mainplate.git
-cd mainplate
+cd mainplate/app
 docker compose up --build
 ```
 
@@ -137,7 +161,7 @@ In-app settings (saved to the database via the Settings page):
 ## Project Structure
 
 ```
-mainplate/
+app/
 ├── app.py                   # Flask app, all routes and DB logic
 ├── requirements.txt
 ├── Dockerfile
@@ -164,6 +188,7 @@ mainplate/
     │   ├── daisyui.css
     │   └── style.css
     ├── js/
+    │   ├── apexcharts.min.js
     │   └── main.js
     └── img/
         ├── logo.svg
