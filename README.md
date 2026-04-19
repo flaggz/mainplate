@@ -160,13 +160,16 @@ In-app settings (saved to the database via the Settings page):
 
 ```
 app/
-├── app.py                   # Flask app, all routes and DB logic
+├── app.py                        # Flask app, all routes and DB logic
 ├── requirements.txt
 ├── Dockerfile
 ├── docker-compose.yml
 ├── lang/
-│   ├── en.json              # default language
-│   └── it.json              # Italian translations
+│   ├── en.json                   # default language
+│   ├── it.json
+│   ├── de.json
+│   ├── es.json
+│   └── fr.json
 ├── templates/
 │   ├── base.html
 │   ├── dashboard.html
@@ -176,6 +179,7 @@ app/
 │   ├── collection.html
 │   ├── collection_form.html
 │   ├── collection_detail.html
+│   ├── collection_dashboard.html
 │   ├── inventory.html
 │   ├── equipment.html
 │   ├── settings.html
@@ -183,14 +187,22 @@ app/
 └── static/
     ├── css/
     │   ├── tailwind.css
+    │   ├── input.css
     │   ├── daisyui.css
     │   └── style.css
     ├── js/
     │   ├── apexcharts.min.js
+    │   ├── tailwind-compiler.js
     │   └── main.js
     └── img/
-        ├── logo.svg
-        └── favicon.svg
+        ├── logo_mainplate.png
+        ├── favicon.svg
+        ├── favicon.ico
+        ├── favicon-96x96.png
+        ├── apple-touch-icon.png
+        ├── site.webmanifest
+        ├── web-app-manifest-192x192.png
+        └── web-app-manifest-512x512.png
 ```
 
 ---

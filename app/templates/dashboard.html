@@ -8,12 +8,12 @@
 {% for f in flips %}{% if f.profit is not none %}{% set _ = sp_profits.append(f.profit) %}{% endif %}{% endfor %}
 
 {# ── KPI Cards ───────────────────────────────────────────── #}
-<div class="stats stats-vertical lg:stats-horizontal shadow-lg bg-gradient-to-br from-base-100 to-base-200/60 w-full mb-6 ring-1 ring-base-200/70">
+<div class="stats stats-vertical lg:stats-horizontal shadow-lg bg-gradient-to-br from-base-100 to-base-200/60 w-full mb-6 ring-1 ring-base-200">
 
     {# — Net Profit — #}
     <div class="stat">
         <div class="flex items-start justify-between mb-3">
-            <span class="text-xs font-semibold uppercase tracking-widest opacity-50">{{ _('net profit') }}</span>
+            <span class="text-xs font-semibold uppercase tracking-widest text-base-content/50">{{ _('net profit') }}</span>
             <span
                 class="p-1.5 rounded-lg {% if total_profit >= 0 %}bg-success/10 text-success{% else %}bg-error/10 text-error{% endif %}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
@@ -30,7 +30,7 @@
             class="text-3xl font-bold tracking-tight {% if total_profit >= 0 %}text-success{% else %}text-error{% endif %}">
             {{ currency_symbol }}{{ '{:,.0f}'.format(total_profit) }}
         </div>
-        <div class="text-xs opacity-40 mt-1 mb-3">{{ sold_count }} {{ _('sold') }}</div>
+        <div class="text-xs text-base-content/40 mt-1 mb-3">{{ sold_count }} {{ _('sold') }}</div>
         {# mini sparkline — rendered by ApexCharts (see extra_scripts block) #}
         {% if sp_profits | length >= 2 %}
         <div id="profit-sparkline" class="-mx-1 -mb-1"></div>
@@ -40,7 +40,7 @@
     {# — Capital — #}
     <div class="stat">
         <div class="flex items-start justify-between mb-3">
-            <span class="text-xs font-semibold uppercase tracking-widest opacity-50">{{ _('investment') }}</span>
+            <span class="text-xs font-semibold uppercase tracking-widest text-base-content/50">{{ _('investment') }}</span>
             <span class="p-1.5 rounded-lg bg-primary/10 text-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -50,13 +50,13 @@
             </span>
         </div>
         <div class="text-3xl font-bold tracking-tight">{{ currency_symbol }}{{ '{:,.0f}'.format(capital) }}</div>
-        <div class="text-xs opacity-40 mt-1">{{ flip_count }} {{ _('flips') }}</div>
+        <div class="text-xs text-base-content/40 mt-1">{{ flip_count }} {{ _('flips') }}</div>
     </div>
 
     {# — Avg ROI — #}
     <div class="stat">
         <div class="flex items-start justify-between mb-3">
-            <span class="text-xs font-semibold uppercase tracking-widest opacity-50">{{ _('avg roi') }}</span>
+            <span class="text-xs font-semibold uppercase tracking-widest text-base-content/50">{{ _('avg roi') }}</span>
             <span class="p-1.5 rounded-lg bg-accent/10 text-accent">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -67,13 +67,13 @@
             </span>
         </div>
         <div class="text-3xl font-bold tracking-tight">{{ '{:.1f}'.format(avg_roi) }}%</div>
-        <div class="text-xs opacity-40 mt-1">{{ _('return on investment') }}</div>
+        <div class="text-xs text-base-content/40 mt-1">{{ _('return on investment') }}</div>
     </div>
 
     {# — Hours / Labor — #}
     <div class="stat">
         <div class="flex items-start justify-between mb-3">
-            <span class="text-xs font-semibold uppercase tracking-widest opacity-50">{{ _('hours') }}</span>
+            <span class="text-xs font-semibold uppercase tracking-widest text-base-content/50">{{ _('hours') }}</span>
             <span class="p-1.5 rounded-lg bg-secondary/10 text-secondary">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -83,8 +83,8 @@
             </span>
         </div>
         <div class="text-3xl font-bold">{{ '{:.0f}'.format(total_hours) }}<span
-                class="text-base opacity-60 font-normal">h</span></div>
-        <div class="text-xs opacity-40 mt-1">{{ currency_symbol }}{{ '{:,.0f}'.format(imputed_labor) }} {{
+                class="text-base text-base-content/60 font-normal">h</span></div>
+        <div class="text-xs text-base-content/40 mt-1">{{ currency_symbol }}{{ '{:,.0f}'.format(imputed_labor) }} {{
             _('labor') }}</div>
     </div>
 </div>
@@ -93,10 +93,10 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="widget-grid">
 
     {# ── Recent Flips ─────────────────────────────────────── #}
-    <div class="widget card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]" data-id="flips">
+    <div class="widget card bg-base-100 border border-base-200 shadow-sm" data-id="flips">
         <div class="card-body p-0">
-            <div class="flex justify-between items-center px-5 py-3.5 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200">
-                <span class="font-bold uppercase tracking-wide text-sm flex items-center gap-2">
+            <div class="flex justify-between items-center px-5 py-3.5 border-b border-base-200 bg-base-100">
+                <span class="font-semibold text-sm flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10" />
@@ -116,7 +116,7 @@
             <div class="flip-card-grid grid grid-cols-2 md:grid-cols-6 gap-4 p-4">
                 {% for f in flips[:6] %}
                 <a href="{{ url_for('flip_detail', fid=f.id) }}"
-                    class="flip-card-item group bg-gradient-to-b from-base-100 to-base-200/80 border border-base-200/60 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-black/[.08] flex flex-col {% if loop.index > 4 %}hidden md:flex{% endif %}">
+                    class="flip-card-item group bg-base-100 border border-base-200 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-md flex flex-col {% if loop.index > 4 %}hidden md:flex{% endif %}">
 
                     {# Image #}
                     <div class="relative h-40 overflow-hidden shrink-0">
@@ -134,38 +134,38 @@
                     <div class="p-3.5 flex flex-col gap-2.5 flex-1">
                         <div>
                             <div class="font-semibold text-sm leading-snug">{{ f.brand }} {{ f.model }}</div>
-                            <div class="text-xs opacity-40 mt-0.5">{{ f.reference or '' }}{% if f.year %} · {{ f.year }}{% endif %}</div>
+                            <div class="text-xs text-base-content/40 mt-0.5">{{ f.reference or '' }}{% if f.year %} · {{ f.year }}{% endif %}</div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
                             <div>
-                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('paid') }}</div>
+                                <div class="text-[10px] text-base-content/40 uppercase tracking-wide">{{ _('paid') }}</div>
                                 <div class="text-xs font-medium tabular-nums mt-0.5">{{ currency_symbol }}{{ '{:,.0f}'.format(f.paid) }}</div>
                             </div>
                             <div>
-                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('exp') }}</div>
+                                <div class="text-[10px] text-base-content/40 uppercase tracking-wide">{{ _('exp') }}</div>
                                 <div class="text-xs font-medium tabular-nums mt-0.5 {% if f.log_cost > 0 %}text-error/80{% else %}opacity-30{% endif %}">
                                     {% if f.log_cost > 0 %}{{ currency_symbol }}{{ '{:,.0f}'.format(f.log_cost) }}{% else %}—{% endif %}
                                 </div>
                             </div>
                             <div>
-                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('total') }}</div>
+                                <div class="text-[10px] text-base-content/40 uppercase tracking-wide">{{ _('total') }}</div>
                                 <div class="text-xs font-medium tabular-nums mt-0.5">{{ currency_symbol }}{{ '{:,.0f}'.format(f.total_cost) }}</div>
                             </div>
                             <div>
-                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('sold') }}</div>
+                                <div class="text-[10px] text-base-content/40 uppercase tracking-wide">{{ _('sold') }}</div>
                                 <div class="text-xs font-medium tabular-nums mt-0.5 {% if not f.sold %}opacity-30{% endif %}">
                                     {% if f.sold > 0 %}{{ currency_symbol }}{{ '{:,.0f}'.format(f.sold) }}{% else %}—{% endif %}
                                 </div>
                             </div>
                             <div>
-                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('hours') }}</div>
+                                <div class="text-[10px] text-base-content/40 uppercase tracking-wide">{{ _('hours') }}</div>
                                 <div class="text-xs font-medium tabular-nums mt-0.5 {% if not f.hours %}opacity-30{% endif %}">
                                     {% if f.hours > 0 %}{{ '{:.1f}'.format(f.hours) }}h{% else %}—{% endif %}
                                 </div>
                             </div>
                             <div>
-                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('labor') }}</div>
+                                <div class="text-[10px] text-base-content/40 uppercase tracking-wide">{{ _('labor') }}</div>
                                 <div class="text-xs font-medium tabular-nums mt-0.5 {% if f.labor_cost > 0 %}text-error/80{% else %}opacity-30{% endif %}">
                                     {% if f.labor_cost > 0 %}{{ currency_symbol }}{{ '{:,.0f}'.format(f.labor_cost) }}{% else %}—{% endif %}
                                 </div>
@@ -203,10 +203,10 @@
     </div>
 
     {# ── Collection ───────────────────────────────────────── #}
-    <div class="widget card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]" data-id="collection">
+    <div class="widget card bg-base-100 border border-base-200 shadow-sm" data-id="collection">
         <div class="card-body p-0">
-            <div class="flex justify-between items-center px-5 py-3.5 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200">
-                <span class="font-bold uppercase tracking-wide text-sm flex items-center gap-2">
+            <div class="flex justify-between items-center px-5 py-3.5 border-b border-base-200 bg-base-100">
+                <span class="font-semibold text-sm flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-error" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path
@@ -225,29 +225,29 @@
             </div>
 
             {# Mini stats bar #}
-            <div class="grid grid-cols-4 text-center stats bg-gradient-to-r from-base-200/40 via-base-100 to-base-200/40 border-b border-base-200/60">
+            <div class="grid grid-cols-4 text-center stats bg-base-200/30 border-b border-base-200">
                 <div class="stat">
                     <div class="text-lg font-bold">{{ collection_count }}</div>
-                    <div class="text-xs opacity-40 uppercase tracking-wide">{{ _('pieces') }}</div>
+                    <div class="text-xs text-base-content/40 uppercase tracking-wide">{{ _('pieces') }}</div>
                 </div>
                 <div class="stat">
                     <div class="text-sm font-bold tabular-nums">{{ currency_symbol }}{{ '{:,.0f}'.format(collection_total_purchase) }}</div>
-                    <div class="text-xs opacity-40 uppercase tracking-wide">{{ _('investment') }}</div>
+                    <div class="text-xs text-base-content/40 uppercase tracking-wide">{{ _('investment') }}</div>
                 </div>
                 <div class="stat">
                     <div class="text-sm font-bold tabular-nums {% if collection_total_service > 0 %}text-error/70{% endif %}">{{ currency_symbol }}{{ '{:,.0f}'.format(collection_total_service) }}</div>
-                    <div class="text-xs opacity-40 uppercase tracking-wide">{{ _('services') }}</div>
+                    <div class="text-xs text-base-content/40 uppercase tracking-wide">{{ _('services') }}</div>
                 </div>
                 <div class="stat">
                     <div class="text-sm font-bold tabular-nums">{{ currency_symbol }}{{ '{:,.0f}'.format(collection_total_invested) }}</div>
-                    <div class="text-xs opacity-40 uppercase tracking-wide">{{ _('tot') }}</div>
+                    <div class="text-xs text-base-content/40 uppercase tracking-wide">{{ _('tot') }}</div>
                 </div>
             </div>
 
             <div class="coll-card-grid grid grid-cols-2 md:grid-cols-6 gap-4 p-4">
                 {% for w in collection_watches[:6] %}
                 <a href="{{ url_for('collection_detail', wid=w.id) }}"
-                    class="coll-card-item group bg-gradient-to-b from-base-100 to-base-200/80 border border-base-200/60 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-black/[.08] flex flex-col {% if loop.index > 4 %}hidden md:flex{% endif %}">
+                    class="coll-card-item group bg-base-100 border border-base-200 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-md flex flex-col {% if loop.index > 4 %}hidden md:flex{% endif %}">
 
                     {# Image #}
                     <div class="relative h-40 overflow-hidden shrink-0">
@@ -261,16 +261,16 @@
                     <div class="p-3.5 flex flex-col gap-2.5 flex-1">
                         <div>
                             <div class="font-semibold text-sm leading-snug">{{ w.brand }} {{ w.model }}</div>
-                            <div class="text-xs opacity-40 mt-0.5">{{ w.reference or '' }}{% if w.year %} · {{ w.year }}{% endif %}</div>
+                            <div class="text-xs text-base-content/40 mt-0.5">{{ w.reference or '' }}{% if w.year %} · {{ w.year }}{% endif %}</div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
                             <div>
-                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('paid') }}</div>
+                                <div class="text-[10px] text-base-content/40 uppercase tracking-wide">{{ _('paid') }}</div>
                                 <div class="text-xs font-medium tabular-nums mt-0.5">{{ currency_symbol }}{{ '{:,.0f}'.format(w.purchase_price or 0) }}</div>
                             </div>
                             <div>
-                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('services') }}</div>
+                                <div class="text-[10px] text-base-content/40 uppercase tracking-wide">{{ _('services') }}</div>
                                 <div class="text-xs font-medium tabular-nums mt-0.5 {% if w.service_cost and w.service_cost > 0 %}text-error/80{% else %}opacity-30{% endif %}">
                                     {% if w.service_cost and w.service_cost > 0 %}{{ currency_symbol }}{{ '{:,.0f}'.format(w.service_cost) }}{% else %}—{% endif %}
                                 </div>
@@ -279,13 +279,13 @@
 
                         <div class="flex items-end justify-between mt-auto pt-2.5 border-t border-base-200">
                             <div>
-                                <div class="text-[10px] opacity-40 uppercase tracking-wide">{{ _('total') }}</div>
+                                <div class="text-[10px] text-base-content/40 uppercase tracking-wide">{{ _('total') }}</div>
                                 <div class="text-sm font-bold tabular-nums mt-0.5">{{ currency_symbol }}{{ '{:,.0f}'.format(w.total_cost or w.purchase_price or 0) }}</div>
                             </div>
                             <div class="text-right">
-                                <div class="text-xs opacity-40">{{ w.fmt_acquired or '—' }}</div>
+                                <div class="text-xs text-base-content/40">{{ w.fmt_acquired or '—' }}</div>
                                 {% if w.logs %}
-                                <div class="text-xs opacity-40 max-w-24 truncate mt-0.5">{{ w.logs[0].description[:20] }}</div>
+                                <div class="text-xs text-base-content/40 max-w-24 truncate mt-0.5">{{ w.logs[0].description[:20] }}</div>
                                 {% endif %}
                             </div>
                         </div>
@@ -306,10 +306,10 @@
     </div>
 
     {# ── Parts Inventory ──────────────────────────────────── #}
-    <div class="widget card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]" data-id="parts">
+    <div class="widget card bg-base-100 border border-base-200 shadow-sm" data-id="parts">
         <div class="card-body p-0">
-            <div class="flex justify-between items-center px-5 py-3.5 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200">
-                <span class="font-bold uppercase tracking-wide text-sm flex items-center gap-2">
+            <div class="flex justify-between items-center px-5 py-3.5 border-b border-base-200 bg-base-100">
+                <span class="font-semibold text-sm flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-warning" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path
@@ -327,7 +327,7 @@
             <div class="overflow-x-auto">
                 <table class="table table-sm" id="dash-parts-table">
                     <thead>
-                        <tr class="text-xs uppercase opacity-60">
+                        <tr class="text-xs uppercase text-base-content/60">
                             <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('part') }}</th>
                             <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('cat') }}</th>
                             <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="2">{{
@@ -354,15 +354,15 @@
                         {% endfor %}
                         {% if parts_count > 6 %}
                         <tr>
-                            <td colspan="4" class="text-center text-xs opacity-40 py-2">+ {{ parts_count - 6 }} {{
+                            <td colspan="4" class="text-center text-xs text-base-content/40 py-2">+ {{ parts_count - 6 }} {{
                                 _('others') }} · <a href="{{ url_for('inventory') }}" class="link">{{ _('see all')
                                     }}</a></td>
                         </tr>
                         {% endif %}
                     </tbody>
                     <tfoot>
-                        <tr class="font-bold border-t-2 border-base-200/70 bg-gradient-to-r from-base-200/50 to-base-100/30">
-                            <td colspan="3" class="text-right text-xs uppercase opacity-50">{{ _('total') }}</td>
+                        <tr class="font-bold border-t-2 border-base-200 bg-base-200/40">
+                            <td colspan="3" class="text-right text-xs uppercase text-base-content/50">{{ _('total') }}</td>
                             <td class="text-right tabular-nums">{{ currency_symbol }}{{ '{:,.2f}'.format(parts_value) }}
                             </td>
                         </tr>
@@ -373,10 +373,10 @@
     </div>
 
     {# ── Equipment ────────────────────────────────────────── #}
-    <div class="widget card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]" data-id="equipment">
+    <div class="widget card bg-base-100 border border-base-200 shadow-sm" data-id="equipment">
         <div class="card-body p-0">
-            <div class="flex justify-between items-center px-5 py-3.5 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200">
-                <span class="font-bold uppercase tracking-wide text-sm flex items-center gap-2">
+            <div class="flex justify-between items-center px-5 py-3.5 border-b border-base-200 bg-base-100">
+                <span class="font-semibold text-sm flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-secondary" viewBox="0 0 24 24"
                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
@@ -395,7 +395,7 @@
             <div class="overflow-x-auto">
                 <table class="table table-sm" id="dash-equip-table">
                     <thead>
-                        <tr class="text-xs uppercase opacity-60">
+                        <tr class="text-xs uppercase text-base-content/60">
                             <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('tool') }}</th>
                             <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right" data-col="1">{{
                                 _('value') }}</th>
@@ -415,15 +415,15 @@
                         {% endfor %}
                         {% if equip_count > 6 %}
                         <tr>
-                            <td colspan="2" class="text-center text-xs opacity-40 py-2">+ {{ equip_count - 6 }} {{
+                            <td colspan="2" class="text-center text-xs text-base-content/40 py-2">+ {{ equip_count - 6 }} {{
                                 _('others') }} · <a href="{{ url_for('equipment') }}" class="link">{{ _('see all')
                                     }}</a></td>
                         </tr>
                         {% endif %}
                     </tbody>
                     <tfoot>
-                        <tr class="font-bold border-t-2 border-base-200/70 bg-gradient-to-r from-base-200/50 to-base-100/30">
-                            <td class="text-right text-xs uppercase opacity-50">{{ _('total') }}</td>
+                        <tr class="font-bold border-t-2 border-base-200 bg-base-200/40">
+                            <td class="text-right text-xs uppercase text-base-content/50">{{ _('total') }}</td>
                             <td class="text-right tabular-nums">{{ currency_symbol }}{{ '{:,.2f}'.format(equip_value) }}
                             </td>
                         </tr>

@@ -51,7 +51,7 @@
 
         <div class="navbar-center">
             <span class="!inline sm:!hidden">MAINPLATE</span>
-            <ul class="menu menu-horizontal px-1 gap-1 uppercase text-sm font-medium !hidden lg:!flex">
+            <ul class="menu menu-horizontal px-1 gap-1 text-sm font-medium !hidden lg:!flex">
                 <li><a href="{{ url_for('dashboard') }}" class="gap-2 {% if active=='dashboard' %}active{% endif %}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
                     {{ _('dashboard') }}</a></li>
@@ -105,10 +105,10 @@
     <main class="container mx-auto py-2 md:py-6 px-1">
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 pb-4 border-b border-base-300">
             <div>
-                <div class="text-sm breadcrumbs mb-1 opacity-70">
+                <div class="text-sm breadcrumbs mb-1 text-base-content/60">
                     {% block breadcrumb %}{% endblock %}
                 </div>
-                <h1 class="text-3xl font-bold uppercase">{% block page_title %}{% endblock %}</h1>
+                <h1 class="text-2xl font-bold">{% block page_title %}{% endblock %}</h1>
             </div>
             <div class="mt-4 md:mt-0 flex flex-wrap gap-2">
                 {% block page_actions %}{% endblock %}
@@ -130,7 +130,7 @@
                     <img src="{{ url_for('static', filename='img/logo.svg') }}" class="h-8 w-8" alt="">
                     MAINPLATE
                 </a>
-                <ul class="menu menu-lg w-full uppercase font-medium gap-1">
+                <ul class="menu menu-lg w-full font-medium gap-1">
                     <li><a href="{{ url_for('dashboard') }}" class="gap-3 {% if active=='dashboard' %}active{% endif %}">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
                         {{ _('dashboard') }}</a></li>

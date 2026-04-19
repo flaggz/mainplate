@@ -1,29 +1,29 @@
 ﻿{% extends 'base.html' %}
 {% block page_title %}{{ _('collection') }}{% endblock %}
 {% block page_actions %}
-<button class="btn btn-primary btn-sm !uppercase" onclick="toggleAddCollForm()">+ {{ _('add watch') }}</button>
+<button class="btn btn-primary btn-sm" onclick="toggleAddCollForm()">+ {{ _('add watch') }}</button>
 {% endblock %}
 {% block content %}
 
 <!-- Summary strip -->
-<div class="stats stats-vertical lg:stats-horizontal shadow-lg bg-gradient-to-br from-base-100 to-base-200/60 ring-1 ring-base-200/70 w-full mb-6">
+<div class="stats stats-vertical lg:stats-horizontal shadow-lg bg-gradient-to-br from-base-100 to-base-200/60 ring-1 ring-base-200 w-full mb-6">
     <div class="stat">
-        <div class="stat-title uppercase">{{ _('totals') }}</div>
+        <div class="stat-title">{{ _('totals') }}</div>
         <div class="stat-value">{{ watch_count }}</div>
         <div class="stat-desc">{{ active_count }} in coll. · {{ sold_count_coll }} {{ _('sold') }}</div>
     </div>
     <div class="stat">
-        <div class="stat-title uppercase">{{ _('investment') }}</div>
+        <div class="stat-title">{{ _('investment') }}</div>
         <div class="stat-value">{{ currency_symbol }}{{ '{:,.2f}'.format(total_purchase) }}</div>
         <div class="stat-desc">{{ _('purchase price') }}</div>
     </div>
     <div class="stat">
-        <div class="stat-title uppercase">{{ _('services') }}</div>
+        <div class="stat-title">{{ _('services') }}</div>
         <div class="stat-value">{{ currency_symbol }}{{ '{:,.2f}'.format(total_service) }}</div>
         <div class="stat-desc">{{ _('service and parts') }}</div>
     </div>
     <div class="stat">
-        <div class="stat-title uppercase">{{ _('total') }}</div>
+        <div class="stat-title">{{ _('total') }}</div>
         <div class="stat-value">{{ currency_symbol }}{{ '{:,.2f}'.format(total_invested) }}</div>
         <div class="stat-desc">{{ _('purchase') }} + {{ _('services') }}</div>
     </div>
@@ -34,13 +34,13 @@
     <div class="card bg-base-100 shadow-md border border-base-200">
         <div class="card-body p-6">
             <div class="flex justify-between items-center mb-4">
-                <span class="font-bold text-lg uppercase">{{ _('new watch') }}</span>
-                <button class="btn btn-ghost btn-xs !uppercase" onclick="toggleAddCollForm()">✕ {{ _('cancel')}}</button>
+                <span class="font-semibold text-lg">{{ _('new watch') }}</span>
+                <button class="btn btn-ghost btn-xs" onclick="toggleAddCollForm()">✕ {{ _('cancel')}}</button>
             </div>
 
             <!-- Chrono24 Lookup -->
             <div class="mb-4">
-                <label class="label pb-1"><span class="label-text uppercase text-xs opacity-70">🔍 {{ _('search on chrono24') }}</span></label>
+                <label class="label pb-1"><span class="label-text text-xs opacity-70">🔍 {{ _('search on chrono24') }}</span></label>
                 <div class="relative">
                     <input type="text" id="nc-lookup-input"
                         placeholder="{{ _('type brand, model or reference…') }}"
@@ -54,39 +54,39 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="form-control">
-                    <label class="label"><span class="label-text uppercase">{{ _('brand') }} *</span></label>
+                    <label class="label"><span class="label-text">{{ _('brand') }} *</span></label>
                     <input type="text" id="nc-brand" placeholder="es. Omega" required
                         class="input input-bordered w-full">
                 </div>
                 <div class="form-control">
-                    <label class="label"><span class="label-text uppercase">{{ _('model') }} *</span></label>
+                    <label class="label"><span class="label-text">{{ _('model') }} *</span></label>
                     <input type="text" id="nc-model" placeholder="es. Seamaster" required
                         class="input input-bordered w-full">
                 </div>
                 <div class="form-control">
-                    <label class="label"><span class="label-text uppercase">{{ _('reference') }}</span></label>
+                    <label class="label"><span class="label-text">{{ _('reference') }}</span></label>
                     <input type="text" id="nc-ref" placeholder="es. 2531.80" class="input input-bordered w-full">
                 </div>
                 <div class="form-control">
-                    <label class="label"><span class="label-text uppercase">{{ _('year') }}</span></label>
+                    <label class="label"><span class="label-text">{{ _('year') }}</span></label>
                     <input type="number" id="nc-year" placeholder="es. 1998" min="1800" max="2099"
                         class="input input-bordered w-full">
                 </div>
                 <div class="form-control">
-                    <label class="label"><span class="label-text uppercase">{{ _('purchase date') }}</span></label>
+                    <label class="label"><span class="label-text">{{ _('purchase date') }}</span></label>
                     <input type="date" id="nc-acquired" class="input input-bordered w-full">
                 </div>
                 <div class="form-control">
-                    <label class="label"><span class="label-text uppercase">{{ _('purchase price') }} ({{ currency_symbol }})</span></label>
+                    <label class="label"><span class="label-text">{{ _('purchase price') }} ({{ currency_symbol }})</span></label>
                     <input type="number" step="0.01" id="nc-price" value="0" min="0"
                         class="input input-bordered w-full">
                 </div>
                 <div class="form-control">
-                    <label class="label"><span class="label-text uppercase">{{ _('sale date') }}</span></label>
+                    <label class="label"><span class="label-text">{{ _('sale date') }}</span></label>
                     <input type="date" id="nc-sold-date" class="input input-bordered w-full">
                 </div>
                 <div class="form-control">
-                    <label class="label"><span class="label-text uppercase">{{ _('sale price') }} ({{ currency_symbol }})</span></label>
+                    <label class="label"><span class="label-text">{{ _('sale price') }} ({{ currency_symbol }})</span></label>
                     <input type="number" step="0.01" id="nc-sold-price" value="0" min="0"
                         class="input input-bordered w-full">
                 </div>
@@ -94,42 +94,42 @@
                     <div class="flex items-center gap-3">
                         <input type="checkbox" id="nc-wishlist" value="1" class="hidden">
                         <button type="button" id="wishlist_btn" onclick="toggleNcWishlist()"
-                            class="btn transition-all duration-300 w-64 btn-success text-white !uppercase">
+                            class="btn transition-all duration-300 w-64 btn-success text-white">
                             <span id="wishlist_text">{{ _('add to wishlist') }}</span>
                         </button>
                     </div>
                 </div>
                 <div class="form-control md:col-span-2 lg:col-span-4">
-                    <label class="label"><span class="label-text uppercase">{{ _('notes') }}</span></label>
+                    <label class="label"><span class="label-text">{{ _('notes') }}</span></label>
                     <textarea id="nc-notes" rows="2" placeholder="{{ _('conditions, history…') }}"
                         class="textarea textarea-bordered w-full"></textarea>
                 </div>
             </div>
 
             <div class="mt-6 flex justify-end gap-2">
-                <button class="btn btn-ghost !uppercase" onclick="toggleAddCollForm()">{{ _('cancel') }}</button>
-                <button class="btn btn-primary !uppercase" onclick="ajaxAddCollection()">{{ _('add') }}</button>
+                <button class="btn btn-ghost" onclick="toggleAddCollForm()">{{ _('cancel') }}</button>
+                <button class="btn btn-primary" onclick="ajaxAddCollection()">{{ _('add') }}</button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Active watches -->
-<div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-8">
+<div class="card bg-base-100 border border-base-200 shadow-sm mb-8">
     <div class="card-body p-0">
-        <div class="font-bold p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 rounded-box uppercase">{{ _('in collection') }} ({{ active_count }})
+        <div class="font-semibold p-4 border-b border-base-200 bg-base-100 rounded-box">{{ _('in collection') }} ({{ active_count }})
         </div>
         <div class="overflow-x-auto">
             <table class="table w-full" id="coll-active-table">
                 <thead>
-                    <tr class="opacity-60">
+                    <tr class="text-base-content/60">
                         <th class="w-12"></th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="1">{{ _('watch') }}</th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase hidden md:table-cell" data-col="2">{{ _('acquired') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase hidden md:table-cell" data-col="3">{{ _('purchase price') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase hidden md:table-cell" data-col="4">{{ _('services') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase hidden md:table-cell" data-col="5">{{ _('total') }}</th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase hidden md:table-cell" data-col="6">{{ _('last log') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('watch') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="2">{{ _('acquired') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="3">{{ _('purchase price') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="4">{{ _('services') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="5">{{ _('total') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="6">{{ _('last log') }}</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -145,7 +145,7 @@
                         </td>
                         <td>
                             <div class="font-semibold">{{ w.brand }} {{ w.model }}</div>
-                            <div class="text-xs opacity-70">{{ w.reference or '' }}{% if w.year %} · {{ w.year }}{% endif %}</div>
+                            <div class="text-xs text-base-content/60">{{ w.reference or '' }}{% if w.year %} · {{ w.year }}{% endif %}</div>
                             {# Mobile summary #}
                             <div class="md:hidden flex flex-wrap gap-x-2 gap-y-0.5 mt-1 text-xs opacity-60">
                                 {% if w.acquired %}<span>{{ w.acquired | fmtdate(date_format) }}</span>{% endif %}
@@ -166,14 +166,14 @@
                         </td>
                         <td onclick="event.preventDefault(); event.stopPropagation();">
                             <div class="flex gap-1 md:gap-3 text-sm justify-end">
-                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="openCollInlineEdit({{ w.id }})"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg><span class="hidden sm:inline">{{ _('edit') }}</span></button>
-                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="deleteCollConfirm({{ w.id }}, this)"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg><span class="hidden sm:inline">{{ _('delete') }}</span></button>
+                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1" onclick="openCollInlineEdit({{ w.id }})"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg><span class="hidden sm:inline">{{ _('edit') }}</span></button>
+                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1" onclick="deleteCollConfirm({{ w.id }}, this)"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg><span class="hidden sm:inline">{{ _('delete') }}</span></button>
                             </div>
                         </td>
                     </tr>
                     {% else %}
                     <tr id="coll-active-empty">
-                        <td colspan="8" class="text-center py-8 opacity-50">{{ _('no watches in collection.') }}</td>
+                        <td colspan="8" class="text-center py-8 text-base-content/50">{{ _('no watches in collection.') }}</td>
                     </tr>
                     {% endfor %}
                     <!-- Shared collection inline edit row — moved by JS after the target row -->
@@ -182,44 +182,44 @@
                             <div class="edit-inner bg-base-200/70 border-y border-base-300/50 px-3 py-3">
                                 <div class="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:gap-3 md:items-end">
                                     <div class="form-control">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('brand') }} *</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('brand') }} *</span></label>
                                         <input id="ci-brand" type="text" class="input input-bordered input-sm w-full md:w-32">
                                     </div>
                                     <div class="form-control">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('model') }} *</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('model') }} *</span></label>
                                         <input id="ci-model" type="text" class="input input-bordered input-sm w-full md:w-32">
                                     </div>
                                     <div class="form-control">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('reference') }}</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('reference') }}</span></label>
                                         <input id="ci-ref" type="text" class="input input-bordered input-sm w-full md:w-28">
                                     </div>
                                     <div class="form-control">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('year') }}</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('year') }}</span></label>
                                         <input id="ci-year" type="number" min="1800" max="2099" class="input input-bordered input-sm w-full md:w-24">
                                     </div>
                                     <div class="form-control">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('purchase date') }}</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('purchase date') }}</span></label>
                                         <input id="ci-acquired" type="date" class="input input-bordered input-sm w-full">
                                     </div>
                                     <div class="form-control">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('purchase price') }} ({{ currency_symbol }})</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('purchase price') }} ({{ currency_symbol }})</span></label>
                                         <input id="ci-price" type="number" step="0.01" min="0" class="input input-bordered input-sm w-full md:w-28">
                                     </div>
                                     <div class="form-control">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('sale date') }}</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('sale date') }}</span></label>
                                         <input id="ci-sold-date" type="date" class="input input-bordered input-sm w-full">
                                     </div>
                                     <div class="form-control">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('sale price') }} ({{ currency_symbol }})</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('sale price') }} ({{ currency_symbol }})</span></label>
                                         <input id="ci-sold-price" type="number" step="0.01" min="0" class="input input-bordered input-sm w-full md:w-28">
                                     </div>
                                     <div class="form-control col-span-2 md:flex-1 md:min-w-44">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('notes') }}</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('notes') }}</span></label>
                                         <input id="ci-notes" type="text" class="input input-bordered input-sm w-full">
                                     </div>
                                     <div class="col-span-2 flex gap-2 md:col-auto md:pb-0.5">
-                                        <button class="btn btn-primary btn-sm uppercase flex-1 md:flex-none" onclick="saveCollInlineEdit()">{{ _('save') }}</button>
-                                        <button class="btn btn-ghost btn-sm uppercase" onclick="closeCollInlineEdit()">{{ _('cancel') }}</button>
+                                        <button class="btn btn-primary btn-sm flex-1 md:flex-none" onclick="saveCollInlineEdit()">{{ _('save') }}</button>
+                                        <button class="btn btn-ghost btn-sm" onclick="closeCollInlineEdit()">{{ _('cancel') }}</button>
                                     </div>
                                 </div>
                             </div>
@@ -232,13 +232,13 @@
 </div>
 
 <!-- {{ _('wishlist') }} -->
-<div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-8">
+<div class="card bg-base-100 border border-base-200 shadow-sm mb-8">
     <div class="card-body p-0">
-        <div class="font-bold p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 uppercase">{{ _('wishlist') }}</div>
+        <div class="font-semibold p-4 border-b border-base-200 bg-base-100">{{ _('wishlist') }}</div>
         <div class="overflow-x-auto">
             <table class="table w-full">
                 <thead>
-                    <tr class="uppercase opacity-60">
+                    <tr class="text-base-content/60">
                         <th class="w-12"></th>
                         <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('watch') }}</th>
                         <th class="hidden md:table-cell"></th>
@@ -260,7 +260,7 @@
                         </td>
                         <td>
                             <div class="font-semibold">{{ w.brand }} {{ w.model }}</div>
-                            <div class="text-xs opacity-70">{{ w.reference or '' }}</div>
+                            <div class="text-xs text-base-content/60">{{ w.reference or '' }}</div>
                             {# Mobile summary #}
                             <div class="md:hidden flex flex-wrap gap-x-2 gap-y-0.5 mt-1 text-xs opacity-60">
                                 {% if w.purchase_price > 0 %}<span class="tabular-nums">{{ currency_symbol }}{{ '{:,.0f}'.format(w.purchase_price) }}</span>{% endif %}
@@ -276,14 +276,14 @@
                         <td class="hidden md:table-cell"></td>
                         <td onclick="event.preventDefault(); event.stopPropagation();">
                             <div class="flex gap-1 md:gap-3 text-sm justify-end">
-                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="openWishlistInlineEdit({{ w.id }})"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg><span class="hidden sm:inline">{{ _('edit') }}</span></button>
-                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="deleteCollConfirm({{ w.id }}, this)"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg><span class="hidden sm:inline">{{ _('delete') }}</span></button>
+                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1" onclick="openWishlistInlineEdit({{ w.id }})"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg><span class="hidden sm:inline">{{ _('edit') }}</span></button>
+                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1" onclick="deleteCollConfirm({{ w.id }}, this)"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg><span class="hidden sm:inline">{{ _('delete') }}</span></button>
                             </div>
                         </td>
                     </tr>
                     {% else %}
                     <tr id="coll-wishlist-empty">
-                        <td colspan="8" class="text-center py-6 opacity-50">{{ _('no watches in wishlist.') }}</td>
+                        <td colspan="8" class="text-center py-6 text-base-content/50">{{ _('no watches in wishlist.') }}</td>
                     </tr>
                     {% endfor %}
                     <!-- Shared inline edit row — moved by JS after the target row -->
@@ -292,32 +292,32 @@
                             <div class="edit-inner bg-base-200/70 border-y border-base-300/50 px-3 py-3">
                                 <div class="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:gap-3 md:items-end">
                                     <div class="form-control">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('brand') }} *</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('brand') }} *</span></label>
                                         <input id="wl-edit-brand" type="text" class="input input-bordered input-sm w-full md:w-32">
                                     </div>
                                     <div class="form-control">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('model') }} *</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('model') }} *</span></label>
                                         <input id="wl-edit-model" type="text" class="input input-bordered input-sm w-full md:w-32">
                                     </div>
                                     <div class="form-control">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('reference') }}</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('reference') }}</span></label>
                                         <input id="wl-edit-ref" type="text" class="input input-bordered input-sm w-full md:w-28">
                                     </div>
                                     <div class="form-control">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('year') }}</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('year') }}</span></label>
                                         <input id="wl-edit-year" type="number" min="1800" max="2099" class="input input-bordered input-sm w-full md:w-24">
                                     </div>
                                     <div class="form-control">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('price') }} ({{ currency_symbol }})</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('price') }} ({{ currency_symbol }})</span></label>
                                         <input id="wl-edit-price" type="number" step="0.01" min="0" class="input input-bordered input-sm w-full md:w-28">
                                     </div>
                                     <div class="form-control col-span-2 md:flex-1 md:min-w-40">
-                                        <label class="label py-0.5"><span class="label-text text-xs uppercase font-semibold">{{ _('notes') }}</span></label>
+                                        <label class="label py-0.5"><span class="label-text text-xs font-semibold">{{ _('notes') }}</span></label>
                                         <input id="wl-edit-notes" type="text" class="input input-bordered input-sm w-full">
                                     </div>
                                     <div class="col-span-2 flex gap-2 md:col-auto md:pb-0.5">
-                                        <button class="btn btn-primary btn-sm uppercase flex-1 md:flex-none" onclick="saveWishlistInlineEdit()">{{ _('save') }}</button>
-                                        <button class="btn btn-ghost btn-sm uppercase" onclick="closeWishlistInlineEdit()">{{ _('cancel') }}</button>
+                                        <button class="btn btn-primary btn-sm flex-1 md:flex-none" onclick="saveWishlistInlineEdit()">{{ _('save') }}</button>
+                                        <button class="btn btn-ghost btn-sm" onclick="closeWishlistInlineEdit()">{{ _('cancel') }}</button>
                                     </div>
                                 </div>
                             </div>
@@ -331,13 +331,13 @@
 
 <!-- Sold watches -->
 {% if sold_watches %}
-<div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-8">
+<div class="card bg-base-100 border border-base-200 shadow-sm mb-8">
     <div class="card-body p-0">
-        <div class="font-bold p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 uppercase">{{ _('sold') }} ({{ sold_count_coll }})</div>
+        <div class="font-semibold p-4 border-b border-base-200 bg-base-100">{{ _('sold') }} ({{ sold_count_coll }})</div>
         <div class="overflow-x-auto">
             <table class="table w-full" id="coll-sold-table">
                 <thead>
-                    <tr class="uppercase opacity-60">
+                    <tr class="text-base-content/60">
                         <th class="w-12"></th>
                         <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('watch') }}</th>
                         <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="2">{{ _('sold on') }}</th>
@@ -375,8 +375,8 @@
                         <td class="hidden md:table-cell"></td>
                         <td onclick="event.preventDefault(); event.stopPropagation();">
                             <div class="flex gap-1 md:gap-3 text-sm justify-end">
-                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="openCollInlineEdit({{ w.id }})"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg><span class="hidden sm:inline">{{ _('edit') }}</span></button>
-                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="deleteCollConfirm({{ w.id }}, this)"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg><span class="hidden sm:inline">{{ _('delete') }}</span></button>
+                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1" onclick="openCollInlineEdit({{ w.id }})"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg><span class="hidden sm:inline">{{ _('edit') }}</span></button>
+                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1" onclick="deleteCollConfirm({{ w.id }}, this)"><svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg><span class="hidden sm:inline">{{ _('delete') }}</span></button>
                             </div>
                         </td>
                     </tr>
@@ -595,7 +595,7 @@
             if (tr) {
                 if (tr.cells[1]) tr.cells[1].innerHTML =
                     `<div class="font-semibold">${w.brand} ${w.model}</div>` +
-                    `<div class="text-xs opacity-70">${w.reference || ''}</div>`;
+                    `<div class="text-xs text-base-content/60">${w.reference || ''}</div>`;
                 if (tr.cells[3]) {
                     tr.cells[3].className = 'text-right';
                     tr.cells[3].innerHTML = w.purchase_price > 0

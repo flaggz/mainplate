@@ -1,6 +1,7 @@
 services:
   app:
     build: .
+    image: flaggz:latest
     container_name: mainplate
     ports:
       - "5000:5000"

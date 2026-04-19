@@ -1,13 +1,21 @@
 FROM python:3.12-slim
 WORKDIR /app
 
+LABEL org.opencontainers.image.title="Mainplate" \
+      org.opencontainers.image.description="Watch flip & collection tracker" \
+      org.opencontainers.image.source="https://github.com/flaggz/mainplate"
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Download Tailwind CLI for Linux (v4.2.2 — matches local binary)
+# TARGETARCH is set by `docker buildx` (amd64 / arm64 / arm); falls back to runtime detection.
+ARG TARGETARCH
 RUN python3 -c "\
 import urllib.request as r, platform, os; \
-arch = 'x64' if platform.machine() == 'x86_64' else 'arm64'; \
+arch_map = {'amd64': 'x64', 'arm64': 'arm64', 'arm': 'armv7'}; \
+arch = arch_map.get(os.environ.get('TARGETARCH', '')) \
+    or ('x64' if platform.machine() == 'x86_64' else 'arm64'); \
 r.urlretrieve(f'https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.2/tailwindcss-linux-{arch}', '/usr/local/bin/tailwindcss'); \
 os.chmod('/usr/local/bin/tailwindcss', 0o755)"
 
@@ -39,7 +47,8 @@ shutil.copy('/tmp/package/dist/apexcharts.min.js', '/app/static/js/apexcharts.mi
 # Rebuild CSS — Tailwind processes DaisyUI as a plugin (only used components + 2 themes)
 RUN tailwindcss -i static/css/input.css -o static/css/tailwind.css --minify
 
-RUN python -c "from app import init_db; init_db()"
+RUN DATA_DIR=/app/data python -c "from app import init_db; init_db()"
+RUN chmod +x /app/run.sh
 VOLUME ["/app/data"]
 EXPOSE 5000
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "--log-level", "warning", "--forwarded-allow-ips", "*", "app:app"]
+CMD ["/app/run.sh"]

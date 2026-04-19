@@ -2,21 +2,21 @@
 {% from 'macros.html' import cat_select with context %}
 {% block page_title %}{{ _('parts inventory') }}{% endblock %}
 {% block content %}
-<div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-8">
+<div class="card bg-base-100 border border-base-200 shadow-sm mb-8">
     <div class="card-body p-0">
-        <div class="flex justify-between items-center p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200">
-            <span class="font-bold uppercase">{{ _('parts inventory') }}</span>
-            <span class="opacity-70 text-xs" id="parts-total-label">{{ currency_symbol }}{{ '{:,.2f}'.format(parts_value) }} {{ _('total value') }}</span>
+        <div class="flex justify-between items-center p-4 border-b border-base-200 bg-base-100">
+            <span class="font-semibold">{{ _('parts inventory') }}</span>
+            <span class="text-base-content/60 text-xs" id="parts-total-label">{{ currency_symbol }}{{ '{:,.2f}'.format(parts_value) }} {{ _('total value') }}</span>
         </div>
         <div class="overflow-x-auto">
             <table class="table" id="parts-table">
                 <thead>
-                    <tr class="opacity-60">
-                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="0">{{ _('part') }}</th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase hidden md:table-cell" data-col="1">{{ _('category') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase hidden md:table-cell" data-col="2">{{ _('qty') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase hidden md:table-cell" data-col="3">{{ _('value') }}</th>
-                        <th class="text-right uppercase">{{ _('actions') }}</th>
+                    <tr class="text-base-content/60">
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('part') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="1">{{ _('category') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="2">{{ _('qty') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="3">{{ _('value') }}</th>
+                        <th class="text-right">{{ _('actions') }}</th>
                     </tr>
                 </thead>
                 <tbody id="parts-tbody">
@@ -25,7 +25,7 @@
                         <td>
                             {{ p.name }}
                             {# Mobile summary #}
-                            <div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs opacity-60">
+                            <div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs text-base-content/60">
                                 {% if p.category %}<span class="badge badge-xs badge-outline">{{ p.category }}</span>{% endif %}
                                 <span>× {{ p.quantity }}</span>
                                 <span class="tabular-nums font-semibold">{{ currency_symbol }}{{ '{:,.2f}'.format(p.value) }}</span>
@@ -38,11 +38,11 @@
                         <td class="text-right hidden md:table-cell">{{ currency_symbol }}{{ '{:,.2f}'.format(p.value) }}</td>
                         <td>
                             <div class="flex gap-1 md:gap-3 justify-end text-sm">
-                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="toggleEditRow('part',{{ p.id }})">
+                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1" onclick="toggleEditRow('part',{{ p.id }})">
                                     <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>
                                     <span class="hidden sm:inline">{{ _('edit') }}</span>
                                 </button>
-                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="ajaxDelete('part',{{ p.id }},this)">
+                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1" onclick="ajaxDelete('part',{{ p.id }},this)">
                                     <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>
                                     <span class="hidden sm:inline">{{ _('delete') }}</span>
                                 </button>
@@ -66,7 +66,7 @@
                     </tr>
                     {% endfor %}
                 </tbody>
-                <tfoot class="bg-gradient-to-r from-base-200/60 to-base-100/30">
+                <tfoot class="bg-base-200/40">
                     <tr class="add-row">
                         <td colspan="5" class="p-2">
                             <div class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:gap-2">
@@ -85,22 +85,22 @@
 </div>
 
 {% if log_parts %}
-<div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-8">
+<div class="card bg-base-100 border border-base-200 shadow-sm mb-8">
     <div class="card-body p-0">
         <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200">
-            <span class="font-bold uppercase">{{ _('parts from flip logs') }}</span>
-            <span class="opacity-70 text-xs">{{ _('added automatically from expense logs') }}</span>
+            class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b border-base-200 bg-base-100">
+            <span class="font-semibold">{{ _('parts from flip logs') }}</span>
+            <span class="text-base-content/60 text-xs">{{ _('added automatically from expense logs') }}</span>
         </div>
         <div class="overflow-x-auto">
             <table class="table">
                 <thead>
-                    <tr class="opacity-60">
-                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="0">{{ _('part') }}</th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase hidden md:table-cell" data-col="1">{{ _('category') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase hidden md:table-cell" data-col="2">{{ _('qty') }}</th>
-                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right uppercase hidden md:table-cell" data-col="3">{{ _('total cost') }}</th>
-                        <th class="sortable-th cursor-pointer hover:bg-base-200 uppercase" data-col="4">{{ _('flip') }}</th>
+                    <tr class="text-base-content/60">
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="0">{{ _('part') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="1">{{ _('category') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="2">{{ _('qty') }}</th>
+                        <th class="sortable-th num cursor-pointer hover:bg-base-200 text-right hidden md:table-cell" data-col="3">{{ _('total cost') }}</th>
+                        <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="4">{{ _('flip') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -108,7 +108,7 @@
                     <tr class="hover">
                         <td>
                             {{ p.name }}
-                            <div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs opacity-60">
+                            <div class="md:hidden flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs text-base-content/60">
                                 {% if p.category %}<span class="badge badge-xs badge-outline">{{ p.category }}</span>{% endif %}
                                 <span>× {{ p.qty }}</span>
                                 <span class="tabular-nums font-semibold">{{ currency_symbol }}{{ '{:,.2f}'.format(p.total_cost) }}</span>

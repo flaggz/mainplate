@@ -1,7 +1,7 @@
 ﻿{% extends 'base.html' %}
 {% from 'macros.html' import cat_select with context %}
 {% block breadcrumb %}<a href="{{ url_for('flips') }}" class="link">{{ _('flips') }}</a> <span
-    class="opacity-50 mx-2">/</span>{%
+    class="text-base-content/50 mx-2">/</span>{%
 endblock %}
 {% block page_title %}{{ flip.brand }} {{ flip.model }}{% endblock %}
 {% block page_actions %}
@@ -31,7 +31,7 @@ endblock %}
                 <div class="flex flex-wrap items-start gap-2.5 mb-5">
                     {% if flip.status %}
                     <div class="flex flex-col gap-px px-3.5 py-1.5 rounded-xl bg-base-200/70 border border-base-300/60">
-                        <span class="text-[9px] uppercase tracking-widest opacity-40 font-semibold leading-none">{{
+                        <span class="text-[9px] uppercase tracking-widest text-base-content/40 font-semibold leading-none">{{
                             _('status')}}</span>
                         <span class="text-sm font-bold font-mono leading-tight mt-0.5">{{ flip.status }}</span>
                     </div>
@@ -39,7 +39,7 @@ endblock %}
 
                     {% if flip.reference %}
                     <div class="flex flex-col gap-px px-3.5 py-1.5 rounded-xl bg-base-200/70 border border-base-300/60">
-                        <span class="text-[9px] uppercase tracking-widest opacity-40 font-semibold leading-none">{{
+                        <span class="text-[9px] uppercase tracking-widest text-base-content/40 font-semibold leading-none">{{
                             _('reference') }}</span>
                         <span class="text-sm font-bold leading-tight mt-0.5">{{ flip.reference }}</span>
                     </div>
@@ -47,7 +47,7 @@ endblock %}
 
                     {% if flip.year %}
                     <div class="flex flex-col gap-px px-3.5 py-1.5 rounded-xl bg-base-200/70 border border-base-300/60">
-                        <span class="text-[9px] uppercase tracking-widest opacity-40 font-semibold leading-none">{{
+                        <span class="text-[9px] uppercase tracking-widest text-base-content/40 font-semibold leading-none">{{
                             _('year') }}</span>
                         <span class="text-sm font-bold leading-tight mt-0.5">{{ flip.year }}</span>
                     </div>
@@ -55,7 +55,7 @@ endblock %}
 
                     {% if flip.acquired %}
                     <div class="flex flex-col gap-px px-3.5 py-1.5 rounded-xl bg-base-200/70 border border-base-300/60">
-                        <span class="text-[9px] uppercase tracking-widest opacity-40 font-semibold leading-none">{{
+                        <span class="text-[9px] uppercase tracking-widest text-base-content/40 font-semibold leading-none">{{
                             _('acquired on') }}</span>
                         <span class="text-sm font-bold leading-tight mt-0.5">{{ flip.acquired | fmtdate(date_format)
                             }}</span>
@@ -67,16 +67,16 @@ endblock %}
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                 <div
-                    class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
+                    class="card bg-base-100 border border-base-200 shadow-sm">
                     <div class="card-body p-4 text-center">
-                        <div class="text-xs opacity-70 font-bold uppercase">{{ _('paid') }}</div>
+                        <div class="text-xs text-base-content/60 font-medium">{{ _('paid') }}</div>
                         <div class="text-xl font-bold">{{ currency_symbol }}{{ '{:,.2f}'.format(flip.paid) }}</div>
                     </div>
                 </div>
                 <div
-                    class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
+                    class="card bg-base-100 border border-base-200 shadow-sm">
                     <div class="card-body p-4 text-center">
-                        <div class="text-xs opacity-70 font-bold uppercase">{{ _('log expenses') }}</div>
+                        <div class="text-xs text-base-content/60 font-medium">{{ _('log expenses') }}</div>
                         <div class="text-xl font-bold {% if log_cost > 0 %}text-error{% endif %}">{{ currency_symbol
                             }}{{ '{:,.2f}'.format(log_cost)
                             }}
@@ -84,40 +84,40 @@ endblock %}
                     </div>
                 </div>
                 <div
-                    class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
+                    class="card bg-base-100 border border-base-200 shadow-sm">
                     <div class="card-body p-4 text-center">
-                        <div class="text-xs opacity-70 font-bold uppercase">{{ _('labor') }}</div>
+                        <div class="text-xs text-base-content/60 font-medium">{{ _('labor') }}</div>
                         <div class="text-xl font-bold {% if labor_cost > 0 %}text-error{% endif %}">{{ currency_symbol
                             }}{{
                             '{:,.2f}'.format(labor_cost)
                             }}</div>
-                        <div class="text-xs opacity-60">{{ '{:.1f}'.format(flip.hours) }}h × {{ currency_symbol }}{{
+                        <div class="text-xs text-base-content/50">{{ '{:.1f}'.format(flip.hours) }}h × {{ currency_symbol }}{{
                             '{:.0f}'.format(hourly_rate)
                             }}/h
                         </div>
                     </div>
                 </div>
                 <div
-                    class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
+                    class="card bg-base-100 border border-base-200 shadow-sm">
                     <div class="card-body p-4 text-center">
-                        <div class="text-xs opacity-70 font-bold uppercase">{{ _('total cost') }}</div>
+                        <div class="text-xs text-base-content/60 font-medium">{{ _('total cost') }}</div>
                         <div class="text-xl font-bold">{{ currency_symbol }}{{ '{:,.2f}'.format(total_cost) }}</div>
-                        <div class="text-xs opacity-60">{{ _('acq + parts + lab.') }}</div>
+                        <div class="text-xs text-base-content/50">{{ _('acq + parts + lab.') }}</div>
                     </div>
                 </div>
                 <div
-                    class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
+                    class="card bg-base-100 border border-base-200 shadow-sm">
                     <div class="card-body p-4 text-center">
-                        <div class="text-xs opacity-70 font-bold uppercase">{{ _('sold') }}</div>
+                        <div class="text-xs text-base-content/60 font-medium">{{ _('sold') }}</div>
                         {% if flip.sold > 0 %}<div class="text-xl font-bold">{{ currency_symbol }}{{
                             '{:,.2f}'.format(flip.sold) }}</div>
                         {% else %}<div class="text-xl font-bold opacity-50">—</div>{% endif %}
                     </div>
                 </div>
                 <div
-                    class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
+                    class="card bg-base-100 border border-base-200 shadow-sm">
                     <div class="card-body p-4 text-center">
-                        <div class="text-xs opacity-70 font-bold uppercase">{{ _('profit / roi') }}</div>
+                        <div class="text-xs text-base-content/60 font-medium">{{ _('profit / roi') }}</div>
                         {% if profit is not none %}
                         <div class="text-xl font-bold {{ 'text-success' if profit >= 0 else 'text-error' }}">{{
                             currency_symbol }}{{
@@ -133,12 +133,12 @@ endblock %}
     </div>{# end 2-col grid #}
 
     <div
-        class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-6">
+        class="card bg-base-100 border border-base-200 shadow-sm mb-6">
         <div class="card-body p-0">
             <div
-                class="font-bold p-3 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 text-sm flex items-center justify-between">
+                class="font-semibold p-3 border-b border-base-200 bg-base-100 text-sm flex items-center justify-between">
                 <span class="uppercase">{{ _('photos') }}</span>
-                <label class="btn btn-ghost btn-xs cursor-pointer uppercase">
+                <label class="btn btn-ghost btn-xs cursor-pointer">
                     <input type="file" id="img-file-input" accept="image/*" multiple class="hidden">
                     + {{ _('add') }}
                 </label>
@@ -150,15 +150,15 @@ endblock %}
     </div>
 
     {# ── TIMEGRAPHER ─────────────────────────────────────────── #}
-    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-6">
+    <div class="card bg-base-100 border border-base-200 shadow-sm mb-6">
         <div class="card-body p-0">
-            <div class="font-bold p-3 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 text-sm flex items-center justify-between">
+            <div class="font-semibold p-3 border-b border-base-200 bg-base-100 text-sm flex items-center justify-between">
                 <span class="uppercase">{{ _('timegrapher') }}</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="table text-sm" id="tg-table">
                     <thead>
-                        <tr class="uppercase opacity-60 text-xs">
+                        <tr class="text-base-content/60 text-xs">
                             <th>{{ _('date') }}</th>
                             <th class="text-right font-mono hidden md:table-cell">DU</th>
                             <th class="text-right font-mono hidden md:table-cell">DD</th>
@@ -174,7 +174,7 @@ endblock %}
                     </thead>
                     <tbody id="tg-tbody">
                         {% if not tg_readings %}
-                        <tr id="tg-empty-row"><td colspan="11" class="text-center opacity-40 py-6">{{ _('no timegrapher readings.') }}</td></tr>
+                        <tr id="tg-empty-row"><td colspan="11" class="text-center text-base-content/40 py-6">{{ _('no timegrapher readings.') }}</td></tr>
                         {% endif %}
                         {% for r in tg_readings %}
                         <tr id="tg-row-{{ r.id }}" class="data-row hover"
@@ -206,12 +206,12 @@ endblock %}
                             <td class="text-right font-bold font-mono {{ r.delta_class }}">{% if r.delta is not none %}{{ '{:.1f}'.format(r.delta) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
                             <td>
                                 <div class="flex gap-2 justify-end">
-                                    <button class="btn btn-primary btn-outline btn-sm gap-1 uppercase" onclick="toggleTgEdit({{ r.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <button class="btn btn-primary btn-outline btn-sm gap-1" onclick="toggleTgEdit({{ r.id }})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="M9 2c0 7 3 9 3 15"></path>
                                         <path d="M15 2c0 7-3 9-3 15"></path>
                                         <line x1="8" y1="7" x2="16" y2="7"></line>
                                     </svg>{{ _('edit') }}</button>
-                                    <button class="btn btn-error btn-outline btn-sm gap-1 uppercase" onclick="deleteTgConfirm({{ r.id }}, {{ flip.id }}, this)"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <button class="btn btn-error btn-outline btn-sm gap-1" onclick="deleteTgConfirm({{ r.id }}, {{ flip.id }}, this)"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <circle cx="10" cy="12" r="8"></circle>
                                         <path d="M18 12h4M20 10v4"></path>
                                         <line x1="7" y1="9" x2="13" y2="15"></line>
@@ -224,21 +224,21 @@ endblock %}
                             <td colspan="11" class="p-3">
                                 <form class="flex flex-wrap gap-2 items-end" onsubmit="submitTgEdit(event, {{ r.id }}, {{ flip.id }})">
                                     <div class="flex flex-col gap-0.5">
-                                        <span class="text-[9px] uppercase opacity-40">{{ _('date') }}</span>
+                                        <span class="text-[9px] uppercase text-base-content/40">{{ _('date') }}</span>
                                         <input type="date" name="reading_date" value="{{ r.reading_date }}" class="input input-bordered input-sm w-36">
                                     </div>
                                     {% for pos, key in [('DU','du'),('DD','dd'),('3U','p3'),('6U','p6'),('9U','p9'),('12U','p12')] %}
                                     <div class="flex flex-col gap-0.5">
-                                        <span class="text-[9px] uppercase opacity-40">{{ pos }}</span>
+                                        <span class="text-[9px] uppercase text-base-content/40">{{ pos }}</span>
                                         <input type="number" step="0.1" name="{{ key }}" value="{{ r[key] if r[key] is not none else '' }}" placeholder="—" class="input input-bordered input-sm w-16 text-right font-mono">
                                     </div>
                                     {% endfor %}
                                     <div class="flex flex-col gap-0.5">
-                                        <span class="text-[9px] uppercase opacity-40">Amp °</span>
+                                        <span class="text-[9px] uppercase text-base-content/40">Amp °</span>
                                         <input type="number" step="1" name="amplitude" value="{{ r.amplitude if r.amplitude is not none else '' }}" placeholder="—" class="input input-bordered input-sm w-16 text-right">
                                     </div>
                                     <div class="flex flex-col gap-0.5">
-                                        <span class="text-[9px] uppercase opacity-40">BE ms</span>
+                                        <span class="text-[9px] uppercase text-base-content/40">BE ms</span>
                                         <input type="number" step="0.1" name="beat_error" value="{{ r.beat_error if r.beat_error is not none else '' }}" placeholder="—" class="input input-bordered input-sm w-16 text-right">
                                     </div>
                                     <div class="flex gap-2 pt-3.5">
@@ -250,7 +250,7 @@ endblock %}
                         </tr>
                         {% endfor %}
                     </tbody>
-                    <tfoot class="bg-gradient-to-r from-base-200/60 to-base-100/30">
+                    <tfoot class="bg-base-200/40">
                         <tr>
                             <td colspan="11" class="p-2">
                                 <div class="flex flex-col gap-2 md:flex-row md:items-center md:gap-1">
@@ -264,7 +264,7 @@ endblock %}
                                         <input type="number" step="1" id="tg-amp" placeholder="Amp°" class="input input-bordered input-sm w-full md:w-16 text-right">
                                         <input type="number" step="0.1" id="tg-be" placeholder="BE ms" class="input input-bordered input-sm w-full md:w-16 text-right">
                                     </div>
-                                    <button class="btn btn-primary btn-sm !uppercase" onclick="addTgReading({{ flip.id }})">+ {{ _('add') }}</button>
+                                    <button class="btn btn-primary btn-sm" onclick="addTgReading({{ flip.id }})">+ {{ _('add') }}</button>
                                 </div>
                             </td>
                         </tr>
@@ -277,10 +277,10 @@ endblock %}
 
     {% if flip.notes %}
     <div
-        class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-8">
+        class="card bg-base-100 border border-base-200 shadow-sm mb-8">
         <div class="card-body p-0">
             <div
-                class="font-bold p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 uppercase">
+                class="font-semibold p-4 border-b border-base-200 bg-base-100">
                 {{ _('notes') }}</div>
             <div class="p-4 whitespace-pre-wrap">{{ flip.notes }}</div>
         </div>
@@ -290,33 +290,33 @@ endblock %}
 
 <div id="flip-edit" class="hidden mb-8 max-w-4xl">
     <div
-        class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
+        class="card bg-base-100 border border-base-200 shadow-sm">
         <div class="card-body">
             <h3 class="card-title text-base border-b border-base-200 pb-2 mb-4">{{ _('edit flip') }}</h3>
             <form method="post" action="{{ url_for('flip_detail', fid=flip.id) }}">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="form-control">
-                        <label class="label"><span class="label-text uppercase">{{ _('brand') }}</span></label>
+                        <label class="label"><span class="label-text">{{ _('brand') }}</span></label>
                         <input type="text" name="brand" value="{{ flip.brand }}" class="input input-bordered w-full"
                             required>
                     </div>
                     <div class="form-control">
-                        <label class="label"><span class="label-text uppercase">{{ _('model') }}</span></label>
+                        <label class="label"><span class="label-text">{{ _('model') }}</span></label>
                         <input type="text" name="model" value="{{ flip.model }}" class="input input-bordered w-full"
                             required>
                     </div>
                     <div class="form-control">
-                        <label class="label"><span class="label-text uppercase">{{ _('reference') }}</span></label>
+                        <label class="label"><span class="label-text">{{ _('reference') }}</span></label>
                         <input type="text" name="reference" value="{{ flip.reference or '' }}"
                             class="input input-bordered w-full">
                     </div>
                     <div class="form-control">
-                        <label class="label"><span class="label-text uppercase">{{ _('year') }}</span></label>
+                        <label class="label"><span class="label-text">{{ _('year') }}</span></label>
                         <input type="number" name="year" value="{{ flip.year or '' }}"
                             class="input input-bordered w-full">
                     </div>
                     <div class="form-control">
-                        <label class="label"><span class="label-text uppercase">{{ _('status') }}</span></label>
+                        <label class="label"><span class="label-text">{{ _('status') }}</span></label>
                         <select name="status" class="select select-bordered w-full">
                             <option value="Acquired" {% if flip.status=='Acquired' %}selected{% endif %}>{{
                                 _('acquired') }}</option>
@@ -329,29 +329,29 @@ endblock %}
                         </select>
                     </div>
                     <div class="form-control">
-                        <label class="label"><span class="label-text uppercase">{{ _('paid') }} ({{ currency_symbol
+                        <label class="label"><span class="label-text">{{ _('paid') }} ({{ currency_symbol
                                 }})</span></label>
                         <input type="number" step="0.01" name="paid" value="{{ flip.paid }}"
                             class="input input-bordered w-full">
                     </div>
                     <div class="form-control">
-                        <label class="label"><span class="label-text uppercase">{{ _('sold') }} ({{ currency_symbol
+                        <label class="label"><span class="label-text">{{ _('sold') }} ({{ currency_symbol
                                 }})</span></label>
                         <input type="number" step="0.01" name="sold" value="{{ flip.sold }}"
                             class="input input-bordered w-full">
                     </div>
                     <div class="form-control">
-                        <label class="label"><span class="label-text uppercase">{{ _('hours worked') }}</span></label>
+                        <label class="label"><span class="label-text">{{ _('hours worked') }}</span></label>
                         <input type="number" step="0.5" name="hours" value="{{ flip.hours }}"
                             class="input input-bordered w-full">
                     </div>
                     <div class="form-control md:col-span-2">
-                        <label class="label"><span class="label-text uppercase">{{ _('notes') }}</span></label>
+                        <label class="label"><span class="label-text">{{ _('notes') }}</span></label>
                         <textarea name="notes" class="textarea textarea-bordered w-full"
                             rows="3">{{ flip.notes or '' }}</textarea>
                     </div>
                 </div>
-                <div class="flex justify-end gap-2 mt-6 uppercase">
+                <div class="flex justify-end gap-2 mt-6">
                     <button type="button" class="btn btn-ghost" onclick="toggleFlipEdit()">{{ _('cancel') }}</button>
                     <button type="submit" class="btn btn-primary">{{ _('save changes') }}</button>
                 </div>
@@ -361,15 +361,15 @@ endblock %}
 </div>
 
 <div
-    class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-8">
+    class="card bg-base-100 border border-base-200 shadow-sm mb-8">
     <div class="card-body p-0">
         <div
-            class="font-bold p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 uppercase">
+            class="font-semibold p-4 border-b border-base-200 bg-base-100">
             {{ _('expense & service log') }}</div>
         <div class="overflow-x-auto">
             <table class="table" id="log-table">
                 <thead>
-                    <tr class="uppercase opacity-60">
+                    <tr class="text-base-content/60">
                         <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="0">{{ _('date') }}</th>
                         <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('description') }}</th>
                         <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="2">{{ _('category') }}</th>
@@ -400,11 +400,11 @@ endblock %}
                         <td class="text-center hidden md:table-cell">{% if e.add_to_inventory %}<span class="text-success font-bold">✓</span>{% else %}<span class="opacity-50">—</span>{% endif %}</td>
                         <td>
                             <div class="flex gap-1 md:gap-3 justify-end text-sm">
-                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 !uppercase" onclick="toggleLogEdit('flip',{{ e.id }})">
+                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1" onclick="toggleLogEdit('flip',{{ e.id }})">
                                     <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>
                                     <span class="hidden sm:inline">{{ _('edit') }}</span>
                                 </button>
-                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 !uppercase" onclick="deleteFlipLogConfirm({{ e.id }},{{ flip.id }},this)">
+                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1" onclick="deleteFlipLogConfirm({{ e.id }},{{ flip.id }},this)">
                                     <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>
                                     <span class="hidden sm:inline">{{ _('delete') }}</span>
                                 </button>
@@ -432,7 +432,7 @@ endblock %}
                     </tr>
                     {% endfor %}
                 </tbody>
-                <tfoot class="bg-gradient-to-r from-base-200/60 to-base-100/30">
+                <tfoot class="bg-base-200/40">
                     <tr class="add-row">
                         <td colspan="6" class="p-2">
                             <div class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:gap-2">
@@ -444,7 +444,7 @@ endblock %}
                                     <input type="checkbox" id="log-inv" class="checkbox checkbox-sm">
                                     <span class="label-text text-xs md:hidden">{{ _('inv.') }}</span>
                                 </label>
-                                <button class="col-span-2 md:col-auto btn btn-primary btn-sm !uppercase" onclick="addFlipLog({{ flip.id }})">+ {{ _('add') }}</button>
+                                <button class="col-span-2 md:col-auto btn btn-primary btn-sm" onclick="addFlipLog({{ flip.id }})">+ {{ _('add') }}</button>
                             </div>
                         </td>
                     </tr>
@@ -452,7 +452,7 @@ endblock %}
             </table>
         </div>
         <div
-            class="p-4 bg-gradient-to-r from-base-200/50 to-base-100/20 border-t border-base-200/60 text-right text-sm capitalize">
+            class="p-4 bg-base-200/30 border-t border-base-200 text-right text-sm capitalize">
             {{ _('expenses') }}: <strong id="log-cost-total">{{ currency_symbol }}{{ '{:,.2f}'.format(log_cost)
                 }}</strong> —
             {{ _('total cost') }}: <strong id="total-cost-val" class="text-primary">{{ currency_symbol }}{{

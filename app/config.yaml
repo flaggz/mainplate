@@ -1,0 +1,22 @@
+name: "Mainplate"
+description: "Watch flip & collection tracker — self-hosted, no external dependencies."
+version: "1.2.0"
+slug: "mainplate"
+init: false
+arch:
+  - aarch64
+  - amd64
+
+
+image: "flaggz/mainplate"
+
+ports:
+  5000/tcp: 5000
+ports_description:
+  5000/tcp: "Mainplate web interface"
+
+map:
+  - data:rw
+
+options: {}
+schema: {}

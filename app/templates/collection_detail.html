@@ -1,14 +1,14 @@
 ﻿{% extends 'base.html' %}
 {% from 'macros.html' import cat_select with context %}
 {% block breadcrumb %}<a href="{{ url_for('collection') }}" class="link">{{ _('collection') }}</a> <span
-    class="opacity-50 mx-2">/</span>{% endblock %}
+    class="text-base-content/50 mx-2">/</span>{% endblock %}
 {% block page_title %}{{ watch.brand }} {{ watch.model }}{% endblock %}
 {% block page_actions %}
 <div class="flex gap-2">
-    <a href="{{ url_for('edit_collection', wid=watch.id) }}" class="btn btn-outline btn-sm uppercase">{{ _('edit') }}</a>
+    <a href="{{ url_for('edit_collection', wid=watch.id) }}" class="btn btn-outline btn-sm">{{ _('edit') }}</a>
     <form method="post" action="{{ url_for('delete_collection', wid=watch.id) }}"
         onsubmit="return confirm('{{ _('?') }}')">
-        <button type="submit" class="btn btn-error btn-sm uppercase">{{ _('delete') }}</button>
+        <button type="submit" class="btn btn-error btn-sm">{{ _('delete') }}</button>
     </form>
 </div>
 {% endblock %}
@@ -21,7 +21,7 @@
     <div>
         <div id="img-hero-wrap" class="mb-3">
             {% if images %}
-                <img class="aspect-square w-full object-cover object-center rounded-2xl cursor-pointer shadow-2xl shadow-black/[.12]" src="{{ images[0].url }}" alt=""
+                <img class="aspect-square w-full object-cover object-center rounded-2xl cursor-pointer shadow-lg" src="{{ images[0].url }}" alt=""
                      onclick="openLightbox(ImageManager.getImages(), 0)">
             {% else %}
                 <div class="aspect-square w-full flex items-center justify-center bg-base-200 rounded-2xl text-base-content/30 text-5xl">&#x1F4F7;</div>
@@ -33,21 +33,21 @@
         <div class="flex flex-wrap items-start gap-2.5 mb-5">
             {% if watch.reference %}
             <div class="flex flex-col gap-px px-3.5 py-1.5 rounded-xl bg-base-200/70 border border-base-300/60">
-                <span class="text-[9px] uppercase tracking-widest opacity-40 font-semibold leading-none">Ref.</span>
+                <span class="text-[9px] uppercase tracking-widest text-base-content/40 font-semibold leading-none">Ref.</span>
                 <span class="text-sm font-bold font-mono leading-tight mt-0.5">{{ watch.reference }}</span>
             </div>
             {% endif %}
 
             {% if watch.year %}
             <div class="flex flex-col gap-px px-3.5 py-1.5 rounded-xl bg-base-200/70 border border-base-300/60">
-                <span class="text-[9px] uppercase tracking-widest opacity-40 font-semibold leading-none">{{ _('year') }}</span>
+                <span class="text-[9px] uppercase tracking-widest text-base-content/40 font-semibold leading-none">{{ _('year') }}</span>
                 <span class="text-sm font-bold leading-tight mt-0.5">{{ watch.year }}</span>
             </div>
             {% endif %}
 
             {% if watch.acquired %}
             <div class="flex flex-col gap-px px-3.5 py-1.5 rounded-xl bg-base-200/70 border border-base-300/60">
-                <span class="text-[9px] uppercase tracking-widest opacity-40 font-semibold leading-none">{{ _('acquired') }}</span>
+                <span class="text-[9px] uppercase tracking-widest text-base-content/40 font-semibold leading-none">{{ _('acquired') }}</span>
                 <span class="text-sm font-bold leading-tight mt-0.5">{{ watch.acquired | fmtdate(date_format) }}</span>
             </div>
             {% endif %}
@@ -61,30 +61,30 @@
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-4">
-    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
         <div class="card-body p-4 text-center">
-            <div class="text-xs opacity-70 font-bold uppercase">{{ _('purchase price')}}</div>
+            <div class="text-xs text-base-content/60 font-medium">{{ _('purchase price')}}</div>
             <div class="text-xl font-bold">{{ currency_symbol }}{{ '{:,.2f}'.format(watch.purchase_price or 0) }}</div>
         </div>
     </div>
-    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
         <div class="card-body p-4 text-center">
-            <div class="text-xs opacity-70 font-bold uppercase">{{ _('service cost')}}</div>
+            <div class="text-xs text-base-content/60 font-medium">{{ _('service cost')}}</div>
             <div class="text-xl font-bold {% if service_cost > 0 %}text-error{% endif %}">{{ currency_symbol }}{{
                 '{:,.2f}'.format(service_cost) }}</div>
-            <div class="text-xs opacity-60">{{ _('revisions, parts...') }}</div>
+            <div class="text-xs text-base-content/50">{{ _('revisions, parts...') }}</div>
         </div>
     </div>
-    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
         <div class="card-body p-4 text-center">
-            <div class="text-xs opacity-70 font-bold uppercase">{{ _('total cost')}}</div>
+            <div class="text-xs text-base-content/60 font-medium">{{ _('total cost')}}</div>
             <div class="text-xl font-bold">{{ currency_symbol }}{{ '{:,.2f}'.format(total_cost) }}</div>
         </div>
     </div>
     {% if is_sold %}
-    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] lg:col-span-2">
+    <div class="card bg-base-100 border border-base-200 shadow-sm lg:col-span-2">
         <div class="card-body p-4 text-center">
-            <div class="text-xs opacity-70 font-bold uppercase">{{ _('sold')}} / {{ _('profit')}}</div>
+            <div class="text-xs text-base-content/60 font-medium">{{ _('sold')}} / {{ _('profit')}}</div>
             <div class="text-xl font-bold">{{ currency_symbol }}{{ '{:,.2f}'.format(watch.sold_price) }}</div>
             <div class="text-xs font-bold {{ 'text-success' if gain >= 0 else 'text-error' }}">
                 {% if gain is not none %}{{ currency_symbol }}{{ '{:,.2f}'.format(gain) }} ({{ '{:.1f}'.format(gain/total_cost*100 if
@@ -93,9 +93,9 @@
         </div>
     </div>
     {% else %}
-    <div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06]">
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
         <div class="card-body p-4 text-center">
-            <div class="text-xs opacity-70 font-bold uppercase">{{ _('services')}}</div>
+            <div class="text-xs text-base-content/60 font-medium">{{ _('services')}}</div>
             <div class="text-xl font-bold">{{ logs|length }}</div>
         </div>
     </div>
@@ -104,12 +104,12 @@
     </div>{# end right col #}
 </div>{# end 2-col grid #}
 
-<div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-6">
+<div class="card bg-base-100 border border-base-200 shadow-sm mb-6">
     <div class="card-body p-0">
-        <div class="font-bold p-3 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 text-sm flex items-center justify-between">
+        <div class="font-semibold p-3 border-b border-base-200 bg-base-100 text-sm flex items-center justify-between">
             <span class="uppercase">{{ _('photos') }}</span>
             <label class="btn btn-ghost btn-xs cursor-pointer">
-                <input type="file" id="img-file-input" accept="image/*" multiple class="hidden uppercase">
+                <input type="file" id="img-file-input" accept="image/*" multiple class="hidden">
                 + {{ _('add') }}
             </label>
         </div>
@@ -120,21 +120,21 @@
 </div>
 
 {% if watch.notes %}
-<div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-8 w-fit min-w-[50%]">
+<div class="card bg-base-100 border border-base-200 shadow-sm mb-8 w-fit min-w-[50%]">
     <div class="card-body p-0">
-        <div class="font-bold p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 uppercase">{{ _('notes')}}</div>
+        <div class="font-semibold p-4 border-b border-base-200 bg-base-100">{{ _('notes')}}</div>
         <div class="p-4 whitespace-pre-wrap">{{ watch.notes }}</div>
     </div>
 </div>
 {% endif %}
 
-<div class="card bg-gradient-to-b from-base-100 to-base-200/30 border border-base-200/60 shadow-xl shadow-black/[.06] mb-8">
+<div class="card bg-base-100 border border-base-200 shadow-sm mb-8">
     <div class="card-body p-0">
-        <div class="font-bold p-4 border-b border-base-200/60 bg-gradient-to-b from-base-100 via-base-100 via-80% to-base-200 uppercase">{{ _('log expenses')}}</div>
+        <div class="font-semibold p-4 border-b border-base-200 bg-base-100">{{ _('log expenses')}}</div>
         <div class="overflow-x-auto">
             <table class="table" id="clog-table">
                 <thead>
-                    <tr class="uppercase opacity-60">
+                    <tr class="text-base-content/60">
                         <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="0">{{ _('date')}}</th>
                         <th class="sortable-th cursor-pointer hover:bg-base-200" data-col="1">{{ _('description')}}</th>
                         <th class="sortable-th cursor-pointer hover:bg-base-200 hidden md:table-cell" data-col="2">{{ _('category')}}</th>
@@ -162,11 +162,11 @@
                         <td class="text-right hidden md:table-cell">{% if e.cost > 0 %}{{ currency_symbol }}{{ '{:,.2f}'.format(e.cost) }}{% else %}<span class="opacity-50">—</span>{% endif %}</td>
                         <td>
                             <div class="flex gap-1 md:gap-3 justify-end text-sm">
-                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="toggleLogEdit('coll',{{ e.id }})">
+                                <button class="btn btn-primary btn-outline btn-xs md:btn-sm gap-1" onclick="toggleLogEdit('coll',{{ e.id }})">
                                     <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>
                                     <span class="hidden sm:inline">{{ _('edit') }}</span>
                                 </button>
-                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1 uppercase" onclick="deleteCollLog({{ e.id }},{{ watch.id }})">
+                                <button class="btn btn-error btn-outline btn-xs md:btn-sm gap-1" onclick="deleteCollLog({{ e.id }},{{ watch.id }})">
                                     <svg class="size-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="12" r="8"/><path d="M18 12h4M20 10v4"/><line x1="7" y1="9" x2="13" y2="15"/><line x1="13" y1="9" x2="7" y2="15"/></svg>
                                     <span class="hidden sm:inline">{{ _('delete') }}</span>
                                 </button>
@@ -190,7 +190,7 @@
                     </tr>
                     {% endfor %}
                 </tbody>
-                <tfoot class="bg-gradient-to-r from-base-200/60 to-base-100/30">
+                <tfoot class="bg-base-200/40">
                     <tr class="add-row">
                         <td colspan="5" class="p-2">
                             <div class="grid grid-cols-2 gap-2 md:flex md:flex-row md:items-center md:gap-2">
@@ -205,7 +205,7 @@
                 </tfoot>
             </table>
         </div>
-        <div class="p-4 bg-gradient-to-r from-base-200/50 to-base-100/20 border-t border-base-200/60 text-right text-sm">
+        <div class="p-4 bg-base-200/30 border-t border-base-200 text-right text-sm">
             {{ _('total cost') }}: <strong id="clog-cost-total" class="text-primary">{{ currency_symbol }}{{ '{:,.2f}'.format(service_cost) }}</strong>
         </div>
     </div>
