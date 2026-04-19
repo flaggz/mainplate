@@ -24,4 +24,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/nome-tua-app:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/mainplate:latest
