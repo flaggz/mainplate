@@ -48,7 +48,7 @@ shutil.copy('/tmp/package/dist/apexcharts.min.js', '/app/static/js/apexcharts.mi
 RUN tailwindcss -i static/css/input.css -o static/css/tailwind.css --minify
 
 RUN DATA_DIR=/app/data python -c "from app import init_db; init_db()"
-RUN chmod +x /app/run.sh
+ENV DATA_DIR=/data
 VOLUME ["/app/data"]
 EXPOSE 5000
-CMD ["/app/run.sh"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "--log-level", "warning", "--forwarded-allow-ips", "*", "app:app"]
