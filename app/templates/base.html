@@ -30,6 +30,29 @@
 
 <body class="bg-base-200 min-h-screen font-sans pattern">
 
+    <div id="mp-splash" aria-hidden="true" class="fixed inset-0 z-[99999] flex items-center justify-center bg-base-100 transition-opacity duration-500">
+      <div class="flex flex-col items-center gap-5">
+        <div class="relative flex items-center justify-center w-24 h-24">
+          <span class="absolute inset-0 rounded-full border border-base-content/20 animate-ping [animation-duration:1.6s]"></span>
+          <span class="absolute inset-0 rounded-full border border-base-content/10 animate-ping [animation-duration:1.6s] [animation-delay:0.6s]"></span>
+          <img src="{{ url_for('static', filename='img/logo_mainplate.png') }}" class="w-32 h-32 object-contain" alt="">
+        </div>
+        <span class="text-[11px] font-semibold tracking-[0.3em] uppercase text-base-content/40">Mainplate</span>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var el = document.getElementById('mp-splash');
+        if (!el) return;
+        if (localStorage.getItem('mp-splash')) { el.remove(); return; }
+        document.body.style.overflow = 'hidden';
+        setTimeout(function () {
+          el.classList.add('opacity-0', 'pointer-events-none');
+          setTimeout(function () { el.remove(); document.body.style.overflow = ''; localStorage.setItem('mp-splash', '1'); }, 500);
+        }, 1900);
+      })();
+    </script>
+
     <!-- Mobile drawer -->
     <div class="drawer">
         <input id="mobile-drawer" type="checkbox" class="drawer-toggle" />

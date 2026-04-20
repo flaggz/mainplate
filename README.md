@@ -4,6 +4,10 @@
 
 A self-hosted web app for watch enthusiasts and watchmakers to track personal collection, flips, parts inventory, and equipment — all in one place.
 
+
+https://github.com/user-attachments/assets/6549cc5b-02ca-4963-b349-016421ed3a0d
+
+
 Built with Flask + SQLite, runs entirely in Docker with no external dependencies.
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
