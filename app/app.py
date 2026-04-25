@@ -560,7 +560,12 @@ def _refresh_lift_angle_cache(force=False, retries=3):
             cur.execute("DELETE FROM lift_angle_ref WHERE source='watchguy'")
             cur.executemany(
                 "INSERT INTO lift_angle_ref (manufacturer, calibre, lift_angle, source, updated_at) "
-                "VALUES (?,?,?,?,?)",
+                "VALUES (?,?,?,?,?) "
+                "ON CONFLICT(manufacturer, calibre) DO UPDATE SET "
+                "lift_angle=excluded.lift_angle, "
+                "source=excluded.source, "
+                "updated_at=excluded.updated_at "
+                "WHERE lift_angle_ref.source != 'custom'",
                 [(m, c, a, 'watchguy', now_iso) for (m, c), a in deduped.items()]
             )
             ts = str(time.time())
@@ -626,20 +631,23 @@ def api_edit_timegrapher(tid):
 
 @app.route('/api/lift-angles/search')
 def api_lift_angles_search():
-    q_str = _norm_lift_text(request.args.get('q', ''))
-    if len(q_str) < 2:
+    raw_q = request.args.get('q', '')
+    manufacturer_q = _norm_manufacturer(raw_q)
+    calibre_q = _norm_calibre(raw_q)
+    if len(_norm_lift_text(raw_q)) < 2:
         return jsonify(results=[], stale=False)
     stale = False
     try:
         _refresh_lift_angle_cache(force=False)
     except Exception:
         stale = True
-    like = f'%{q_str}%'
+    manufacturer_like = f'%{manufacturer_q}%'
+    calibre_like = f'%{calibre_q}%'
     rows = q(
         "SELECT manufacturer, calibre, lift_angle FROM lift_angle_ref "
         "WHERE manufacturer LIKE ? OR calibre LIKE ? "
         "ORDER BY manufacturer, calibre LIMIT 30",
-        (like, like)
+        (manufacturer_like, calibre_like)
     )
     return jsonify(results=[dict(r) for r in rows], stale=stale)
 
@@ -674,7 +682,15 @@ def api_lift_angles_list():
     params = []
 
     if manufacturer:
-        where.append("UPPER(TRIM(REPLACE(REPLACE(manufacturer,'-',' '),'_',' '))) = ?")
+        # Keep SQL-side canonicalization aligned with _norm_manufacturer:
+        # separators -> spaces, trim, uppercase, collapse repeated whitespace.
+        where.append(
+            "UPPER(TRIM("
+            "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE("
+            "REPLACE(REPLACE(manufacturer,'-',' '),'_',' '),"
+            "'  ',' '),'  ',' '),'  ',' '),'  ',' '),'  ',' '),'  ',' ')"
+            ")) = ?"
+        )
         params.append(manufacturer)
     if calibre_q:
         where.append('calibre LIKE ?')
