@@ -173,6 +173,23 @@ Full reset (deletes all data):
 docker compose down -v
 ```
 
+### Local CSS build (Tailwind + DaisyUI)
+
+If you edit styles or templates and want to rebuild frontend CSS locally (without relying on CDN), run these commands from the project root:
+
+```bash
+npm install
+npm run build:css
+```
+
+Watch mode while working on UI:
+
+```bash
+npm run watch:css
+```
+
+This compiles `app/static/css/input.css` into `app/static/css/tailwind.css`.
+
 ---
 
 ## Configuration
@@ -248,7 +265,6 @@ app/
     │   └── style.css
     ├── js/
     │   ├── apexcharts.min.js
-    │   ├── tailwind-compiler.js
     │   └── main.js
     └── img/
         ├── logo_mainplate.png

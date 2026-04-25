@@ -797,13 +797,60 @@ function deleteFlipLogConfirm(lid, flipId, btn) {
 // ── Timegrapher ────────────────────────────────────────────
 function _tgFmt(v) { return v !== null && v !== undefined ? (v >= 0 ? '+' : '') + parseFloat(v).toFixed(1) : '—'; }
 function _tgFmtPlain(v, digits, suffix) { return v !== null && v !== undefined ? parseFloat(v).toFixed(digits) + (suffix || '') : '—'; }
+let _tgLiftSuggestions = [];
+
+function _tgOptionValue(row) {
+    const m = (row.manufacturer || '').trim();
+    const c = (row.calibre || '').trim();
+    return [m, c].filter(Boolean).join(' ');
+}
+
+function _tgFillLiftDatalist(rows) {
+    const dl = document.getElementById('tg-lift-options');
+    if (!dl) return;
+    dl.innerHTML = rows.map(r => {
+        const label = `${_tgOptionValue(r)} (${parseFloat(r.lift_angle).toFixed(1)}°)`;
+        return `<option value="${label}"></option>`;
+    }).join('');
+}
+
+function _tgLoadLiftSuggestions(query) {
+    const q = (query || '').trim();
+    if (q.length < 2) return;
+    fetch(`/api/lift-angles/search?q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(data => {
+            _tgLiftSuggestions = data.results || [];
+            _tgFillLiftDatalist(_tgLiftSuggestions);
+        })
+        .catch(() => {});
+}
+
+function _tgTryApplyLiftFromInput(inputValue) {
+    const raw = (inputValue || '').trim().toUpperCase();
+    if (!raw) return false;
+    let match = _tgLiftSuggestions.find(r => {
+        const label = `${_tgOptionValue(r)} (${parseFloat(r.lift_angle).toFixed(1)}°)`.toUpperCase();
+        return label === raw;
+    });
+    if (!match) {
+        match = _tgLiftSuggestions.find(r => raw.includes((r.calibre || '').toUpperCase()));
+    }
+    if (!match) return false;
+    const caliberInput = document.getElementById('tg-caliber');
+    const liftInput = document.getElementById('tg-lift-angle');
+    if (caliberInput) caliberInput.value = _tgOptionValue(match);
+    if (liftInput) liftInput.value = parseFloat(match.lift_angle).toFixed(1);
+    return true;
+}
 
 function _tgReadData(tr) {
     const D = tr.dataset;
     const f = s => s !== '' && s !== undefined ? parseFloat(s) : null;
     return { du: f(D.du), dd: f(D.dd), p3: f(D.p3), p6: f(D.p6),
              p9: f(D.p9), p12: f(D.p12), amplitude: f(D.amplitude),
-             beat_error: f(D.beatError) };
+             beat_error: f(D.beatError), lift_angle: f(D.liftAngle),
+             caliber: D.caliber || '' };
 }
 
 function _tgWarnings(d) {
@@ -879,8 +926,12 @@ function addTgReading(flipId) {
     }
     const amp = document.getElementById('tg-amp')?.value;
     const be = document.getElementById('tg-be')?.value;
+    const caliber = document.getElementById('tg-caliber')?.value || '';
+    const liftInput = document.getElementById('tg-lift-angle')?.value;
     payload.amplitude = amp !== '' ? parseFloat(amp) : null;
     payload.beat_error = be !== '' ? parseFloat(be) : null;
+    payload.caliber = caliber.trim();
+    payload.lift_angle = liftInput !== '' ? parseFloat(liftInput) : null;
 
     fetch(`/api/flips/${flipId}/timegrapher`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -906,6 +957,8 @@ function addTgReading(flipId) {
             <td class="text-right font-mono">${_tgFmt(data.p12)}</td>
             <td class="text-right">${_tgFmtPlain(data.amplitude, 0, '°')}</td>
             <td class="text-right">${_tgFmtPlain(data.beat_error, 1, '')}</td>
+            <td class="hidden lg:table-cell">${data.caliber ? data.caliber : '<span class="opacity-40">—</span>'}</td>
+            <td class="text-right hidden lg:table-cell">${_tgFmtPlain(data.lift_angle, 1, '°')}</td>
             <td class="text-right">${deltaCell}</td>
             <td><div class="flex gap-2 justify-end">
                 <button class="btn btn-primary btn-outline btn-sm gap-1 uppercase" onclick="toggleTgEdit(${data.id})"><svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2c0 7 3 9 3 15"/><path d="M15 2c0 7-3 9-3 15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>${window.I18N.edit}</button>
@@ -918,7 +971,7 @@ function addTgReading(flipId) {
             `<div class="flex flex-col gap-0.5"><span class="text-[9px] uppercase opacity-40">${pos}</span>
             <input type="number" step="0.1" name="${key}" value="${data[key] ?? ''}" placeholder="—" class="input input-bordered input-sm w-16 text-right font-mono"></div>`
         ).join('');
-        er.innerHTML = `<td colspan="11" class="p-3"><form class="flex flex-wrap gap-2 items-end" onsubmit="submitTgEdit(event,${data.id},${flipId})">
+        er.innerHTML = `<td colspan="13" class="p-3"><form class="flex flex-wrap gap-2 items-end" onsubmit="submitTgEdit(event,${data.id},${flipId})">
             <div class="flex flex-col gap-0.5"><span class="text-[9px] uppercase opacity-40">Date</span>
             <input type="date" name="reading_date" value="${data.reading_date}" class="input input-bordered input-sm w-36"></div>
             ${posInputs}
@@ -926,6 +979,10 @@ function addTgReading(flipId) {
             <input type="number" step="1" name="amplitude" value="${data.amplitude ?? ''}" placeholder="—" class="input input-bordered input-sm w-16 text-right"></div>
             <div class="flex flex-col gap-0.5"><span class="text-[9px] uppercase opacity-40">BE ms</span>
             <input type="number" step="0.1" name="beat_error" value="${data.beat_error ?? ''}" placeholder="—" class="input input-bordered input-sm w-16 text-right"></div>
+            <div class="flex flex-col gap-0.5"><span class="text-[9px] uppercase opacity-40">${window.I18N.caliber || 'Caliber'}</span>
+            <input type="text" name="caliber" value="${data.caliber || ''}" placeholder="ETA 2824-2" class="input input-bordered input-sm w-36"></div>
+            <div class="flex flex-col gap-0.5"><span class="text-[9px] uppercase opacity-40">${window.I18N.lift_angle || 'Lift angle'} °</span>
+            <input type="number" step="0.1" name="lift_angle" value="${data.lift_angle ?? ''}" placeholder="52.0" class="input input-bordered input-sm w-20 text-right"></div>
             <div class="flex gap-2 pt-3.5">
                 <button type="submit" class="btn btn-primary btn-sm">Salva</button>
                 <button type="button" class="btn btn-ghost btn-sm" onclick="toggleTgEdit(${data.id})">Annulla</button>
@@ -936,6 +993,7 @@ function addTgReading(flipId) {
             du: data.du ?? '', dd: data.dd ?? '', p3: data.p3 ?? '',
             p6: data.p6 ?? '', p9: data.p9 ?? '', p12: data.p12 ?? '',
             amplitude: data.amplitude ?? '', beatError: data.beat_error ?? ''
+            , caliber: data.caliber ?? '', liftAngle: data.lift_angle ?? ''
         });
         _applyTgWarnings(tr, data);
         animateIn(tr);
@@ -943,6 +1001,8 @@ function addTgReading(flipId) {
         for (const key of ['du','dd','p3','p6','p9','p12']) { const el = document.getElementById(`tg-${key}`); if (el) el.value = ''; }
         const ampEl = document.getElementById('tg-amp'); if (ampEl) ampEl.value = '';
         const beEl = document.getElementById('tg-be'); if (beEl) beEl.value = '';
+        const caliberEl = document.getElementById('tg-caliber'); if (caliberEl) caliberEl.value = '';
+        const liftEl = document.getElementById('tg-lift-angle'); if (liftEl) liftEl.value = '';
         showFlash(window.I18N.entry_added);
     }).catch(() => showFlash(window.I18N.error, 'info'));
 }
@@ -952,7 +1012,7 @@ function submitTgEdit(event, tid, flipId) {
     const fd = new FormData(event.target);
     const payload = {};
     for (const [k, v] of fd.entries()) {
-        if (['du','dd','p3','p6','p9','p12','amplitude','beat_error'].includes(k))
+        if (['du','dd','p3','p6','p9','p12','amplitude','beat_error','lift_angle'].includes(k))
             payload[k] = v !== '' ? parseFloat(v) : null;
         else payload[k] = v;
     }
@@ -976,11 +1036,14 @@ function submitTgEdit(event, tid, flipId) {
             vr.cells[6].innerHTML = _tgFmt(data.p12);
             vr.cells[7].textContent = _tgFmtPlain(data.amplitude, 0, '°');
             vr.cells[8].textContent = _tgFmtPlain(data.beat_error, 2, '');
-            vr.cells[9].innerHTML = deltaCell;
+            vr.cells[9].innerHTML = data.caliber ? data.caliber : '<span class="opacity-40">—</span>';
+            vr.cells[10].textContent = _tgFmtPlain(data.lift_angle, 1, '°');
+            vr.cells[11].innerHTML = deltaCell;
             Object.assign(vr.dataset, {
                 du: data.du ?? '', dd: data.dd ?? '', p3: data.p3 ?? '',
                 p6: data.p6 ?? '', p9: data.p9 ?? '', p12: data.p12 ?? '',
-                amplitude: data.amplitude ?? '', beatError: data.beat_error ?? ''
+                amplitude: data.amplitude ?? '', beatError: data.beat_error ?? '',
+                caliber: data.caliber ?? '', liftAngle: data.lift_angle ?? ''
             });
             _applyTgWarnings(vr, data);
             animateFlash(vr);
@@ -1003,7 +1066,7 @@ function deleteTgConfirm(tid, flipId, btn) {
                 if (tbody && !tbody.querySelector('.data-row')) {
                     const empty = document.createElement('tr');
                     empty.id = 'tg-empty-row';
-                    empty.innerHTML = '<td colspan="11" class="text-center opacity-40 py-6">No data</td>';
+                    empty.innerHTML = '<td colspan="13" class="text-center opacity-40 py-6">No data</td>';
                     tbody.insertBefore(empty, tbody.firstChild);
                 }
                 showFlash(window.I18N.entry_deleted, 'info');
@@ -1155,6 +1218,17 @@ document.addEventListener('click', (e) => {
         if (results && wrap && !wrap.contains(e.target)) {
             results.classList.add('hidden');
         }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const tgCaliber = document.getElementById('tg-caliber');
+    if (!tgCaliber) return;
+    tgCaliber.addEventListener('input', (e) => {
+        _tgLoadLiftSuggestions(e.target.value);
+    });
+    tgCaliber.addEventListener('change', (e) => {
+        _tgTryApplyLiftFromInput(e.target.value);
     });
 });
 
@@ -1600,3 +1674,178 @@ function loadThumbnails(type, ids) {
             });
         });
 }
+
+// ── Lift angles page ────────────────────────────────────────
+let _liftSearchTimer = null;
+
+function _renderLiftAngleRows(results) {
+    const tbody = document.getElementById('lift-angles-tbody');
+    if (!tbody) return;
+    if (!results || !results.length) {
+        tbody.innerHTML = `<tr id="lift-angles-empty"><td colspan="5" class="text-center text-base-content/40 py-6">${window.I18N.lift_no_results || 'No results'}</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = results.map(r => `
+        <tr class="data-row">
+            <td>${r.manufacturer || ''}</td>
+            <td>${r.calibre || ''}</td>
+            <td class="text-right">${r.lift_angle !== null && r.lift_angle !== undefined ? parseFloat(r.lift_angle).toFixed(1) + '°' : '—'}</td>
+            <td>${(r.source || '') === 'custom'
+                ? `<span class="badge badge-sm badge-primary">${window.I18N.custom || 'custom'}</span>`
+                : `<span class="badge badge-sm badge-ghost">${r.source || 'watchguy'}</span>`
+            }</td>
+            <td class="text-right">
+                ${(r.source || '') === 'custom'
+                    ? `<div class="flex justify-end gap-1">
+                        <button class="btn btn-xs btn-outline" onclick="editCustomLiftAngle('${(r.manufacturer || '').replace(/'/g, "\\'")}', '${(r.calibre || '').replace(/'/g, "\\'")}', '${r.lift_angle}')">${window.I18N.edit || 'edit'}</button>
+                        <button class="btn btn-xs btn-error btn-outline" onclick="deleteCustomLiftAngle('${(r.manufacturer || '').replace(/'/g, "\\'")}', '${(r.calibre || '').replace(/'/g, "\\'")}')">${window.I18N.delete || 'delete'}</button>
+                    </div>`
+                    : '<span class="opacity-40">—</span>'
+                }
+            </td>
+        </tr>
+    `).join('');
+}
+
+function _liftFilterParams() {
+    const manufacturer = (document.getElementById('lift-filter-manufacturer')?.value || '').trim();
+    const calibre = (document.getElementById('lift-filter-calibre')?.value || '').trim();
+    const min = (document.getElementById('lift-filter-min')?.value || '').trim();
+    const max = (document.getElementById('lift-filter-max')?.value || '').trim();
+    const limitRaw = parseInt(document.getElementById('lift-filter-limit')?.value || '500', 10);
+    const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(limitRaw, 2000)) : 500;
+    return { manufacturer, calibre, min, max, limit };
+}
+
+function _loadLiftManufacturers() {
+    const sel = document.getElementById('lift-filter-manufacturer');
+    if (!sel) return Promise.resolve();
+    const current = sel.value || '';
+    return fetch('/api/lift-angles/manufacturers')
+        .then(r => r.json())
+        .then(data => {
+            const options = (data.manufacturers || []).map(m => `<option value="${m}">${m}</option>`).join('');
+            sel.innerHTML = `<option value="">${window.I18N.all_manufacturers || 'All manufacturers'}</option>${options}`;
+            sel.value = current;
+        })
+        .catch(() => {});
+}
+
+function loadLiftAnglesTable() {
+    const status = document.getElementById('lift-angle-status');
+    const p = _liftFilterParams();
+    if (status) status.textContent = window.I18N.lift_searching || 'searching…';
+    const qs = new URLSearchParams();
+    if (p.manufacturer) qs.set('manufacturer', p.manufacturer);
+    if (p.calibre) qs.set('calibre', p.calibre);
+    if (p.min) qs.set('min_angle', p.min);
+    if (p.max) qs.set('max_angle', p.max);
+    qs.set('limit', String(p.limit));
+
+    fetch(`/api/lift-angles/list?${qs.toString()}`)
+        .then(r => r.json())
+        .then(data => {
+            _renderLiftAngleRows(data.results || []);
+            if (!status) return;
+            const bits = [`${data.count || 0} rows`];
+            if (data.stale) {
+                bits.push('using cached data');
+            }
+            status.textContent = bits.join(' · ');
+        })
+        .catch(() => {
+            if (status) status.textContent = window.I18N.error || 'error';
+            _renderLiftAngleRows([]);
+        });
+}
+
+function refreshLiftAnglesCache() {
+    fetch('/api/lift-angles/refresh', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.ok) throw new Error(data.error || 'refresh_failed');
+            showFlash(window.I18N.lift_refresh_ok || 'Lift angles refreshed');
+            loadLiftAnglesTable();
+        })
+        .catch(() => showFlash(window.I18N.lift_refresh_err || 'Error refreshing lift angles', 'info'));
+}
+
+function resetLiftAngleFilters() {
+    const ids = ['lift-filter-manufacturer', 'lift-filter-calibre', 'lift-filter-min', 'lift-filter-max'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const limit = document.getElementById('lift-filter-limit');
+    if (limit) limit.value = '500';
+    loadLiftAnglesTable();
+}
+
+function addCustomLiftAngle() {
+    const manufacturer = (document.getElementById('lift-custom-manufacturer')?.value || '').trim();
+    const calibre = (document.getElementById('lift-custom-calibre')?.value || '').trim();
+    const liftAngleRaw = (document.getElementById('lift-custom-angle')?.value || '').trim();
+    const lift_angle = liftAngleRaw !== '' ? parseFloat(liftAngleRaw) : null;
+    if (!manufacturer || !calibre || lift_angle === null || Number.isNaN(lift_angle)) {
+        showFlash(window.I18N.fill_required_fields || 'Fill all required fields', 'info');
+        return;
+    }
+    fetch('/api/lift-angles/custom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ manufacturer, calibre, lift_angle })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.ok) throw new Error(data.error || 'save_failed');
+        showFlash(window.I18N.custom_lift_added || 'Custom lift angle saved');
+        document.getElementById('lift-custom-manufacturer').value = '';
+        document.getElementById('lift-custom-calibre').value = '';
+        document.getElementById('lift-custom-angle').value = '';
+        _loadLiftManufacturers().then(() => loadLiftAnglesTable());
+    })
+    .catch(() => showFlash(window.I18N.error_saving || 'Error saving', 'info'));
+}
+
+function editCustomLiftAngle(manufacturer, calibre, liftAngle) {
+    const m = document.getElementById('lift-custom-manufacturer');
+    const c = document.getElementById('lift-custom-calibre');
+    const a = document.getElementById('lift-custom-angle');
+    if (m) m.value = manufacturer || '';
+    if (c) c.value = calibre || '';
+    if (a) a.value = (liftAngle !== null && liftAngle !== undefined) ? String(liftAngle) : '';
+    m?.focus();
+}
+
+function deleteCustomLiftAngle(manufacturer, calibre) {
+    if (!confirm(window.I18N.confirm_delete_custom_lift || 'Delete this custom lift-angle entry?')) return;
+    fetch('/api/lift-angles/custom', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ manufacturer, calibre })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.ok) throw new Error(data.error || 'delete_failed');
+        showFlash(window.I18N.custom_lift_deleted || 'Custom lift angle deleted', 'info');
+        _loadLiftManufacturers().then(() => loadLiftAnglesTable());
+    })
+    .catch(() => showFlash(window.I18N.error || 'Error', 'info'));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const fields = [
+        document.getElementById('lift-filter-manufacturer'),
+        document.getElementById('lift-filter-calibre'),
+        document.getElementById('lift-filter-min'),
+        document.getElementById('lift-filter-max'),
+        document.getElementById('lift-filter-limit')
+    ].filter(Boolean);
+    if (!fields.length) return;
+
+    fields.forEach(input => input.addEventListener('input', () => {
+        clearTimeout(_liftSearchTimer);
+        _liftSearchTimer = setTimeout(() => loadLiftAnglesTable(), 250);
+    }));
+    _loadLiftManufacturers().then(() => loadLiftAnglesTable());
+});

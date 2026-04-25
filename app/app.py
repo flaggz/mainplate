@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, Response, send_from_directory
-import sqlite3, os, json, datetime, uuid, zipfile, io, re, urllib.parse
+import sqlite3, os, json, datetime, uuid, zipfile, io, re, urllib.parse, time
 from PIL import Image
 import werkzeug.serving
 try:
@@ -71,6 +71,11 @@ def _(key):
     except:
         return TRANSLATIONS.get('en', {}).get(key, key)
 
+def set_request_language(lang_code):
+    """Apply a valid language code to the current request context."""
+    if lang_code and lang_code in TRANSLATIONS:
+        g.lang = lang_code
+
 # ── DB ──────────────────────────────────────────────────────
 def get_db():
     conn = sqlite3.connect(DB, timeout=15)
@@ -92,8 +97,19 @@ def init_db():
     CREATE TABLE IF NOT EXISTS collection_log (id INTEGER PRIMARY KEY AUTOINCREMENT, watch_id INTEGER NOT NULL REFERENCES collection(id) ON DELETE CASCADE, log_date TEXT NOT NULL, description TEXT NOT NULL, cost REAL DEFAULT 0, category TEXT DEFAULT '');
     CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
     CREATE TABLE IF NOT EXISTS images (id INTEGER PRIMARY KEY AUTOINCREMENT, entity_type TEXT NOT NULL, entity_id INTEGER NOT NULL, filename TEXT NOT NULL, sort_order INTEGER DEFAULT 0);
-    CREATE TABLE IF NOT EXISTS flip_timegrapher (id INTEGER PRIMARY KEY AUTOINCREMENT, flip_id INTEGER NOT NULL REFERENCES flips(id) ON DELETE CASCADE, reading_date TEXT NOT NULL, du REAL, dd REAL, p3 REAL, p6 REAL, p9 REAL, p12 REAL, amplitude REAL, beat_error REAL);
+    CREATE TABLE IF NOT EXISTS flip_timegrapher (id INTEGER PRIMARY KEY AUTOINCREMENT, flip_id INTEGER NOT NULL REFERENCES flips(id) ON DELETE CASCADE, reading_date TEXT NOT NULL, du REAL, dd REAL, p3 REAL, p6 REAL, p9 REAL, p12 REAL, amplitude REAL, beat_error REAL, caliber TEXT DEFAULT '', lift_angle REAL);
+    CREATE TABLE IF NOT EXISTS lift_angle_ref (id INTEGER PRIMARY KEY AUTOINCREMENT, manufacturer TEXT NOT NULL, calibre TEXT NOT NULL, lift_angle REAL NOT NULL, source TEXT DEFAULT 'watchguy', updated_at TEXT NOT NULL);
     ''')
+    # Backward-compatible migration for existing databases.
+    cols = [r['name'] for r in conn.execute("PRAGMA table_info(flip_timegrapher)").fetchall()]
+    if 'caliber' not in cols:
+        conn.execute("ALTER TABLE flip_timegrapher ADD COLUMN caliber TEXT DEFAULT ''")
+    if 'lift_angle' not in cols:
+        conn.execute("ALTER TABLE flip_timegrapher ADD COLUMN lift_angle REAL")
+    conn.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_lift_angle_ref_manu_calibre "
+        "ON lift_angle_ref (manufacturer, calibre)"
+    )
     conn.commit()
 
 def q(sql, params=(), one=False):
@@ -482,15 +498,104 @@ def _tg_float(val):
     try: return float(val) if val not in (None,'','null') else None
     except: return None
 
+def _norm_lift_text(value):
+    value = re.sub(r'\s+', ' ', str(value or '').strip())
+    return value.upper()
+
+def _norm_manufacturer(value):
+    # Canonicalize common WatchGuy brand variants (hyphen/underscore/space).
+    value = str(value or '').replace('-', ' ').replace('_', ' ')
+    return _norm_lift_text(value)
+
+def _norm_calibre(value):
+    return _norm_lift_text(value)
+
+def _fetch_watchguy_lift_angles():
+    if not _LOOKUP_AVAILABLE:
+        raise RuntimeError('deps_missing')
+    url = 'https://watchguy.co.uk/cgi-bin/lift_angles'
+    resp = _lookup_get(url, timeout=20)
+    if resp.status_code != 200:
+        raise RuntimeError(f'http_{resp.status_code}')
+    soup = _BS(resp.text, 'html.parser')
+    rows = []
+    for tr in soup.select('table tr'):
+        tds = tr.find_all('td')
+        if len(tds) < 3:
+            continue
+        manufacturer = _norm_manufacturer(tds[0].get_text(' ', strip=True))
+        calibre = _norm_calibre(tds[1].get_text(' ', strip=True))
+        raw_angle = tds[2].get_text(' ', strip=True).replace('°', '')
+        try:
+            angle = float(raw_angle)
+        except Exception:
+            continue
+        if manufacturer and calibre:
+            rows.append((manufacturer, calibre, angle))
+    if not rows:
+        raise RuntimeError('no_rows_parsed')
+    return rows
+
+def _refresh_lift_angle_cache(force=False, retries=3):
+    for attempt in range(max(1, retries)):
+        conn = None
+        try:
+            conn = get_db()
+            cur = conn.cursor()
+            meta = cur.execute(
+                "SELECT value FROM settings WHERE key='lift_angle_ref_updated'"
+            ).fetchone()
+            if meta and not force:
+                try:
+                    if (time.time() - float(meta['value'])) < 86400:
+                        return False
+                except Exception:
+                    pass
+
+            rows = _fetch_watchguy_lift_angles()
+            deduped = {}
+            for m, c, a in rows:
+                deduped[(m, c)] = a
+            now_iso = datetime.datetime.utcnow().isoformat(timespec='seconds')
+            cur.execute("DELETE FROM lift_angle_ref WHERE source='watchguy'")
+            cur.executemany(
+                "INSERT INTO lift_angle_ref (manufacturer, calibre, lift_angle, source, updated_at) "
+                "VALUES (?,?,?,?,?) "
+                "ON CONFLICT(manufacturer, calibre) DO UPDATE SET "
+                "lift_angle=excluded.lift_angle, "
+                "source=excluded.source, "
+                "updated_at=excluded.updated_at "
+                "WHERE lift_angle_ref.source != 'custom'",
+                [(m, c, a, 'watchguy', now_iso) for (m, c), a in deduped.items()]
+            )
+            ts = str(time.time())
+            cur.execute(
+                "INSERT INTO settings (key,value) VALUES (?,?) "
+                "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                ('lift_angle_ref_updated', ts)
+            )
+            conn.commit()
+            return True
+        except sqlite3.OperationalError as e:
+            msg = str(e).lower()
+            if 'locked' in msg and attempt < retries - 1:
+                time.sleep(0.2 * (attempt + 1))
+                continue
+            raise
+        finally:
+            if conn is not None:
+                conn.close()
+
 @app.route('/api/flips/<int:fid>/timegrapher', methods=['POST'])
 def api_add_timegrapher(fid):
     d=request.json
-    tid=run('INSERT INTO flip_timegrapher (flip_id,reading_date,du,dd,p3,p6,p9,p12,amplitude,beat_error) VALUES (?,?,?,?,?,?,?,?,?,?)',
+    tid=run('INSERT INTO flip_timegrapher (flip_id,reading_date,du,dd,p3,p6,p9,p12,amplitude,beat_error,caliber,lift_angle) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
         (fid, d.get('reading_date', today()),
          _tg_float(d.get('du')), _tg_float(d.get('dd')),
          _tg_float(d.get('p3')), _tg_float(d.get('p6')),
          _tg_float(d.get('p9')), _tg_float(d.get('p12')),
-         _tg_float(d.get('amplitude')), _tg_float(d.get('beat_error'))))
+         _tg_float(d.get('amplitude')), _tg_float(d.get('beat_error')),
+         (d.get('caliber') or '').strip(), _tg_float(d.get('lift_angle'))))
     r=q('SELECT * FROM flip_timegrapher WHERE id=?',(tid,),one=True)
     delta=timegrapher_delta(r); dc=delta_class(delta)
     df=get_settings().get('date_format','DD-MM-YYYY')
@@ -498,17 +603,19 @@ def api_add_timegrapher(fid):
         fmt_reading_date=fmt_date(r['reading_date'],df),
         du=r['du'],dd=r['dd'],p3=r['p3'],p6=r['p6'],p9=r['p9'],p12=r['p12'],
         amplitude=r['amplitude'],beat_error=r['beat_error'],
+        caliber=r['caliber'] or '', lift_angle=r['lift_angle'],
         delta=delta, delta_class=dc)
 
 @app.route('/api/timegrapher/<int:tid>', methods=['POST'])
 def api_edit_timegrapher(tid):
     d=request.json
-    run('UPDATE flip_timegrapher SET reading_date=?,du=?,dd=?,p3=?,p6=?,p9=?,p12=?,amplitude=?,beat_error=? WHERE id=?',
+    run('UPDATE flip_timegrapher SET reading_date=?,du=?,dd=?,p3=?,p6=?,p9=?,p12=?,amplitude=?,beat_error=?,caliber=?,lift_angle=? WHERE id=?',
         (d.get('reading_date', today()),
          _tg_float(d.get('du')), _tg_float(d.get('dd')),
          _tg_float(d.get('p3')), _tg_float(d.get('p6')),
          _tg_float(d.get('p9')), _tg_float(d.get('p12')),
-         _tg_float(d.get('amplitude')), _tg_float(d.get('beat_error')), tid))
+         _tg_float(d.get('amplitude')), _tg_float(d.get('beat_error')),
+         (d.get('caliber') or '').strip(), _tg_float(d.get('lift_angle')), tid))
     r=q('SELECT * FROM flip_timegrapher WHERE id=?',(tid,),one=True)
     delta=timegrapher_delta(r); dc=delta_class(delta)
     df=get_settings().get('date_format','DD-MM-YYYY')
@@ -518,8 +625,165 @@ def api_edit_timegrapher(tid):
         fmt_reading_date=fmt_date(r['reading_date'],df),
         du=r['du'],dd=r['dd'],p3=r['p3'],p6=r['p6'],p9=r['p9'],p12=r['p12'],
         amplitude=r['amplitude'],beat_error=r['beat_error'],
+        caliber=r['caliber'] or '', lift_angle=r['lift_angle'],
         delta=delta, delta_class=dc,
         latest=dict(latest) if latest else None, latest_delta=ld, latest_delta_class=ldc)
+
+@app.route('/api/lift-angles/search')
+def api_lift_angles_search():
+    raw_q = request.args.get('q', '')
+    manufacturer_q = _norm_manufacturer(raw_q)
+    calibre_q = _norm_calibre(raw_q)
+    if len(_norm_lift_text(raw_q)) < 2:
+        return jsonify(results=[], stale=False)
+    stale = False
+    try:
+        _refresh_lift_angle_cache(force=False)
+    except Exception:
+        stale = True
+    manufacturer_like = f'%{manufacturer_q}%'
+    calibre_like = f'%{calibre_q}%'
+    rows = q(
+        "SELECT manufacturer, calibre, lift_angle FROM lift_angle_ref "
+        "WHERE manufacturer LIKE ? OR calibre LIKE ? "
+        "ORDER BY manufacturer, calibre LIMIT 30",
+        (manufacturer_like, calibre_like)
+    )
+    return jsonify(results=[dict(r) for r in rows], stale=stale)
+
+@app.route('/api/lift-angles/refresh', methods=['POST'])
+def api_lift_angles_refresh():
+    try:
+        _refresh_lift_angle_cache(force=True)
+        count = q('SELECT COUNT(*) AS c FROM lift_angle_ref', one=True)['c']
+        return jsonify(ok=True, count=count)
+    except Exception as e:
+        return jsonify(ok=False, error=str(e)), 400
+
+@app.route('/api/lift-angles/list')
+def api_lift_angles_list():
+    stale = False
+    try:
+        _refresh_lift_angle_cache(force=False)
+    except Exception:
+        stale = True
+
+    manufacturer = _norm_manufacturer(request.args.get('manufacturer', ''))
+    calibre_q = _norm_calibre(request.args.get('calibre', ''))
+    min_angle = _tg_float(request.args.get('min_angle'))
+    max_angle = _tg_float(request.args.get('max_angle'))
+    try:
+        limit = int(request.args.get('limit', '500') or 500)
+    except Exception:
+        limit = 500
+    limit = max(1, min(limit, 2000))
+
+    where = []
+    params = []
+
+    if manufacturer:
+        # Keep SQL-side canonicalization aligned with _norm_manufacturer:
+        # separators -> spaces, trim, uppercase, collapse repeated whitespace.
+        where.append(
+            "UPPER(TRIM("
+            "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE("
+            "REPLACE(REPLACE(manufacturer,'-',' '),'_',' '),"
+            "'  ',' '),'  ',' '),'  ',' '),'  ',' '),'  ',' '),'  ',' ')"
+            ")) = ?"
+        )
+        params.append(manufacturer)
+    if calibre_q:
+        where.append('calibre LIKE ?')
+        params.append(f'%{calibre_q}%')
+    if min_angle is not None:
+        where.append('lift_angle >= ?')
+        params.append(min_angle)
+    if max_angle is not None:
+        where.append('lift_angle <= ?')
+        params.append(max_angle)
+
+    sql = "SELECT manufacturer, calibre, lift_angle, source FROM lift_angle_ref"
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " ORDER BY manufacturer, calibre LIMIT ?"
+    params.append(limit)
+
+    rows = q(sql, tuple(params))
+    # Normalize manufacturer names in output and collapse legacy variants.
+    merged = {}
+    for r in rows:
+        k = (_norm_manufacturer(r['manufacturer']), _norm_calibre(r['calibre']))
+        existing = merged.get(k)
+        cand = dict(r)
+        cand['manufacturer'] = k[0]
+        cand['calibre'] = k[1]
+        # Prefer custom rows when both custom/watchguy variants exist.
+        if existing is None or (existing.get('source') != 'custom' and cand.get('source') == 'custom'):
+            merged[k] = cand
+    out = list(merged.values())
+    return jsonify(
+        results=out,
+        stale=stale,
+        count=len(out)
+    )
+
+@app.route('/api/lift-angles/custom', methods=['POST'])
+def api_lift_angles_custom():
+    d = request.json or {}
+    manufacturer = _norm_manufacturer(d.get('manufacturer', ''))
+    calibre = _norm_calibre(d.get('calibre', ''))
+    lift_angle = _tg_float(d.get('lift_angle'))
+    if not manufacturer or not calibre or lift_angle is None:
+        return jsonify(ok=False, error='manufacturer, calibre and lift_angle are required'), 400
+
+    now_iso = datetime.datetime.utcnow().isoformat(timespec='seconds')
+    run(
+        "INSERT INTO lift_angle_ref (manufacturer, calibre, lift_angle, source, updated_at) "
+        "VALUES (?,?,?,?,?) "
+        "ON CONFLICT(manufacturer, calibre) DO UPDATE SET "
+        "lift_angle=excluded.lift_angle, source='custom', updated_at=excluded.updated_at",
+        (manufacturer, calibre, lift_angle, 'custom', now_iso)
+    )
+    return jsonify(ok=True)
+
+@app.route('/api/lift-angles/custom', methods=['DELETE'])
+def api_lift_angles_custom_delete():
+    d = request.json or {}
+    manufacturer = _norm_manufacturer(d.get('manufacturer', ''))
+    calibre = _norm_calibre(d.get('calibre', ''))
+    if not manufacturer or not calibre:
+        return jsonify(ok=False, error='manufacturer and calibre are required'), 400
+    row = q(
+        "SELECT source FROM lift_angle_ref WHERE manufacturer=? AND calibre=?",
+        (manufacturer, calibre),
+        one=True
+    )
+    if not row:
+        return jsonify(ok=False, error='not found'), 404
+    if row['source'] != 'custom':
+        return jsonify(ok=False, error='only custom rows can be deleted'), 400
+    run(
+        "DELETE FROM lift_angle_ref WHERE manufacturer=? AND calibre=?",
+        (manufacturer, calibre)
+    )
+    return jsonify(ok=True)
+
+@app.route('/api/lift-angles/manufacturers')
+def api_lift_angles_manufacturers():
+    stale = False
+    try:
+        _refresh_lift_angle_cache(force=False)
+    except Exception:
+        stale = True
+    rows = q(
+        "SELECT DISTINCT manufacturer FROM lift_angle_ref "
+        "ORDER BY manufacturer"
+    )
+    brands = sorted({_norm_manufacturer(r['manufacturer']) for r in rows})
+    return jsonify(
+        manufacturers=brands,
+        stale=stale
+    )
 
 @app.route('/api/timegrapher/<int:tid>', methods=['DELETE'])
 def api_delete_timegrapher(tid):
@@ -941,15 +1205,22 @@ def api_delete_equipment(eid): run('DELETE FROM equipment WHERE id=?',(eid,)); r
 @app.route('/settings',methods=['GET','POST'])
 def settings():
     if request.method == 'POST':
+        selected_language = request.form.get('language', '').strip()
         for k in ['date_format', 'hourly_rate', 'language', 'currency_symbol']:
             v = request.form.get(k, '')
             if v != '':
                 run('INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?', (k, v, v))
+        # Ensure this request's flash message uses the language just selected in the form.
+        set_request_language(selected_language)
         flash(_('settings saved successfully'), 'success')
         return redirect(url_for('settings'))
     
     langs = [f[:-5] for f in os.listdir(LANG_DIR) if f.endswith('.json')] if os.path.exists(LANG_DIR) else ['en']
     return render_template('settings.html', settings=get_settings(), categories=get_all_categories(), active='settings', langs=langs)
+
+@app.route('/lift-angles')
+def lift_angles():
+    return render_template('lift_angles.html', active='lift_angles')
 
 @app.route('/api/export')
 def api_export():
