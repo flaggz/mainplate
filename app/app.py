@@ -502,6 +502,14 @@ def _norm_lift_text(value):
     value = re.sub(r'\s+', ' ', str(value or '').strip())
     return value.upper()
 
+def _norm_manufacturer(value):
+    # Canonicalize common WatchGuy brand variants (hyphen/underscore/space).
+    value = str(value or '').replace('-', ' ').replace('_', ' ')
+    return _norm_lift_text(value)
+
+def _norm_calibre(value):
+    return _norm_lift_text(value)
+
 def _fetch_watchguy_lift_angles():
     if not _LOOKUP_AVAILABLE:
         raise RuntimeError('deps_missing')
@@ -515,8 +523,8 @@ def _fetch_watchguy_lift_angles():
         tds = tr.find_all('td')
         if len(tds) < 3:
             continue
-        manufacturer = _norm_lift_text(tds[0].get_text(' ', strip=True))
-        calibre = _norm_lift_text(tds[1].get_text(' ', strip=True))
+        manufacturer = _norm_manufacturer(tds[0].get_text(' ', strip=True))
+        calibre = _norm_calibre(tds[1].get_text(' ', strip=True))
         raw_angle = tds[2].get_text(' ', strip=True).replace('°', '')
         try:
             angle = float(raw_angle)
@@ -652,8 +660,8 @@ def api_lift_angles_list():
     except Exception:
         stale = True
 
-    manufacturer = _norm_lift_text(request.args.get('manufacturer', ''))
-    calibre_q = _norm_lift_text(request.args.get('calibre', ''))
+    manufacturer = _norm_manufacturer(request.args.get('manufacturer', ''))
+    calibre_q = _norm_calibre(request.args.get('calibre', ''))
     min_angle = _tg_float(request.args.get('min_angle'))
     max_angle = _tg_float(request.args.get('max_angle'))
     try:
@@ -666,7 +674,7 @@ def api_lift_angles_list():
     params = []
 
     if manufacturer:
-        where.append('manufacturer = ?')
+        where.append("UPPER(TRIM(REPLACE(REPLACE(manufacturer,'-',' '),'_',' '))) = ?")
         params.append(manufacturer)
     if calibre_q:
         where.append('calibre LIKE ?')
@@ -685,17 +693,29 @@ def api_lift_angles_list():
     params.append(limit)
 
     rows = q(sql, tuple(params))
+    # Normalize manufacturer names in output and collapse legacy variants.
+    merged = {}
+    for r in rows:
+        k = (_norm_manufacturer(r['manufacturer']), _norm_calibre(r['calibre']))
+        existing = merged.get(k)
+        cand = dict(r)
+        cand['manufacturer'] = k[0]
+        cand['calibre'] = k[1]
+        # Prefer custom rows when both custom/watchguy variants exist.
+        if existing is None or (existing.get('source') != 'custom' and cand.get('source') == 'custom'):
+            merged[k] = cand
+    out = list(merged.values())
     return jsonify(
-        results=[dict(r) for r in rows],
+        results=out,
         stale=stale,
-        count=len(rows)
+        count=len(out)
     )
 
 @app.route('/api/lift-angles/custom', methods=['POST'])
 def api_lift_angles_custom():
     d = request.json or {}
-    manufacturer = _norm_lift_text(d.get('manufacturer', ''))
-    calibre = _norm_lift_text(d.get('calibre', ''))
+    manufacturer = _norm_manufacturer(d.get('manufacturer', ''))
+    calibre = _norm_calibre(d.get('calibre', ''))
     lift_angle = _tg_float(d.get('lift_angle'))
     if not manufacturer or not calibre or lift_angle is None:
         return jsonify(ok=False, error='manufacturer, calibre and lift_angle are required'), 400
@@ -713,8 +733,8 @@ def api_lift_angles_custom():
 @app.route('/api/lift-angles/custom', methods=['DELETE'])
 def api_lift_angles_custom_delete():
     d = request.json or {}
-    manufacturer = _norm_lift_text(d.get('manufacturer', ''))
-    calibre = _norm_lift_text(d.get('calibre', ''))
+    manufacturer = _norm_manufacturer(d.get('manufacturer', ''))
+    calibre = _norm_calibre(d.get('calibre', ''))
     if not manufacturer or not calibre:
         return jsonify(ok=False, error='manufacturer and calibre are required'), 400
     row = q(
@@ -743,8 +763,9 @@ def api_lift_angles_manufacturers():
         "SELECT DISTINCT manufacturer FROM lift_angle_ref "
         "ORDER BY manufacturer"
     )
+    brands = sorted({_norm_manufacturer(r['manufacturer']) for r in rows})
     return jsonify(
-        manufacturers=[r['manufacturer'] for r in rows],
+        manufacturers=brands,
         stale=stale
     )
 
