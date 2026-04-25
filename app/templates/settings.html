@@ -12,11 +12,11 @@
                         <label class="label"><span class="label-text">{{ _('date format') }}</span></label>
                         <select name="date_format" class="select select-bordered w-full">
                             <option value="DD-MM-YYYY" {% if settings.get('date_format', 'DD-MM-YYYY' )=='DD-MM-YYYY'
-                                %}selected{% endif %}>GG-MM-AAAA</option>
+                                %}selected{% endif %}>{{ _('date format DD-MM-YYYY') }}</option>
                             <option value="MM-DD-YYYY" {% if settings.get('date_format', '' )=='MM-DD-YYYY' %}selected{%
-                                endif %}>MM-GG-AAAA</option>
+                                endif %}>{{ _('date format MM-DD-YYYY') }}</option>
                             <option value="YYYY-MM-DD" {% if settings.get('date_format', '' )=='YYYY-MM-DD' %}selected{%
-                                endif %}>AAAA-MM-GG</option>
+                                endif %}>{{ _('date format YYYY-MM-DD') }}</option>
                         </select>
                     </div>
                     <div class="form-control">

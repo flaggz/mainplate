@@ -168,13 +168,15 @@ endblock %}
                             <th class="text-right font-mono hidden md:table-cell">12U</th>
                             <th class="text-right hidden md:table-cell">{{ _('amplitude') }}</th>
                             <th class="text-right hidden md:table-cell">{{ _('beat error') }}</th>
+                            <th class="hidden lg:table-cell">{{ _('caliber') }}</th>
+                            <th class="text-right hidden lg:table-cell">{{ _('lift angle') }}</th>
                             <th class="text-right font-bold">Δ</th>
                             <th class="text-right">{{ _('actions') }}</th>
                         </tr>
                     </thead>
                     <tbody id="tg-tbody">
                         {% if not tg_readings %}
-                        <tr id="tg-empty-row"><td colspan="11" class="text-center text-base-content/40 py-6">{{ _('no timegrapher readings.') }}</td></tr>
+                        <tr id="tg-empty-row"><td colspan="13" class="text-center text-base-content/40 py-6">{{ _('no timegrapher readings.') }}</td></tr>
                         {% endif %}
                         {% for r in tg_readings %}
                         <tr id="tg-row-{{ r.id }}" class="data-row hover"
@@ -185,7 +187,9 @@ endblock %}
                             data-p9="{{ r.p9 if r.p9 is not none else '' }}"
                             data-p12="{{ r.p12 if r.p12 is not none else '' }}"
                             data-amplitude="{{ r.amplitude if r.amplitude is not none else '' }}"
-                            data-beat-error="{{ r.beat_error if r.beat_error is not none else '' }}">
+                            data-beat-error="{{ r.beat_error if r.beat_error is not none else '' }}"
+                            data-caliber="{{ r.caliber if r.caliber else '' }}"
+                            data-lift-angle="{{ r.lift_angle if r.lift_angle is not none else '' }}">
                             <td class="whitespace-nowrap">
                                 {{ r.reading_date | fmtdate(date_format) }}
                                 {# Mobile summary #}
@@ -193,6 +197,7 @@ endblock %}
                                     {% for lbl, val in [('DU', r.du), ('DD', r.dd), ('3U', r.p3), ('6U', r.p6), ('9U', r.p9), ('12U', r.p12)] %}{% if val is not none %}<span>{{ lbl }}:{{ '{:+.1f}'.format(val) }}</span>{% endif %}{% endfor %}
                                     {% if r.amplitude is not none %}<span>{{ '{:.0f}'.format(r.amplitude) }}°</span>{% endif %}
                                     {% if r.beat_error is not none %}<span>BE:{{ '{:.1f}'.format(r.beat_error) }}</span>{% endif %}
+                                    {% if r.lift_angle is not none %}<span>LA:{{ '{:.1f}'.format(r.lift_angle) }}°</span>{% endif %}
                                 </div>
                             </td>
                             <td class="text-right font-mono hidden md:table-cell">{% if r.du is not none %}{{ '{:+.1f}'.format(r.du) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
@@ -203,6 +208,8 @@ endblock %}
                             <td class="text-right font-mono hidden md:table-cell">{% if r.p12 is not none %}{{ '{:+.1f}'.format(r.p12) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
                             <td class="text-right hidden md:table-cell">{% if r.amplitude is not none %}{{ '{:.0f}'.format(r.amplitude) }}°{% else %}<span class="opacity-40">—</span>{% endif %}</td>
                             <td class="text-right hidden md:table-cell">{% if r.beat_error is not none %}{{ '{:.1f}'.format(r.beat_error) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
+                            <td class="hidden lg:table-cell">{% if r.caliber %}{{ r.caliber }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
+                            <td class="text-right hidden lg:table-cell">{% if r.lift_angle is not none %}{{ '{:.1f}'.format(r.lift_angle) }}°{% else %}<span class="opacity-40">—</span>{% endif %}</td>
                             <td class="text-right font-bold font-mono {{ r.delta_class }}">{% if r.delta is not none %}{{ '{:.1f}'.format(r.delta) }}{% else %}<span class="opacity-40">—</span>{% endif %}</td>
                             <td>
                                 <div class="flex gap-2 justify-end">
@@ -221,7 +228,7 @@ endblock %}
                             </td>
                         </tr>
                         <tr id="tg-edit-{{ r.id }}" class="edit-row hidden bg-base-200">
-                            <td colspan="11" class="p-3">
+                            <td colspan="13" class="p-3">
                                 <form class="flex flex-wrap gap-2 items-end" onsubmit="submitTgEdit(event, {{ r.id }}, {{ flip.id }})">
                                     <div class="flex flex-col gap-0.5">
                                         <span class="text-[9px] uppercase text-base-content/40">{{ _('date') }}</span>
@@ -241,6 +248,14 @@ endblock %}
                                         <span class="text-[9px] uppercase text-base-content/40">BE ms</span>
                                         <input type="number" step="0.1" name="beat_error" value="{{ r.beat_error if r.beat_error is not none else '' }}" placeholder="—" class="input input-bordered input-sm w-16 text-right">
                                     </div>
+                                    <div class="flex flex-col gap-0.5">
+                                        <span class="text-[9px] uppercase text-base-content/40">{{ _('caliber') }}</span>
+                                        <input type="text" name="caliber" value="{{ r.caliber if r.caliber else '' }}" placeholder="ETA 2824-2" class="input input-bordered input-sm w-36">
+                                    </div>
+                                    <div class="flex flex-col gap-0.5">
+                                        <span class="text-[9px] uppercase text-base-content/40">{{ _('lift angle') }} °</span>
+                                        <input type="number" step="0.1" name="lift_angle" value="{{ r.lift_angle if r.lift_angle is not none else '' }}" placeholder="52.0" class="input input-bordered input-sm w-20 text-right">
+                                    </div>
                                     <div class="flex gap-2 pt-3.5">
                                         <button type="submit" class="btn btn-primary btn-sm">{{ _('save') }}</button>
                                         <button type="button" class="btn btn-ghost btn-sm" onclick="toggleTgEdit({{ r.id }})">{{ _('cancel') }}</button>
@@ -252,7 +267,7 @@ endblock %}
                     </tbody>
                     <tfoot class="bg-base-200/40">
                         <tr>
-                            <td colspan="11" class="p-2">
+                            <td colspan="13" class="p-2">
                                 <div class="flex flex-col gap-2 md:flex-row md:items-center md:gap-1">
                                     <input type="date" id="tg-date" class="input input-bordered input-sm md:w-36" value="{{ today }}">
                                     <div class="grid grid-cols-3 gap-1 md:contents">
@@ -264,6 +279,9 @@ endblock %}
                                         <input type="number" step="1" id="tg-amp" placeholder="Amp°" class="input input-bordered input-sm w-full md:w-16 text-right">
                                         <input type="number" step="0.1" id="tg-be" placeholder="BE ms" class="input input-bordered input-sm w-full md:w-16 text-right">
                                     </div>
+                                    <input type="text" id="tg-caliber" list="tg-lift-options" placeholder="{{ _('caliber') }}" class="input input-bordered input-sm w-full md:w-44">
+                                    <input type="number" step="0.1" id="tg-lift-angle" placeholder="{{ _('lift angle') }}°" class="input input-bordered input-sm w-full md:w-24 text-right">
+                                    <datalist id="tg-lift-options"></datalist>
                                     <button class="btn btn-primary btn-sm" onclick="addTgReading({{ flip.id }})">+ {{ _('add') }}</button>
                                 </div>
                             </td>
