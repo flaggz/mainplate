@@ -5,7 +5,7 @@
 A self-hosted web app for watch enthusiasts and watchmakers to track personal collection, flips, parts inventory, and equipment — all in one place.
 
 Now on AppStore!
-<a href="https://apps.apple.com/it/app/mainplate/id6764563800"><img width="135" height="40" alt="Download_on_the_App_Store_Badge" src="https://github.com/user-attachments/assets/54864a3e-3df0-4512-8abe-65b86fdac396" /></a>
+<a href="https://apps.apple.com/us/app/mainplate/id6764563800"><img width="135" height="40" alt="Download_on_the_App_Store_Badge" src="https://github.com/user-attachments/assets/54864a3e-3df0-4512-8abe-65b86fdac396" /></a>
 
 https://github.com/user-attachments/assets/6549cc5b-02ca-4963-b349-016421ed3a0d
 
