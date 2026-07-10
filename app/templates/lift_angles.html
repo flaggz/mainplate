@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block breadcrumb %}<a href="{{ url_for('lift_angles') }}" class="link">{{ _('lift angles') }}</a>{% endblock %}
+{% block page_title %}{{ _('lift angles') }}{% endblock %}
+{% block page_actions %}
+<button class="btn btn-outline btn-sm" onclick="refreshLiftAnglesCache()">{{ _('refresh lift angles') }}</button>
+{% endblock %}
+{% block content %}
+<div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-0">
+        <div class="p-4 border-b border-base-200 bg-base-200/30">
+            <div class="text-xs uppercase tracking-wide text-base-content/60 mb-2">{{ _('add custom lift angle') }}</div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                <input id="lift-custom-manufacturer" type="text" class="input input-bordered input-sm" placeholder="{{ _('manufacturer') }}">
+                <input id="lift-custom-calibre" type="text" class="input input-bordered input-sm" placeholder="{{ _('calibre') }}">
+                <input id="lift-custom-angle" type="number" step="0.1" class="input input-bordered input-sm text-right" placeholder="{{ _('lift angle') }} °">
+                <button class="btn btn-primary btn-sm" onclick="addCustomLiftAngle()">{{ _('add custom') }}</button>
+            </div>
+            <div class="text-xs text-base-content/50 mt-1">{{ _('if manufacturer + calibre already exists, custom value overrides it.') }}</div>
+        </div>
+        <div class="p-4 border-b border-base-200">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-2 md:items-end">
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">{{ _('manufacturer') }}</span></label>
+                    <select id="lift-filter-manufacturer" class="select select-bordered select-sm w-full">
+                        <option value="">{{ _('all manufacturers') }}</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">{{ _('calibre') }}</span></label>
+                    <input id="lift-filter-calibre" type="text" class="input input-bordered input-sm w-full" placeholder="{{ _('calibre') }}">
+                </div>
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">{{ _('min lift angle') }}</span></label>
+                    <input id="lift-filter-min" type="number" step="0.1" class="input input-bordered input-sm w-full text-right" placeholder="0.0">
+                </div>
+                <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">{{ _('max lift angle') }}</span></label>
+                    <input id="lift-filter-max" type="number" step="0.1" class="input input-bordered input-sm w-full text-right" placeholder="90.0">
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn btn-primary btn-sm w-full" onclick="loadLiftAnglesTable()">{{ _('apply filters') }}</button>
+                    <button class="btn btn-ghost btn-sm" onclick="resetLiftAngleFilters()">{{ _('reset filters') }}</button>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row gap-2 md:items-center mt-3">
+                <input
+                    id="lift-filter-limit"
+                    type="number"
+                    class="input input-bordered input-sm w-full md:w-40"
+                    value="500"
+                    min="1"
+                    max="2000">
+                <span id="lift-angle-status" class="text-xs text-base-content/60"></span>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="table table-zebra text-sm">
+                <thead>
+                    <tr class="text-base-content/60">
+                        <th>{{ _('manufacturer') }}</th>
+                        <th>{{ _('calibre') }}</th>
+                        <th class="text-right">{{ _('lift angle') }}</th>
+                        <th>{{ _('source') }}</th>
+                        <th class="text-right">{{ _('actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody id="lift-angles-tbody">
+                    <tr id="lift-angles-empty">
+                        <td colspan="5" class="text-center text-base-content/40 py-6">{{ _('loading') }}…</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
